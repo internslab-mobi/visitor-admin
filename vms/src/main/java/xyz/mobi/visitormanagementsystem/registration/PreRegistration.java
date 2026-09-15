@@ -5,10 +5,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class PreRegistration {
 
-
-
         @GetMapping("/Registration")
         public String health() {
-            return "registration up";
+            return "registration done successfully";
         }
     }
