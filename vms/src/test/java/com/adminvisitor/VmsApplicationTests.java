@@ -1,4 +1,4 @@
-package xyz.mobi.visitormanagementsystem;
+package com.adminvisitor;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
