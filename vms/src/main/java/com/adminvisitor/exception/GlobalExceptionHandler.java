@@ -85,4 +85,26 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.CONFLICT)
                 .body(errorResponse);
     }
+
+    @ExceptionHandler(MobileNumberAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleMobileNumberAlreadyExists(
+            MobileNumberAlreadyExistsException exception) {
+
+        log.warn(
+                "Mobile number already exists: {}",
+                exception.getMessage()
+        );
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                exception.getMessage(),
+                null
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(errorResponse);
+    }
 }
