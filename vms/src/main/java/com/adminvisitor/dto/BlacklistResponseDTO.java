@@ -1,0 +1,19 @@
+package com.adminvisitor.dto;
+
+import com.adminvisitor.enums.BlacklistStatus;
+
+import java.time.LocalDateTime;
+
+public record BlacklistResponseDTO(
+        Long id,
+        Long visitorId,
+        String idType,
+        String idNumber,
+        String reason,
+        BlacklistStatus status,
+        Long addedBy,
+        LocalDateTime addedAt,
+        LocalDateTime removedAt,
+        Long removedBy
+) {
+}
