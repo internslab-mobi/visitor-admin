@@ -9,7 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class BlacklistRequestDTO {
+public class BlacklistRequest {
 
     @NotNull(message = "Visitor ID is required")
     @Positive(message = "Visitor ID must be positive")

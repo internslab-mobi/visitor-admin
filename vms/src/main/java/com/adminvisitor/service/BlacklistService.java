@@ -1,7 +1,7 @@
 package com.adminvisitor.service;
 
-import com.adminvisitor.dto.requestdto.BlacklistRequestDTO;
-import com.adminvisitor.dto.responsedto.BlacklistResponseDTO;
+import com.adminvisitor.dto.requestdto.BlacklistRequest;
+import com.adminvisitor.dto.responsedto.BlacklistResponse;
 import com.adminvisitor.entity.Blacklist;
 import com.adminvisitor.entity.Visitor;
 import com.adminvisitor.enums.BlacklistStatus;
@@ -37,8 +37,8 @@ public class BlacklistService {
                 .isPresent();
     }
 
-    public BlacklistResponseDTO addToBlacklist(
-            BlacklistRequestDTO request) {
+    public BlacklistResponse addToBlacklist(
+            BlacklistRequest request) {
 
         if (isBlacklisted(request.getIdType(), request.getIdNumber())) {
             throw new IllegalArgumentException(
@@ -65,7 +65,7 @@ public class BlacklistService {
         return blacklistMapper.toResponse(savedBlacklist);
     }
 
-    public BlacklistResponseDTO removeFromBlacklist(
+    public BlacklistResponse removeFromBlacklist(
             Long blacklistId,
             Long removedBy) {
 

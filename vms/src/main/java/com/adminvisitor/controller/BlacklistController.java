@@ -1,7 +1,7 @@
 package com.adminvisitor.controller;
 
-import com.adminvisitor.dto.requestdto.BlacklistRequestDTO;
-import com.adminvisitor.dto.responsedto.BlacklistResponseDTO;
+import com.adminvisitor.dto.requestdto.BlacklistRequest;
+import com.adminvisitor.dto.responsedto.BlacklistResponse;
 import com.adminvisitor.service.BlacklistService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,10 +17,10 @@ public class BlacklistController {
     private final BlacklistService blacklistService;
 
     @PostMapping
-    public ResponseEntity<BlacklistResponseDTO> addToBlacklist(
-            @Valid @RequestBody BlacklistRequestDTO request) {
+    public ResponseEntity<BlacklistResponse> addToBlacklist(
+            @Valid @RequestBody BlacklistRequest request) {
 
-        BlacklistResponseDTO response =
+        BlacklistResponse response =
                 blacklistService.addToBlacklist(request);
 
         return ResponseEntity
@@ -29,11 +29,11 @@ public class BlacklistController {
     }
 
     @PutMapping("/{id}/remove")
-    public ResponseEntity<BlacklistResponseDTO> removeFromBlacklist(
+    public ResponseEntity<BlacklistResponse> removeFromBlacklist(
             @PathVariable Long id,
             @RequestParam Long removedBy) {
 
-        BlacklistResponseDTO response =
+        BlacklistResponse response =
                 blacklistService.removeFromBlacklist(
                         id,
                         removedBy

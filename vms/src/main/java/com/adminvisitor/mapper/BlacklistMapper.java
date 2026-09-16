@@ -1,7 +1,7 @@
 package com.adminvisitor.mapper;
 
-import com.adminvisitor.dto.requestdto.BlacklistRequestDTO;
-import com.adminvisitor.dto.responsedto.BlacklistResponseDTO;
+import com.adminvisitor.dto.requestdto.BlacklistRequest;
+import com.adminvisitor.dto.responsedto.BlacklistResponse;
 import com.adminvisitor.entity.Blacklist;
 import com.adminvisitor.entity.Visitor;
 import org.springframework.stereotype.Component;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class BlacklistMapper {
 
     public Blacklist toEntity(
-            BlacklistRequestDTO request,
+            BlacklistRequest request,
             Visitor visitor) {
 
         Blacklist blacklist = new Blacklist();
@@ -24,9 +24,9 @@ public class BlacklistMapper {
         return blacklist;
     }
 
-    public BlacklistResponseDTO toResponse(Blacklist blacklist) {
+    public BlacklistResponse toResponse(Blacklist blacklist) {
 
-        return new BlacklistResponseDTO(
+        return new BlacklistResponse(
                 blacklist.getId(),
                 blacklist.getVisitor().getId(),
                 blacklist.getIdType(),

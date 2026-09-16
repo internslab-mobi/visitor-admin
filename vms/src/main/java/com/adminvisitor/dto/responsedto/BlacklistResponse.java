@@ -4,7 +4,7 @@ import com.adminvisitor.enums.BlacklistStatus;
 
 import java.time.LocalDateTime;
 
-public record BlacklistResponseDTO(
+public record BlacklistResponse(
         Long id,
         Long visitorId,
         String idType,
