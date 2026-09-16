@@ -9,6 +9,7 @@ import com.adminvisitor.entity.Visitor;
 import com.adminvisitor.enums.RegistrationType;
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.repository.VisitRepository;
+import com.adminvisitor.repository.VisitorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ public class VisitService {
 
     private final VisitRepository visitRepository;
     private final VisitorService visitorService;
+    private final VisitorRepository visitorRepository;
 
     @Transactional
     public RegistrationResponse register(RegistrationRequest request) {
@@ -30,26 +32,40 @@ public class VisitService {
         validateVisitTiming(request);
 
         /*
-         * 1. Create or reuse Visitor
+         * 1. Find existing Visitor or create a new Visitor
          */
-        VisitorRequest visitorRequest = new VisitorRequest();
+        Visitor visitor = visitorRepository
+                .findByEmail(request.email())
+                .orElseGet(() -> {
 
-        visitorRequest.setFirstName(request.firstName());
-        visitorRequest.setLastName(request.lastName());
-        visitorRequest.setEmail(request.email());
-        visitorRequest.setMobileNumber(request.mobileNumber());
-        visitorRequest.setCompanyName(request.companyName());
+                    VisitorRequest visitorRequest = new VisitorRequest();
+
+                    visitorRequest.setFirstName(request.firstName());
+                    visitorRequest.setLastName(request.lastName());
+                    visitorRequest.setEmail(request.email());
+                    visitorRequest.setMobileNumber(request.mobileNumber());
+                    visitorRequest.setCompanyName(request.companyName());
+
+                    VisitorResponse response =
+                            visitorService.createVisitor(visitorRequest);
+
+                    return visitorRepository
+                            .findById(response.id())
+                            .orElseThrow();
+                });
 
         VisitorResponse visitorResponse =
-                visitorService.createOrReuseVisitor(visitorRequest);
-
-        /*
-         * Get the actual Visitor entity.
-         *
-         * We need the entity to create the Visit relationship.
-         */
-        Visitor visitor = new Visitor();
-        visitor.setId(visitorResponse.id());
+                new VisitorResponse(
+                        visitor.getId(),
+                        visitor.getFirstName(),
+                        visitor.getLastName(),
+                        visitor.getEmail(),
+                        visitor.getMobileNumber(),
+                        visitor.getCompanyName(),
+                        visitor.getCooldownUntil(),
+                        visitor.getCreatedAt(),
+                        visitor.getUpdatedAt()
+                );
 
         /*
          * 2. Create Visit
