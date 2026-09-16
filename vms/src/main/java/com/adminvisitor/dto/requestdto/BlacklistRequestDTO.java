@@ -1,4 +1,4 @@
-package com.adminvisitor.dto;
+package com.adminvisitor.dto.requestdto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

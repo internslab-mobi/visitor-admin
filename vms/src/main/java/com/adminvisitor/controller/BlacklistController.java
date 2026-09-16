@@ -1,7 +1,7 @@
 package com.adminvisitor.controller;
 
-import com.adminvisitor.dto.BlacklistRequestDTO;
-import com.adminvisitor.dto.BlacklistResponseDTO;
+import com.adminvisitor.dto.requestdto.BlacklistRequestDTO;
+import com.adminvisitor.dto.responsedto.BlacklistResponseDTO;
 import com.adminvisitor.service.BlacklistService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.adminvisitor.dto;
+package com.adminvisitor.dto.responsedto;
 
 import com.adminvisitor.enums.BlacklistStatus;
 

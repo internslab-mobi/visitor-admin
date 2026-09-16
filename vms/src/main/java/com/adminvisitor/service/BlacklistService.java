@@ -1,7 +1,7 @@
 package com.adminvisitor.service;
 
-import com.adminvisitor.dto.BlacklistRequestDTO;
-import com.adminvisitor.dto.BlacklistResponseDTO;
+import com.adminvisitor.dto.requestdto.BlacklistRequestDTO;
+import com.adminvisitor.dto.responsedto.BlacklistResponseDTO;
 import com.adminvisitor.entity.Blacklist;
 import com.adminvisitor.enums.BlacklistStatus;
 import com.adminvisitor.repository.BlacklistRepository;
