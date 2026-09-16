@@ -1,4 +1,5 @@
 package com.adminvisitor.entity;
 
-public class Visitor {
+public class Visitor extends BaseEntity {
+    
 }
