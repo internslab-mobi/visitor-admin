@@ -25,15 +25,15 @@ public class VisitService {
     private final VisitRepository visitRepository;
     private final VisitorService visitorService;
     private final VisitorRepository visitorRepository;
+    private final EmailService emailService;
 
     @Transactional
     public RegistrationResponse register(RegistrationRequest request) {
 
         validateVisitTiming(request);
 
-        /*
-         * 1. Find existing Visitor or create a new Visitor
-         */
+         //1. Find existing Visitor or create a new Visitor
+
         Visitor visitor = visitorRepository
                 .findByEmail(request.email())
                 .orElseGet(() -> {
@@ -67,9 +67,9 @@ public class VisitService {
                         visitor.getUpdatedAt()
                 );
 
-        /*
-         * 2. Create Visit
-         */
+
+        //2. Create Visit
+
         Visit visit = new Visit();
 
         visit.setVisitReference(generateVisitReference());
@@ -120,6 +120,7 @@ public class VisitService {
         visit.setStatus(VisitStatus.REGISTERED);
 
         Visit savedVisit = visitRepository.save(visit);
+        emailService.sendVisitConfirmationEmail(savedVisit);
 
         /*
          * 3. Build response

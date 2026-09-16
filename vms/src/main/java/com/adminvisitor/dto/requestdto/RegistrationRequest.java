@@ -32,7 +32,7 @@ public record RegistrationRequest(
         @NotBlank(message = "Mobile number is required")
         @Pattern(
                 regexp = "^[6-9][0-9]{9}$",
-                message = "Mobile number must be a valid 10-digit Indian mobile number"
+                message = "Mobile number must be a valid 10-digit number"
         )
         String mobileNumber,
 

@@ -7,5 +7,23 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+vms:
+  notification:
+        host-email: ${VMS_HOST_EMAIL}
+        host-name: ${VMS_HOST_NAME}
+        department-name: ${VMS_DEPARTMENT_NAME}
+
 server:
   port: 8092
