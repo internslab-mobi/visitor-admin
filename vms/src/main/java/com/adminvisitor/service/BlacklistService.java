@@ -3,20 +3,30 @@ package com.adminvisitor.service;
 import com.adminvisitor.dto.requestdto.BlacklistRequestDTO;
 import com.adminvisitor.dto.responsedto.BlacklistResponseDTO;
 import com.adminvisitor.entity.Blacklist;
+import com.adminvisitor.entity.Visitor;
 import com.adminvisitor.enums.BlacklistStatus;
+import com.adminvisitor.mapper.BlacklistMapper;
 import com.adminvisitor.repository.BlacklistRepository;
+import com.adminvisitor.repository.VisitorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BlacklistService {
 
     private final BlacklistRepository blacklistRepository;
+    private final VisitorRepository visitorRepository;
+    private final BlacklistMapper blacklistMapper;
 
-    public boolean isBlacklisted(String idType, String idNumber) {
+    @Transactional(readOnly = true)
+    public boolean isBlacklisted(
+            String idType,
+            String idNumber) {
 
         return blacklistRepository
                 .findByIdTypeAndIdNumberAndStatus(
@@ -36,20 +46,23 @@ public class BlacklistService {
             );
         }
 
-        Blacklist blacklist = new Blacklist();
+        Visitor visitor = visitorRepository.findById(request.getVisitorId())
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Visitor not found"
+                        )
+                );
 
-        blacklist.setVisitorId(request.getVisitorId());
-        blacklist.setIdType(request.getIdType());
-        blacklist.setIdNumber(request.getIdNumber());
-        blacklist.setReason(request.getReason());
+        Blacklist blacklist =
+                blacklistMapper.toEntity(request, visitor);
+
         blacklist.setStatus(BlacklistStatus.ACTIVE);
-        blacklist.setAddedBy(request.getAddedBy());
         blacklist.setAddedAt(LocalDateTime.now());
 
         Blacklist savedBlacklist =
                 blacklistRepository.save(blacklist);
 
-        return mapToResponse(savedBlacklist);
+        return blacklistMapper.toResponse(savedBlacklist);
     }
 
     public BlacklistResponseDTO removeFromBlacklist(
@@ -77,23 +90,6 @@ public class BlacklistService {
         Blacklist updatedBlacklist =
                 blacklistRepository.save(blacklist);
 
-        return mapToResponse(updatedBlacklist);
-    }
-
-    private BlacklistResponseDTO mapToResponse(
-            Blacklist blacklist) {
-
-        return new BlacklistResponseDTO(
-                blacklist.getId(),
-                blacklist.getVisitorId(),
-                blacklist.getIdType(),
-                blacklist.getIdNumber(),
-                blacklist.getReason(),
-                blacklist.getStatus(),
-                blacklist.getAddedBy(),
-                blacklist.getAddedAt(),
-                blacklist.getRemovedAt(),
-                blacklist.getRemovedBy()
-        );
+        return blacklistMapper.toResponse(updatedBlacklist);
     }
 }
