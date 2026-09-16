@@ -26,8 +26,12 @@ import java.time.LocalDateTime;
                         columnList = "mobile_number"
                 ),
                 @Index(
-                        name = "idx_vms_visitor_full_name",
-                        columnList = "full_name"
+                        name = "idx_vms_visitor_first_name",
+                        columnList = "first_name"
+                ),
+                @Index(
+                        name = "idx_vms_visitor_last_name",
+                        columnList = "last_name"
                 )
         }
 )
@@ -40,8 +44,11 @@ public class Visitor extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "full_name", nullable = false, length = 150)
-    private String fullName;
+    @Column(name = "first_name", nullable = false, length = 100)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false, length = 100)
+    private String lastName;
 
     @Column(name = "email", nullable = false, length = 254)
     private String email;
