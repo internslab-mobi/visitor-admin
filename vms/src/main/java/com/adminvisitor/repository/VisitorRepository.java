@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface VisitorRepository extends JpaRepository<Visitor, Long> {
 
     Optional<Visitor> findByEmail(String email);
+
+    Optional<Visitor> findByMobileNumber(String mobileNumber);
 }
