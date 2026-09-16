@@ -19,8 +19,9 @@ public class Blacklist {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "visitorid", nullable = false)
-    private Long visitorId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "visitor_id", nullable = false)
+    private Visitor visitor;
 
     @Column(name = "id_type", nullable = false, length = 50)
     private String idType;
