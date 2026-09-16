@@ -21,7 +21,7 @@ public class VisitorController {
             @Valid @RequestBody VisitorRequest request) {
 
         VisitorResponse response =
-                visitorService.createOrReuseVisitor(request);
+                visitorService.createVisitor(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

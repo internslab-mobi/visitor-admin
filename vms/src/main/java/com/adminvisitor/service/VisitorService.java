@@ -3,6 +3,7 @@ package com.adminvisitor.service;
 import com.adminvisitor.dto.requestdto.VisitorRequest;
 import com.adminvisitor.dto.responsedto.VisitorResponse;
 import com.adminvisitor.entity.Visitor;
+import com.adminvisitor.exception.EmailAlreadyExistsException;
 import com.adminvisitor.mapper.VisitorMapper;
 import com.adminvisitor.repository.VisitorRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,36 +20,30 @@ public class VisitorService {
     private final VisitorRepository visitorRepository;
     private final VisitorMapper visitorMapper;
 
-     // Creates a new visitor or reuses an existing visitor identified by email.
-    public VisitorResponse createOrReuseVisitor(
-            VisitorRequest request) {
+    public VisitorResponse createVisitor(VisitorRequest request) {
 
         log.info(
-                "Processing visitor profile. email={}",
+                "Creating visitor profile. email={}",
                 request.getEmail()
         );
 
-        // Reuse the existing visitor when the email is already registered.
-        Visitor visitor = visitorRepository
-                .findByEmail(request.getEmail())
-                .orElseGet(() -> {
-                    log.info(
-                            "Creating new visitor profile. email={}",
-                            request.getEmail()
-                    );
+        if (visitorRepository.findByEmail(request.getEmail()).isPresent()) {
+            log.warn(
+                    "Visitor creation rejected because email already exists. email={}",
+                    request.getEmail()
+            );
 
-                    return visitorMapper.toEntity(request);
-                });
+            throw new EmailAlreadyExistsException(
+                    "A visitor with this email already exists"
+            );
+        }
 
-        visitor.setFirstName(request.getFirstName());
-        visitor.setLastName(request.getLastName());
-        visitor.setMobileNumber(request.getMobileNumber());
-        visitor.setCompanyName(request.getCompanyName());
+        Visitor visitor = visitorMapper.toEntity(request);
 
         Visitor savedVisitor = visitorRepository.save(visitor);
 
         log.info(
-                "Visitor profile saved successfully. visitorId={}",
+                "Visitor profile created successfully. visitorId={}",
                 savedVisitor.getId()
         );
 
