@@ -2,12 +2,21 @@ package com.adminvisitor.controller;
 
 import com.adminvisitor.dto.requestdto.RegistrationRequest;
 import com.adminvisitor.dto.responsedto.RegistrationResponse;
+import com.adminvisitor.dto.responsedto.VisitDashboardResponse;
+import com.adminvisitor.dto.responsedto.VisitDetailResponse;
 import com.adminvisitor.service.VisitService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.adminvisitor.dto.responsedto.VisitResponse;
+import com.adminvisitor.enums.VisitStatus;
+import com.adminvisitor.enums.VisitView;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/visits")
@@ -26,5 +35,115 @@ public class VisitController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+//    @GetMapping
+//    public ResponseEntity<List<VisitResponse>> getVisits(
+//
+//            @RequestParam(required = false)
+//            VisitView view,
+//
+//            @RequestParam(required = false)
+//            Long visitorId,
+//
+//            @RequestParam(required = false)
+//            String visitorName,
+//
+//            @RequestParam(required = false)
+//            String visitorEmail,
+//
+//            @RequestParam(required = false)
+//            VisitStatus status,
+//
+//            @RequestParam(required = false)
+//            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+//            LocalDate date,
+//
+//            @RequestParam(required = false)
+//            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+//            LocalDate fromDate,
+//
+//            @RequestParam(required = false)
+//            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+//            LocalDate toDate,
+//
+//            @RequestParam(defaultValue = "ASC")
+//            String sortDirection
+//    ) {
+//
+//        List<VisitResponse> visits =
+//                visitService.getVisits(
+//                        view,
+//                        visitorId,
+//                        visitorName,
+//                        visitorEmail,
+//                        status,
+//                        date,
+//                        fromDate,
+//                        toDate,
+//                        sortDirection
+//                );
+//
+//        return ResponseEntity.ok(visits);
+//    }
+
+    @GetMapping
+    public ResponseEntity<List<VisitDashboardResponse>> getDashboardVisits(
+
+            @RequestParam(required = false)
+            VisitView view,
+
+            @RequestParam(required = false)
+            Long visitorId,
+
+            @RequestParam(required = false)
+            String visitorName,
+
+            @RequestParam(required = false)
+            String visitorEmail,
+
+            @RequestParam(required = false)
+            VisitStatus status,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate date,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate fromDate,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate toDate,
+
+            @RequestParam(defaultValue = "ASC")
+            String sortDirection
+    ) {
+
+        List<VisitDashboardResponse> visits =
+                visitService.getDashboardVisits(
+                        view,
+                        visitorId,
+                        visitorName,
+                        visitorEmail,
+                        status,
+                        date,
+                        fromDate,
+                        toDate,
+                        sortDirection
+                );
+
+        return ResponseEntity.ok(visits);
+    }
+
+    @GetMapping("/{visitId}")
+    public ResponseEntity<VisitDetailResponse> getVisitDetails(
+            @PathVariable Long visitId
+    ) {
+
+        VisitDetailResponse response =
+                visitService.getVisitDetails(visitId);
+
+        return ResponseEntity.ok(response);
     }
 }
