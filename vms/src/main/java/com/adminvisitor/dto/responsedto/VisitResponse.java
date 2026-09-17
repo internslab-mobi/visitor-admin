@@ -6,7 +6,7 @@ import com.adminvisitor.enums.VisitorType;
 
 import java.time.LocalDateTime;
 
-public record PreRegisterResponse(
+public record VisitResponse(
 
         Long visitId,
 
@@ -14,11 +14,13 @@ public record PreRegisterResponse(
 
         Long visitorId,
 
-        String visitorName,
+        String firstName,
+
+        String lastName,
 
         String email,
 
-        String mobile,
+        String mobileNumber,
 
         String companyName,
 
@@ -40,6 +42,15 @@ public record PreRegisterResponse(
 
         VisitStatus status,
 
-        String message
+        String proofType,
+
+        String proofNumber,
+
+        String proofImagePath,
+
+        LocalDateTime createdAt,
+
+        LocalDateTime updatedAt
+
 ) {
 }
