@@ -16,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -62,7 +61,6 @@ public class BlacklistService {
                 blacklistMapper.toEntity(request, visitor);
 
         blacklist.setStatus(BlacklistStatus.ACTIVE);
-        blacklist.setAddedAt(LocalDateTime.now());
 
         Blacklist savedBlacklist =
                 blacklistRepository.save(blacklist);
@@ -72,7 +70,7 @@ public class BlacklistService {
 
     public BlacklistResponse removeFromBlacklist(
             Long blacklistId,
-            Long removedBy) {
+            String removedBy) {
 
         Blacklist blacklist =
                 blacklistRepository.findById(blacklistId)
@@ -89,8 +87,7 @@ public class BlacklistService {
         }
 
         blacklist.setStatus(BlacklistStatus.REMOVED);
-        blacklist.setRemovedAt(LocalDateTime.now());
-        blacklist.setRemovedBy(removedBy);
+        blacklist.setUpdatedBy(removedBy);
 
         Blacklist updatedBlacklist =
                 blacklistRepository.save(blacklist);

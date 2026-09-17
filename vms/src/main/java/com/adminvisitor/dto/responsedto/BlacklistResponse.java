@@ -11,9 +11,9 @@ public record BlacklistResponse(
         String idNumber,
         String reason,
         BlacklistStatus status,
-        Long addedBy,
-        LocalDateTime addedAt,
-        LocalDateTime removedAt,
-        Long removedBy
+        String createdBy,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        String updatedBy
 ) {
 }

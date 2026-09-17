@@ -29,5 +29,5 @@ public class BlacklistRequest {
 
     @NotNull(message = "Added by is required")
     @Positive(message = "Added by must be positive")
-    private Long addedBy;
+    private String createdBy;
 }
