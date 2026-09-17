@@ -109,6 +109,94 @@ public class GlobalExceptionHandler {
                 .body(errorResponse);
     }
 
+    @ExceptionHandler(BlacklistAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleBlacklistAlreadyExists(
+            BlacklistAlreadyExistsException exception) {
+
+        log.warn(
+                "Blacklist entry already exists: {}",
+                exception.getMessage()
+        );
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                exception.getMessage(),
+                null
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(BlacklistAlreadyRemovedException.class)
+    public ResponseEntity<ErrorResponse> handleBlacklistAlreadyRemoved(
+            BlacklistAlreadyRemovedException exception) {
+
+        log.warn(
+                "Blacklist entry already removed: {}",
+                exception.getMessage()
+        );
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                exception.getMessage(),
+                null
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(BlacklistNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleBlacklistNotFound(
+            BlacklistNotFoundException exception) {
+
+        log.warn(
+                "Blacklist record not found: {}",
+                exception.getMessage()
+        );
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                exception.getMessage(),
+                null
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(VisitorNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleVisitorNotFound(
+            VisitorNotFoundException exception) {
+
+        log.warn(
+                "Visitor not found: {}",
+                exception.getMessage()
+        );
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                exception.getMessage(),
+                null
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(errorResponse);
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleMessageNotReadable(
             HttpMessageNotReadableException exception) {

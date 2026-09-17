@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/blacklist")
 @RequiredArgsConstructor
@@ -40,5 +42,22 @@ public class BlacklistController {
                 );
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<BlacklistResponse>> getAllBlacklistRecords() {
+
+        return ResponseEntity.ok(
+                blacklistService.getAllBlacklistRecords()
+        );
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<BlacklistResponse> getBlacklistById(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                blacklistService.getBlacklistById(id)
+        );
     }
 }

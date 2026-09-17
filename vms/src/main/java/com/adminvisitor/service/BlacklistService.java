@@ -5,6 +5,10 @@ import com.adminvisitor.dto.responsedto.BlacklistResponse;
 import com.adminvisitor.entity.Blacklist;
 import com.adminvisitor.entity.Visitor;
 import com.adminvisitor.enums.BlacklistStatus;
+import com.adminvisitor.exception.BlacklistAlreadyExistsException;
+import com.adminvisitor.exception.BlacklistAlreadyRemovedException;
+import com.adminvisitor.exception.BlacklistNotFoundException;
+import com.adminvisitor.exception.VisitorNotFoundException;
 import com.adminvisitor.mapper.BlacklistMapper;
 import com.adminvisitor.repository.BlacklistRepository;
 import com.adminvisitor.repository.VisitorRepository;
@@ -13,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -41,14 +46,14 @@ public class BlacklistService {
             BlacklistRequest request) {
 
         if (isBlacklisted(request.getIdType(), request.getIdNumber())) {
-            throw new IllegalArgumentException(
+            throw new BlacklistAlreadyExistsException(
                     "Person is already in blacklist"
             );
         }
 
         Visitor visitor = visitorRepository.findById(request.getVisitorId())
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new VisitorNotFoundException(
                                 "Visitor not found"
                         )
                 );
@@ -72,13 +77,13 @@ public class BlacklistService {
         Blacklist blacklist =
                 blacklistRepository.findById(blacklistId)
                         .orElseThrow(() ->
-                                new IllegalArgumentException(
+                                new BlacklistNotFoundException(
                                         "Blacklist record not found"
                                 )
                         );
 
         if (blacklist.getStatus() == BlacklistStatus.REMOVED) {
-            throw new IllegalArgumentException(
+            throw new BlacklistAlreadyRemovedException(
                     "Person is already removed from blacklist"
             );
         }
@@ -91,5 +96,28 @@ public class BlacklistService {
                 blacklistRepository.save(blacklist);
 
         return blacklistMapper.toResponse(updatedBlacklist);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BlacklistResponse> getAllBlacklistRecords() {
+
+        return blacklistRepository.findAll()
+                .stream()
+                .map(blacklistMapper::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public BlacklistResponse getBlacklistById(Long id) {
+
+        Blacklist blacklist =
+                blacklistRepository.findById(id)
+                        .orElseThrow(() ->
+                                new BlacklistNotFoundException(
+                                        "Blacklist record not found"
+                                )
+                        );
+
+        return blacklistMapper.toResponse(blacklist);
     }
 }
