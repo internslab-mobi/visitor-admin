@@ -1,16 +1,18 @@
 package com.adminvisitor.service;
 
 import com.adminvisitor.dto.requestdto.RegistrationRequest;
-import com.adminvisitor.dto.requestdto.VisitorRequest;
 import com.adminvisitor.dto.responsedto.RegistrationResponse;
-import com.adminvisitor.dto.responsedto.VisitorResponse;
 import com.adminvisitor.entity.Visit;
 import com.adminvisitor.entity.Visitor;
 import com.adminvisitor.enums.RegistrationType;
 import com.adminvisitor.enums.VisitStatus;
+import com.adminvisitor.exception.BusinessRuleException;
+import com.adminvisitor.exception.EmailAlreadyExistsException;
+import com.adminvisitor.exception.MobileNumberAlreadyExistsException;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.repository.VisitorRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,56 +22,29 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class VisitService {
 
     private final VisitRepository visitRepository;
-    private final VisitorService visitorService;
     private final VisitorRepository visitorRepository;
     private final EmailService emailService;
 
     @Transactional
     public RegistrationResponse register(RegistrationRequest request) {
 
+        log.debug(
+                "Starting visit registration. registrationType={}, visitorType={}, hostId={}",
+                request.registrationType(),
+                request.visitorType(),
+                request.hostId()
+        );
+
         validateVisitTiming(request);
 
-         //1. Find existing Visitor or create a new Visitor
+        // 1. Find an existing Visitor or create a new Visitor.
+        Visitor visitor = findOrCreateVisitor(request);
 
-        Visitor visitor = visitorRepository
-                .findByEmail(request.email())
-                .orElseGet(() -> {
-
-                    VisitorRequest visitorRequest = new VisitorRequest();
-
-                    visitorRequest.setFirstName(request.firstName());
-                    visitorRequest.setLastName(request.lastName());
-                    visitorRequest.setEmail(request.email());
-                    visitorRequest.setMobileNumber(request.mobileNumber());
-                    visitorRequest.setCompanyName(request.companyName());
-
-                    VisitorResponse response =
-                            visitorService.createVisitor(visitorRequest);
-
-                    return visitorRepository
-                            .findById(response.id())
-                            .orElseThrow();
-                });
-
-        VisitorResponse visitorResponse =
-                new VisitorResponse(
-                        visitor.getId(),
-                        visitor.getFirstName(),
-                        visitor.getLastName(),
-                        visitor.getEmail(),
-                        visitor.getMobileNumber(),
-                        visitor.getCompanyName(),
-                        visitor.getCooldownUntil(),
-                        visitor.getCreatedAt(),
-                        visitor.getUpdatedAt()
-                );
-
-
-        //2. Create Visit
-
+        // 2. Create Visit.
         Visit visit = new Visit();
 
         visit.setVisitReference(generateVisitReference());
@@ -120,20 +95,28 @@ public class VisitService {
         visit.setStatus(VisitStatus.REGISTERED);
 
         Visit savedVisit = visitRepository.save(visit);
+
         emailService.sendVisitConfirmationEmail(savedVisit);
 
-        /*
-         * 3. Build response
-         */
+        log.info(
+                "Visit registered successfully. visitId={}, visitReference={}, visitorId={}, registrationType={}, status={}",
+                savedVisit.getId(),
+                savedVisit.getVisitReference(),
+                visitor.getId(),
+                savedVisit.getRegistrationType(),
+                savedVisit.getStatus()
+        );
+
+        // 3. Build response.
         return new RegistrationResponse(
                 savedVisit.getId(),
                 savedVisit.getVisitReference(),
-                visitorResponse.id(),
-                visitorResponse.firstName(),
-                visitorResponse.lastName(),
-                visitorResponse.email(),
-                visitorResponse.mobileNumber(),
-                visitorResponse.companyName(),
+                visitor.getId(),
+                visitor.getFirstName(),
+                visitor.getLastName(),
+                visitor.getEmail(),
+                visitor.getMobileNumber(),
+                visitor.getCompanyName(),
                 savedVisit.getVisitorType(),
                 savedVisit.getRegistrationType(),
                 savedVisit.getPurpose(),
@@ -147,13 +130,110 @@ public class VisitService {
         );
     }
 
+    private Visitor findOrCreateVisitor(RegistrationRequest request) {
+
+        String email = request.email();
+        String mobileNumber = request.mobileNumber();
+
+        /*
+         * Check whether a visitor already exists with the supplied email.
+         */
+        Visitor visitorByEmail = visitorRepository
+                .findByEmail(email)
+                .orElse(null);
+
+        /*
+         * Check whether a visitor already exists with the supplied mobile number.
+         */
+        Visitor visitorByMobileNumber = visitorRepository
+                .findByMobileNumber(mobileNumber)
+                .orElse(null);
+
+        /*
+         * Case 1:
+         * Both email and mobile belong to the same visitor.
+         *
+         * This is the valid existing visitor case.
+         */
+        if (visitorByEmail != null
+                && visitorByMobileNumber != null
+                && visitorByEmail.getId().equals(visitorByMobileNumber.getId())) {
+
+            log.info(
+                    "Existing visitor found. visitorId={}",
+                    visitorByEmail.getId()
+            );
+
+            return visitorByEmail;
+        }
+
+        /*
+         * Case 2:
+         * Email exists, but mobile is different or belongs to another visitor.
+         */
+        if (visitorByEmail != null) {
+
+            log.warn(
+                    "Visitor registration rejected because the supplied email is already associated with another visitor"
+            );
+
+            throw new EmailAlreadyExistsException(
+                    "This email is already associated with another visitor"
+            );
+        }
+
+        /*
+         * Case 3:
+         * Mobile exists, but email is different or belongs to another visitor.
+         */
+        if (visitorByMobileNumber != null) {
+
+            log.warn(
+                    "Visitor registration rejected because the supplied mobile number is already associated with another visitor"
+            );
+
+            throw new MobileNumberAlreadyExistsException(
+                    "This mobile number is already associated with another visitor"
+            );
+        }
+
+        /*
+         * Case 4:
+         * Neither email nor mobile exists.
+         * Create a new Visitor profile.
+         */
+        Visitor newVisitor = new Visitor();
+
+        newVisitor.setFirstName(request.firstName());
+        newVisitor.setLastName(request.lastName());
+        newVisitor.setEmail(email);
+        newVisitor.setMobileNumber(mobileNumber);
+        newVisitor.setCompanyName(request.companyName());
+
+        Visitor savedVisitor = visitorRepository.save(newVisitor);
+
+        log.info(
+                "New visitor profile created. visitorId={}",
+                savedVisitor.getId()
+        );
+
+        return savedVisitor;
+    }
+
     private void validateVisitTiming(RegistrationRequest request) {
 
         if (!request.expectedDepartureTime()
                 .isAfter(request.expectedArrivalTime())) {
 
-            throw new IllegalArgumentException(
-                    "Expected departure time must be after expected arrival time"
+            log.warn(
+                    "Visit registration rejected because expected departure time is not after expected arrival time. visitDate={}, arrivalTime={}, departureTime={}",
+                    request.visitDate(),
+                    request.expectedArrivalTime(),
+                    request.expectedDepartureTime()
+            );
+
+            throw new BusinessRuleException(
+                    "Expected departure time must be after expected arrival time on the same visit date"
             );
         }
     }
@@ -183,11 +263,10 @@ public class VisitService {
 
     private String getSuccessMessage(RegistrationType registrationType) {
 
-        if (registrationType == RegistrationType.PRE_REGISTRATION) {
-            return "Visitor pre-registered successfully";
-        }
-
-        return "Visitor arrival registered successfully";
+        return switch (registrationType) {
+            case PRE_REGISTRATION -> "Visitor pre-registered successfully";
+            case ARRIVAL_REGISTRATION -> "Visitor arrival registered successfully";
+        };
     }
 
     private String generateVisitReference() {

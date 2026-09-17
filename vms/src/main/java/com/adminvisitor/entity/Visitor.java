@@ -14,27 +14,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(
-        name = "vms_visitor",
-        indexes = {
-                @Index(
-                        name = "idx_vms_visitor_email",
-                        columnList = "email"
-                ),
-                @Index(
-                        name = "idx_vms_visitor_mobile_number",
-                        columnList = "mobile_number"
-                ),
-                @Index(
-                        name = "idx_vms_visitor_first_name",
-                        columnList = "first_name"
-                ),
-                @Index(
-                        name = "idx_vms_visitor_last_name",
-                        columnList = "last_name"
-                )
-        }
-)
+@Table(name = "vms_visitor")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -50,10 +30,10 @@ public class Visitor extends BaseEntity {
     @Column(name = "last_name", nullable = false, length = 100)
     private String lastName;
 
-    @Column(name = "email", nullable = false, length = 254)
+    @Column(name = "email", nullable = false, unique = true, length = 254)
     private String email;
 
-    @Column(name = "mobile_number", nullable = false, length = 20)
+    @Column(name = "mobile_number", nullable = false, unique = true, length = 20)
     private String mobileNumber;
 
     @Column(name = "company_name", nullable = false, length = 150)

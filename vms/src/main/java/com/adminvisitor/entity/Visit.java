@@ -23,31 +23,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(
-        name = "vms_visit",
-        indexes = {
-                @Index(
-                        name = "idx_vms_visit_reference",
-                        columnList = "visit_reference"
-                ),
-                @Index(
-                        name = "idx_vms_visit_visitor_id",
-                        columnList = "visitor_id"
-                ),
-                @Index(
-                        name = "idx_vms_visit_host_id",
-                        columnList = "host_id"
-                ),
-                @Index(
-                        name = "idx_vms_visit_status",
-                        columnList = "status"
-                ),
-                @Index(
-                        name = "idx_vms_visit_expected_arrival_at",
-                        columnList = "expected_arrival_at"
-                )
-        }
-)
+@Table(name = "vms_visit")
 @Getter
 @Setter
 @NoArgsConstructor
