@@ -57,7 +57,7 @@ public class VisitService {
         Visit visit = new Visit();
 
         visit.setId(
-                idGeneratorService.generateId("VISIT", "VT")
+                idGeneratorService.generateId("VISIT", "VIS")
         );
 
         visit.setVisitReference(generateVisitReference());
@@ -218,7 +218,7 @@ public class VisitService {
         Visitor newVisitor = new Visitor();
 
         newVisitor.setId(
-                idGeneratorService.generateId("VISITOR", "VS")
+                idGeneratorService.generateId("VISITOR", "  VTR")
         );
         newVisitor.setFirstName(request.firstName());
         newVisitor.setLastName(request.lastName());
