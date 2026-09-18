@@ -55,9 +55,9 @@ class VisitControllerTest {
         );
 
         RegistrationResponse expectedResponse = new RegistrationResponse(
-                "VT-001",
+                "VIS-001",
                 "VIS-20260920100000-ABC12345",
-                "VS-001",
+                "VTR-001",
                 "John",
                 "Doe",
                 "john.doe@example.com",
@@ -66,8 +66,8 @@ class VisitControllerTest {
                 VisitorType.GUEST,
                 RegistrationType.PRE_REGISTRATION,
                 "Business meeting",
-                1L,
-                1L,
+                "EMP001",
+                "DT001",
                 LocalDateTime.of(2026, 9, 20, 10, 0),
                 LocalDateTime.of(2026, 9, 20, 11, 0),
                 "First-time visitor",
