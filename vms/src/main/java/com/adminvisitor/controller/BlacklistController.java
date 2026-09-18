@@ -32,7 +32,7 @@ public class BlacklistController {
 
     @PutMapping("/{id}/remove")
     public ResponseEntity<BlacklistResponse> removeFromBlacklist(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestParam String removedBy) {
 
         BlacklistResponse response =
@@ -54,7 +54,7 @@ public class BlacklistController {
 
     @GetMapping("/{id}")
     public ResponseEntity<BlacklistResponse> getBlacklistById(
-            @PathVariable Long id) {
+            @PathVariable String id) {
 
         return ResponseEntity.ok(
                 blacklistService.getBlacklistById(id)

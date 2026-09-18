@@ -21,8 +21,8 @@ import java.time.LocalDateTime;
 public class Visitor extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id", nullable = false, length = 20)
+    private String id;
 
     @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;
