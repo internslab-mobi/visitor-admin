@@ -7,7 +7,7 @@ import com.adminvisitor.repository.VisitBadgeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.adminvisitor.exception.BadgeAlreadyExistsException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -23,8 +23,8 @@ public class VisitBadgeService {
     public VisitBadge createBadge(Visit visit) {
 
         if (visitBadgeRepository.findByVisit_Id(visit.getId()).isPresent()) {
-            throw new IllegalStateException(
-                    "Badge already exists for visit: " + visit.getId()
+            throw new BadgeAlreadyExistsException(
+                    "A visitor badge already exists for visit: " + visit.getId()
             );
         }
         String badgeId =
