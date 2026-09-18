@@ -4,17 +4,20 @@ import com.adminvisitor.entity.Visit;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
+import org.springframework.scheduling.annotation.Async;
 
 import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EmailService {
 
     private final JavaMailSender mailSender;
@@ -35,6 +38,7 @@ public class EmailService {
     @Value("${vms.notification.department-name}")
     private String departmentName;
 
+    @Async
     public void sendVisitConfirmationEmail(Visit visit) {
 
         DateTimeFormatter formatter =
@@ -61,9 +65,17 @@ public class EmailService {
         context.setVariable("hostName", hostName);
         context.setVariable("departmentName", departmentName);
 
+        // Measure Thymeleaf template processing separately.
+        long templateStart = System.currentTimeMillis();
+
         String htmlBody = templateEngine.process(
                 "emails/visit-confirmation",
                 context
+        );
+
+        log.debug(
+                "Timing: emailTemplateProcessing={} ms",
+                System.currentTimeMillis() - templateStart
         );
 
         try {
@@ -83,7 +95,15 @@ public class EmailService {
 
             helper.setText(htmlBody, true);
 
+            // Measure the actual SMTP sending operation separately.
+            long smtpStart = System.currentTimeMillis();
+
             mailSender.send(message);
+
+            log.debug(
+                    "Timing: smtpSend={} ms",
+                    System.currentTimeMillis() - smtpStart
+            );
 
         } catch (MessagingException exception) {
 
