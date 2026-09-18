@@ -28,3 +28,7 @@ vms:
 server:
   port: 8092
 
+logging:
+  level:
+    com.adminvisitor: DEBUG
+

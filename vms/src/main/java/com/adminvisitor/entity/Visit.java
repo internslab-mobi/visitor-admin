@@ -59,11 +59,13 @@ public class Visit extends BaseEntity {
     @Column(name = "purpose", nullable = false, length = 500)
     private String purpose;
 
-    @Column(name = "host_id", nullable = false)
-    private Long hostId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "host_id", nullable = false)
+    private Employee host;
 
-    @Column(name = "department_id")
-    private Long departmentId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    private Department department;
 
     @Column(name = "expected_arrival_at", nullable = false)
     private LocalDateTime expectedArrivalAt;
