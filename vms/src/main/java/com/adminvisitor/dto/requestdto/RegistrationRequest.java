@@ -48,9 +48,8 @@ public record RegistrationRequest(
         )
         String purpose,
 
-        @NotNull(message = "Host employee is required")
-        @Positive(message = "Host employee ID must be positive")
-        Long hostId,
+        @NotBlank(message = "Host employee is required")
+        String hostId,
 
         @NotNull(message = "Visit date is required")
         LocalDate visitDate,

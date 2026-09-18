@@ -4,6 +4,7 @@ import com.adminvisitor.dto.requestdto.RegistrationRequest;
 import com.adminvisitor.dto.responsedto.RegistrationResponse;
 import com.adminvisitor.dto.responsedto.VisitDashboardResponse;
 import com.adminvisitor.dto.responsedto.VisitDetailResponse;
+import com.adminvisitor.entity.Employee;
 import com.adminvisitor.entity.Visit;
 import com.adminvisitor.entity.Visitor;
 import com.adminvisitor.enums.RegistrationType;
@@ -11,6 +12,7 @@ import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.exception.BusinessRuleException;
 import com.adminvisitor.exception.EmailAlreadyExistsException;
 import com.adminvisitor.exception.MobileNumberAlreadyExistsException;
+import com.adminvisitor.repository.EmployeeRepository;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.repository.VisitorRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,7 @@ public class VisitService {
     private final VisitorRepository visitorRepository;
     private final EmailService emailService;
     private final IdGeneratorService idGeneratorService;
+    private final EmployeeRepository employeeRepository;
 
     @Transactional
     public RegistrationResponse register(RegistrationRequest request) {
@@ -70,16 +73,21 @@ public class VisitService {
 
         visit.setPurpose(request.purpose());
 
-        visit.setHostId(request.hostId());
+        Employee employee = employeeRepository.findById(request.hostId())
+                .orElseThrow(() ->
+                        new BusinessRuleException(
+                                "Employee not found with id: " + request.hostId()
+                        )
+                );
 
-        /*
-         * Temporary department mapping.
-         *
-         * This method will later be replaced with
-         * EmployeeService/EmployeeRepository logic.
-         */
-        Long departmentId = getDepartmentIdForHost(request.hostId());
-        visit.setDepartmentId(departmentId);
+        if (!"ACTIVE".equalsIgnoreCase(employee.getStatus())) {
+            throw new BusinessRuleException(
+                    "Selected employee is not active"
+            );
+        }
+
+        visit.setHost(employee);
+        visit.setDepartment(employee.getDepartment());
 
         LocalDateTime expectedArrivalAt =
                 LocalDateTime.of(
@@ -133,8 +141,8 @@ public class VisitService {
                 savedVisit.getVisitorType(),
                 savedVisit.getRegistrationType(),
                 savedVisit.getPurpose(),
-                savedVisit.getHostId(),
-                savedVisit.getDepartmentId(),
+                savedVisit.getHost().getId(),
+                savedVisit.getDepartment().getId(),
                 savedVisit.getExpectedArrivalAt(),
                 savedVisit.getExpectedDepartureAt(),
                 savedVisit.getRemarks(),
@@ -252,29 +260,6 @@ public class VisitService {
                     "Expected departure time must be after expected arrival time on the same visit date"
             );
         }
-    }
-
-    /*
-     * TEMPORARY implementation.
-     *
-     * Later this method will call the Employee module.
-     * Keeping the logic isolated means the rest of VisitService
-     * does not need to change.
-     */
-    private Long getDepartmentIdForHost(Long hostId) {
-
-        /*
-         * Temporary hardcoded host → department mapping.
-         *
-         * Replace these values with actual employee/department
-         * data when the Employee files are available.
-         */
-        return switch (hostId.intValue()) {
-            case 1 -> 1L;
-            case 2 -> 2L;
-            case 3 -> 3L;
-            default -> 1L;
-        };
     }
 
     private String getSuccessMessage(RegistrationType registrationType) {
@@ -448,38 +433,16 @@ public class VisitService {
 
         Visitor visitor = visit.getVisitor();
 
-        /*
-         * Temporary hardcoded host/department mapping.
-         * This will later be replaced with Employee/Department
-         * service or repository lookup.
-         */
-        Long hostId = visit.getHostId();
+        Employee employee = visit.getHost();
 
-        String hostName;
-        String departmentName;
+        String hostName =
+                employee.getFirstName()
+                        + " "
+                        + employee.getLastName();
 
-        switch (hostId.intValue()) {
-            case 1 -> {
-                hostName = "Arun Kumar";
-                departmentName = "Human Resources";
-            }
-            case 2 -> {
-                hostName = "Priya Sharma";
-                departmentName = "Engineering";
-            }
-            case 3 -> {
-                hostName = "Rahul Raj";
-                departmentName = "Finance";
-            }
-            case 6 -> {
-                hostName = "Kavi Kumar";
-                departmentName = "Operations";
-            }
-            default -> {
-                hostName = "Unknown Host";
-                departmentName = "Unknown Department";
-            }
-        }
+        String departmentName =
+                employee.getDepartment().getDepartmentName();
+
 
         return new VisitDetailResponse(
 
@@ -505,9 +468,9 @@ public class VisitService {
 
                 // Host information
                 new VisitDetailResponse.HostDetails(
-                        visit.getHostId(),
+                        visit.getHost().getId(),
                         hostName,
-                        visit.getDepartmentId(),
+                        visit.getDepartment().getId(),
                         departmentName
                 ),
 
