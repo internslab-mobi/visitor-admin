@@ -1,11 +1,16 @@
 package com.adminvisitor.service;
 
 import com.adminvisitor.entity.Visit;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.time.format.DateTimeFormatter;
 
@@ -14,6 +19,7 @@ import java.time.format.DateTimeFormatter;
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    private final SpringTemplateEngine templateEngine;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -32,17 +38,6 @@ public class EmailService {
 
     public void sendVisitConfirmationEmail(Visit visit) {
 
-        SimpleMailMessage message = new SimpleMailMessage();
-
-        message.setFrom(fromEmail);
-
-        message.setTo(visit.getVisitor().getEmail());
-
-        message.setCc(hostEmail);
-
-        message.setSubject("Visit Registration Confirmation - "
-                + visit.getVisitReference());
-
         DateTimeFormatter formatter =
                 DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
 
@@ -51,30 +46,52 @@ public class EmailService {
                         + " "
                         + visit.getVisitor().getLastName();
 
-        String emailBody =
-                "Dear " + visitorName + ",\n\n" +
+        Context context = new Context();
 
-                        "Your visit has been successfully registered.\n\n" +
+        context.setVariable("visitorName", visitorName);
+        context.setVariable("visitReference", visit.getVisitReference());
+        context.setVariable("purpose", visit.getPurpose());
+        context.setVariable(
+                "expectedArrival",
+                visit.getExpectedArrivalAt().format(formatter)
+        );
+        context.setVariable(
+                "expectedDeparture",
+                visit.getExpectedDepartureAt().format(formatter)
+        );
+        context.setVariable("hostName", hostName);
+        context.setVariable("departmentName", departmentName);
 
-                        "Visit Details\n" +
-                        "------------------------------\n" +
-                        "Visit Reference  : " + visit.getVisitReference() + "\n" +
-                        "Purpose          : " + visit.getPurpose() + "\n" +
-                        "Expected Arrival : "
-                        + visit.getExpectedArrivalAt().format(formatter) + "\n" +
-                        "Expected Departure: "
-                        + visit.getExpectedDepartureAt().format(formatter) + "\n" +
-                        "Host             : " + hostName + "\n" +
-                        "Department       : " + departmentName + "\n" +
-                        "------------------------------\n\n" +
+        String htmlBody = templateEngine.process(
+                "emails/visit-confirmation",
+                context
+        );
 
-                        "Please carry your ID proof for verification during check-in.\n\n" +
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
 
-                        "Regards,\n" +
-                        "Visitor Management System";
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(message, true, "UTF-8");
 
-        message.setText(emailBody);
+            helper.setFrom(fromEmail);
+            helper.setTo(visit.getVisitor().getEmail());
+            helper.setCc(hostEmail);
 
-        mailSender.send(message);
+            helper.setSubject(
+                    "Visit Registration Confirmation - "
+                            + visit.getVisitReference()
+            );
+
+            helper.setText(htmlBody, true);
+
+            mailSender.send(message);
+
+        } catch (MessagingException exception) {
+
+            throw new IllegalStateException(
+                    "Failed to prepare visit confirmation email",
+                    exception
+            );
+        }
     }
 }

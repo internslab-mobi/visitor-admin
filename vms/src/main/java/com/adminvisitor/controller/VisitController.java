@@ -36,55 +36,7 @@ public class VisitController {
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
-//    @GetMapping
-//    public ResponseEntity<List<VisitResponse>> getVisits(
-//
-//            @RequestParam(required = false)
-//            VisitView view,
-//
-//            @RequestParam(required = false)
-//            Long visitorId,
-//
-//            @RequestParam(required = false)
-//            String visitorName,
-//
-//            @RequestParam(required = false)
-//            String visitorEmail,
-//
-//            @RequestParam(required = false)
-//            VisitStatus status,
-//
-//            @RequestParam(required = false)
-//            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-//            LocalDate date,
-//
-//            @RequestParam(required = false)
-//            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-//            LocalDate fromDate,
-//
-//            @RequestParam(required = false)
-//            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-//            LocalDate toDate,
-//
-//            @RequestParam(defaultValue = "ASC")
-//            String sortDirection
-//    ) {
-//
-//        List<VisitResponse> visits =
-//                visitService.getVisits(
-//                        view,
-//                        visitorId,
-//                        visitorName,
-//                        visitorEmail,
-//                        status,
-//                        date,
-//                        fromDate,
-//                        toDate,
-//                        sortDirection
-//                );
-//
-//        return ResponseEntity.ok(visits);
-//    }
+
 
     @GetMapping
     public ResponseEntity<List<VisitDashboardResponse>> getDashboardVisits(

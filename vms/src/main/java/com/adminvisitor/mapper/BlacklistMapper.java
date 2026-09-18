@@ -19,7 +19,7 @@ public class BlacklistMapper {
         blacklist.setIdType(request.getIdType());
         blacklist.setIdNumber(request.getIdNumber());
         blacklist.setReason(request.getReason());
-        blacklist.setAddedBy(request.getAddedBy());
+        blacklist.setCreatedBy(request.getCreatedBy());
 
         return blacklist;
     }
@@ -33,10 +33,10 @@ public class BlacklistMapper {
                 blacklist.getIdNumber(),
                 blacklist.getReason(),
                 blacklist.getStatus(),
-                blacklist.getAddedBy(),
-                blacklist.getAddedAt(),
-                blacklist.getRemovedAt(),
-                blacklist.getRemovedBy()
+                blacklist.getCreatedBy(),
+                blacklist.getCreatedAt(),
+                blacklist.getUpdatedAt(),
+                blacklist.getUpdatedBy()
         );
     }
 }
