@@ -11,4 +11,5 @@ public interface VisitBadgeRepository
         extends JpaRepository<VisitBadge, String> {
 
     Optional<VisitBadge> findByVisit_Id(String visitId);
+    Optional<VisitBadge> findByQrContainingToken(String qrContainingToken);
 }

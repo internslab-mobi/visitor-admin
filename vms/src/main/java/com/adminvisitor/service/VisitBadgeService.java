@@ -77,4 +77,33 @@ public class VisitBadgeService {
 
         visitBadgeRepository.save(badge);
     }
+
+    @Transactional(readOnly = true)
+    public BadgeStatus validateQrToken(String qrToken) {
+
+        VisitBadge badge =
+                visitBadgeRepository
+                        .findByQrContainingToken(qrToken)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Invalid QR code"
+                                )
+                        );
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (badge.getStatus() != BadgeStatus.ACTIVE) {
+            return BadgeStatus.INVALID;
+        }
+
+        if (now.isBefore(badge.getValidFrom())) {
+            return BadgeStatus.INVALID;
+        }
+
+        if (now.isAfter(badge.getValidUntil())) {
+            return BadgeStatus.INVALID;
+        }
+
+        return BadgeStatus.ACTIVE;
+    }
 }

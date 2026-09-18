@@ -1,7 +1,9 @@
 package com.adminvisitor.controller;
 
+import com.adminvisitor.dto.responsedto.QrValidationResponse;
 import com.adminvisitor.entity.Visit;
 import com.adminvisitor.entity.VisitBadge;
+import com.adminvisitor.enums.BadgeStatus;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.service.EmailService;
 import com.adminvisitor.service.QrCodeService;
@@ -14,14 +16,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/test/visit-badges")
+@RequestMapping("/api/visit-badges")
 @RequiredArgsConstructor
-public class VisitBadgeTestController {
+public class VisitBadgeController {
 
     private final VisitRepository visitRepository;
     private final VisitBadgeService visitBadgeService;
     private final QrCodeService qrCodeService;
     private final EmailService emailService;
+
     @PostMapping("/{visitId}")
     public ResponseEntity<Map<String, Object>> createTestBadge(
             @PathVariable String visitId
@@ -65,5 +68,43 @@ public class VisitBadgeTestController {
         response.put("status", badge.getStatus());
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/validate")
+    public ResponseEntity<QrValidationResponse> validateQr(
+            @RequestParam String token
+    ) {
+
+        try {
+
+            BadgeStatus status =
+                    visitBadgeService.validateQrToken(token);
+
+            if (status == BadgeStatus.ACTIVE) {
+
+                return ResponseEntity.ok(
+                        new QrValidationResponse(
+                                BadgeStatus.ACTIVE,
+                                "QR code is valid"
+                        )
+                );
+            }
+
+            return ResponseEntity.ok(
+                    new QrValidationResponse(
+                            BadgeStatus.INVALID,
+                            "QR code is no longer valid"
+                    )
+            );
+
+        } catch (IllegalArgumentException exception) {
+
+            return ResponseEntity.ok(
+                    new QrValidationResponse(
+                            BadgeStatus.INVALID,
+                            "Invalid QR code"
+                    )
+            );
+        }
     }
 }
