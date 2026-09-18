@@ -11,9 +11,8 @@ import lombok.Setter;
 @Setter
 public class BlacklistRequest {
 
-    @NotNull(message = "Visitor ID is required")
-    @Positive(message = "Visitor ID must be positive")
-    private Long visitorId;
+    @NotBlank(message = "Visitor ID is required")
+    private String visitorId;
 
     @NotBlank(message = "ID type is required")
     @Size(max = 50, message = "ID type cannot exceed 50 characters")
@@ -28,6 +27,5 @@ public class BlacklistRequest {
     private String reason;
 
     @NotNull(message = "Added by is required")
-    @Positive(message = "Added by must be positive")
     private String createdBy;
 }

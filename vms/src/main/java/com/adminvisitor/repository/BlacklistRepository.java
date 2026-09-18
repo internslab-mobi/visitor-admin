@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface BlacklistRepository extends JpaRepository<Blacklist, Long> {
+public interface BlacklistRepository extends JpaRepository<Blacklist, String> {
 
     Optional<Blacklist> findByIdTypeAndIdNumberAndStatus(
             String idType,

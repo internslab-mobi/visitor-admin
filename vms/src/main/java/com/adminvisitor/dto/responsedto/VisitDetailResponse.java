@@ -8,37 +8,26 @@ import java.time.LocalDateTime;
 
 public record VisitDetailResponse(
 
-        Long visitId,
+        String visitId,
 
         String visitReference,
-
         VisitorDetails visitor,
-
         VisitorType visitorType,
-
         RegistrationType registrationType,
-
         String purpose,
-
         HostDetails host,
-
         LocalDateTime expectedArrivalAt,
-
         LocalDateTime expectedDepartureAt,
-
         String remarks,
-
         ProofDetails proof,
-
         VisitStatus status,
-
         AuditDetails audit
 
 ) {
 
     public record VisitorDetails(
 
-            Long visitorId,
+            String visitorId,
 
             String firstName,
 

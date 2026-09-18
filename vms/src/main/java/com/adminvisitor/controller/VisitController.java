@@ -45,7 +45,7 @@ public class VisitController {
             VisitView view,
 
             @RequestParam(required = false)
-            Long visitorId,
+            String visitorId,
 
             @RequestParam(required = false)
             String visitorName,
@@ -90,7 +90,7 @@ public class VisitController {
 
     @GetMapping("/{visitId}")
     public ResponseEntity<VisitDetailResponse> getVisitDetails(
-            @PathVariable Long visitId
+            @PathVariable String visitId
     ) {
 
         VisitDetailResponse response =

@@ -22,7 +22,6 @@ import com.adminvisitor.enums.VisitView;
 import com.adminvisitor.specification.VisitSpecification;
 import org.springframework.data.domain.Sort;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 import java.time.LocalDateTime;
@@ -37,6 +36,7 @@ public class VisitService {
     private final VisitRepository visitRepository;
     private final VisitorRepository visitorRepository;
     private final EmailService emailService;
+    private final IdGeneratorService idGeneratorService;
 
     @Transactional
     public RegistrationResponse register(RegistrationRequest request) {
@@ -55,6 +55,10 @@ public class VisitService {
 
         // 2. Create Visit.
         Visit visit = new Visit();
+
+        visit.setId(
+                idGeneratorService.generateId("VISIT", "VIS")
+        );
 
         visit.setVisitReference(generateVisitReference());
 
@@ -213,6 +217,9 @@ public class VisitService {
          */
         Visitor newVisitor = new Visitor();
 
+        newVisitor.setId(
+                idGeneratorService.generateId("VISITOR", "  VTR")
+        );
         newVisitor.setFirstName(request.firstName());
         newVisitor.setLastName(request.lastName());
         newVisitor.setEmail(email);
@@ -294,7 +301,7 @@ public class VisitService {
 
     public List<VisitDashboardResponse> getDashboardVisits(
             VisitView view,
-            Long visitorId,
+            String visitorId,
             String visitorName,
             String visitorEmail,
             VisitStatus status,
@@ -425,7 +432,7 @@ public class VisitService {
         );
     }
 
-    public VisitDetailResponse getVisitDetails(Long visitId) {
+    public VisitDetailResponse getVisitDetails(String visitId) {
 
         Visit visit =
                 visitRepository.findById(visitId)

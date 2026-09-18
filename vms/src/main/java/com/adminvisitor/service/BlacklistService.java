@@ -26,6 +26,7 @@ public class BlacklistService {
     private final BlacklistRepository blacklistRepository;
     private final VisitorRepository visitorRepository;
     private final BlacklistMapper blacklistMapper;
+    private final IdGeneratorService idGeneratorService;
 
     @Transactional(readOnly = true)
     public boolean isBlacklisted(
@@ -60,6 +61,10 @@ public class BlacklistService {
         Blacklist blacklist =
                 blacklistMapper.toEntity(request, visitor);
 
+        blacklist.setId(
+                idGeneratorService.generateId("BLACKLIST", "BL")
+        );
+
         blacklist.setStatus(BlacklistStatus.ACTIVE);
 
         Blacklist savedBlacklist =
@@ -69,7 +74,7 @@ public class BlacklistService {
     }
 
     public BlacklistResponse removeFromBlacklist(
-            Long blacklistId,
+            String blacklistId,
             String removedBy) {
 
         Blacklist blacklist =
@@ -105,7 +110,7 @@ public class BlacklistService {
     }
 
     @Transactional(readOnly = true)
-    public BlacklistResponse getBlacklistById(Long id) {
+    public BlacklistResponse getBlacklistById(String id) {
 
         Blacklist blacklist =
                 blacklistRepository.findById(id)

@@ -67,7 +67,7 @@ public final class VisitSpecification {
         };
     }
 
-    public static Specification<Visit> hasVisitorId(Long visitorId) {
+    public static Specification<Visit> hasVisitorId(String visitorId) {
 
         if (visitorId == null) {
             return null;

@@ -5,22 +5,14 @@ import com.adminvisitor.enums.VisitorType;
 
 public record VisitDashboardResponse(
 
-        Long visitId,
-
+        String visitId,
         String visitReference,
-
-        Long visitorId,
-
+        String visitorId,
         String visitorName,
-
         String companyName,
-
         VisitorType visitorType,
-
         String purpose,
-
         String hostName,
-
         VisitStatus status
 
 ) {
