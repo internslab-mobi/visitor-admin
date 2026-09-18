@@ -256,4 +256,27 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(errorResponse);
     }
+
+
+    @ExceptionHandler(BadgeAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleBadgeAlreadyExists(
+            BadgeAlreadyExistsException exception) {
+
+        log.warn(
+                "Visitor badge already exists: {}",
+                exception.getMessage()
+        );
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                exception.getMessage(),
+                null
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(errorResponse);
+    }
 }
