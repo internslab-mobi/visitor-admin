@@ -2,10 +2,7 @@ package com.adminvisitor.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,7 +33,7 @@ public class Visitor extends BaseEntity {
     @Column(name = "mobile_number", nullable = false, unique = true, length = 20)
     private String mobileNumber;
 
-    @Column(name = "company_name", nullable = false, length = 150)
+    @Column(name = "company_name", length = 150)
     private String companyName;
 
     @Column(name = "cooldown_until")

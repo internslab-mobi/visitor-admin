@@ -5,14 +5,13 @@ import com.adminvisitor.dto.responsedto.RegistrationResponse;
 import com.adminvisitor.dto.responsedto.VisitDashboardResponse;
 import com.adminvisitor.dto.responsedto.VisitDetailResponse;
 import com.adminvisitor.service.VisitService;
+import com.adminvisitor.enums.VisitStatus;
+import com.adminvisitor.enums.VisitView;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.adminvisitor.dto.responsedto.VisitResponse;
-import com.adminvisitor.enums.VisitStatus;
-import com.adminvisitor.enums.VisitView;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -95,6 +94,17 @@ public class VisitController {
 
         VisitDetailResponse response =
                 visitService.getVisitDetails(visitId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{visitId}/cancel")
+    public ResponseEntity<VisitDetailResponse> cancelVisit(
+            @PathVariable String visitId
+    ) {
+
+        VisitDetailResponse response =
+                visitService.cancelVisit(visitId);
 
         return ResponseEntity.ok(response);
     }

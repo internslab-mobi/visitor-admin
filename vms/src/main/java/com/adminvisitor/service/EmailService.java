@@ -116,7 +116,7 @@ public class EmailService {
         }
     }
 
-
+    @Async
     public void sendVisitBadgeEmail(
             Visit visit,
             VisitBadge badge,
@@ -141,18 +141,15 @@ public class EmailService {
         );
 
         context.setVariable(
-                "hostId",
-                visit.getHost()
+                "hostName",
+                visit.getHost().getFirstName()
+                        + " "
+                        + visit.getHost().getLastName()
         );
 
         context.setVariable(
                 "issuedAt",
                 badge.getIssuedAt().format(formatter)
-        );
-
-        context.setVariable(
-                "validFrom",
-                badge.getValidFrom().format(formatter)
         );
 
         context.setVariable(
@@ -221,6 +218,84 @@ public class EmailService {
 
             throw new IllegalStateException(
                     "Failed to prepare visitor badge email",
+                    exception
+            );
+        }
+    }
+
+    @Async
+    public void sendVisitCancellationEmail(Visit visit) {
+
+        DateTimeFormatter formatter =
+                DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
+
+        String visitorName =
+                visit.getVisitor().getFirstName()
+                        + " "
+                        + visit.getVisitor().getLastName();
+
+        String hostName =
+                visit.getHost().getFirstName()
+                        + " "
+                        + visit.getHost().getLastName();
+
+        Context context = new Context();
+
+        context.setVariable("visitorName", visitorName);
+        context.setVariable("visitReference", visit.getVisitReference());
+        context.setVariable("purpose", visit.getPurpose());
+
+        context.setVariable(
+                "expectedArrival",
+                visit.getExpectedArrivalAt().format(formatter)
+        );
+
+        context.setVariable(
+                "expectedDeparture",
+                visit.getExpectedDepartureAt().format(formatter)
+        );
+
+        context.setVariable("hostName", hostName);
+
+        String htmlBody = templateEngine.process(
+                "emails/visit-cancellation",
+                context
+        );
+
+        try {
+
+            MimeMessage message =
+                    mailSender.createMimeMessage();
+
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(
+                            message,
+                            true,
+                            "UTF-8"
+                    );
+
+            helper.setFrom(fromEmail);
+
+            helper.setTo(
+                    visit.getVisitor().getEmail()
+            );
+
+            helper.setSubject(
+                    "Visit Cancellation - "
+                            + visit.getVisitReference()
+            );
+
+            helper.setText(
+                    htmlBody,
+                    true
+            );
+
+            mailSender.send(message);
+
+        } catch (MessagingException exception) {
+
+            throw new IllegalStateException(
+                    "Failed to prepare visit cancellation email",
                     exception
             );
         }

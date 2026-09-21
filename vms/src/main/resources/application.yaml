@@ -2,10 +2,11 @@ spring:
   application:
     name: vms
 
+#   Original company/shared database configuration
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+     url: ${DB_URL}
+     username: ${DB_USERNAME}
+     password: ${DB_PASSWORD}
 
   mail:
     host: smtp.gmail.com
@@ -18,12 +19,20 @@ spring:
           auth: true
           starttls:
             enable: true
+            required: true
+          connectiontimeout: 6000
+          timeout: 6000
+          writetimeout: 6000
+
+app:
+  cors:
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:4200}
 
 vms:
   notification:
-        host-email: ${VMS_HOST_EMAIL}
-        host-name: ${VMS_HOST_NAME}
-        department-name: ${VMS_DEPARTMENT_NAME}
+    host-email: ${VMS_HOST_EMAIL}
+    host-name: ${VMS_HOST_NAME}
+    department-name: ${VMS_DEPARTMENT_NAME}
 
 server:
   port: 8092
@@ -31,4 +40,3 @@ server:
 logging:
   level:
     com.adminvisitor: DEBUG
-
