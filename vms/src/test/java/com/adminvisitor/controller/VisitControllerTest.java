@@ -1,90 +1,351 @@
 //package com.adminvisitor.controller;
 //
-//import com.adminvisitor.dto.requestdto.RegistrationRequest;
-//import com.adminvisitor.dto.responsedto.RegistrationResponse;
-//import com.adminvisitor.enums.RegistrationType;
-//import com.adminvisitor.enums.VisitStatus;
-//import com.adminvisitor.enums.VisitorType;
-//import com.adminvisitor.service.VisitService;
+//import com.adminvisitor.entity.Visit;
+//import com.adminvisitor.entity.VisitBadge;
+//import com.adminvisitor.enums.BadgeStatus;
+//import com.adminvisitor.exception.BadgeAlreadyExistsException;
+//import com.adminvisitor.exception.GlobalExceptionHandler;
+//import com.adminvisitor.exception.ResourceNotFoundException;
+//import com.adminvisitor.repository.VisitRepository;
+//import com.adminvisitor.service.EmailService;
+//import com.adminvisitor.service.QrCodeService;
+//import com.adminvisitor.service.VisitBadgeService;
 //import org.junit.jupiter.api.Test;
-//import org.junit.jupiter.api.extension.ExtendWith;
-//import org.mockito.InjectMocks;
-//import org.mockito.Mock;
-//import org.mockito.junit.jupiter.MockitoExtension;
-//import org.springframework.http.HttpStatus;
-//import org.springframework.http.ResponseEntity;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+//import org.springframework.context.annotation.Import;
+//import org.springframework.test.context.bean.override.mockito.MockitoBean;
+//import org.springframework.test.web.servlet.MockMvc;
 //
-//import java.time.LocalDate;
 //import java.time.LocalDateTime;
-//import java.time.LocalTime;
+//import java.util.Optional;
 //
-//import static org.junit.jupiter.api.Assertions.assertEquals;
-//import static org.junit.jupiter.api.Assertions.assertSame;
-//import static org.mockito.Mockito.verify;
-//import static org.mockito.Mockito.verifyNoMoreInteractions;
-//import static org.mockito.Mockito.when;
+//import static org.mockito.Mockito.*;
+//import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+//import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+//import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+//import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 //
-//@ExtendWith(MockitoExtension.class)
-//class VisitControllerTest {
+//@WebMvcTest(VisitBadgeController.class)
+//@Import(GlobalExceptionHandler.class)
+//class VisitBadgeControllerTest {
 //
-//    @Mock
-//    private VisitService visitService;
+//    @Autowired
+//    private MockMvc mockMvc;
 //
-//    @InjectMocks
-//    private VisitController visitController;
+//    @MockitoBean
+//    private VisitRepository visitRepository;
+//
+//    @MockitoBean
+//    private VisitBadgeService visitBadgeService;
+//
+//    @MockitoBean
+//    private QrCodeService qrCodeService;
+//
+//    @MockitoBean
+//    private EmailService emailService;
+//
+//
+//    // =========================================================
+//    // CREATE BADGE - SUCCESS
+//    // =========================================================
 //
 //    @Test
-//    void register_shouldReturnCreatedResponse() {
+//    void createBadge_shouldReturn200_whenBadgeCreatedSuccessfully()
+//            throws Exception {
 //
-//        RegistrationRequest request = new RegistrationRequest(
-//                RegistrationType.PRE_REGISTRATION,
-//                VisitorType.GUEST,
-//                "John",
-//                "Doe",
-//                "john.doe@example.com",
-//                "9876543210",
-//                "ABC Technologies",
-//                "Business meeting",
-//                "EMP001",
-//                LocalDate.of(2026, 9, 20),
-//                LocalTime.of(10, 0),
-//                LocalTime.of(11, 0),
-//                "First-time visitor",
-//                null,
-//                null
-//        );
+//        String visitId = "vt-001";
 //
-//        RegistrationResponse expectedResponse = new RegistrationResponse(
-//                "VIS-001",
-//                "VIS-20260920100000-ABC12345",
-//                "VTR-001",
-//                "John",
-//                "Doe",
-//                "john.doe@example.com",
-//                "9876543210",
-//                "ABC Technologies",
-//                VisitorType.GUEST,
-//                RegistrationType.PRE_REGISTRATION,
-//                "Business meeting",
-//                "EMP001",
-//                "DT001",
-//                LocalDateTime.of(2026, 9, 20, 10, 0),
-//                LocalDateTime.of(2026, 9, 20, 11, 0),
-//                "First-time visitor",
-//                VisitStatus.REGISTERED,
-//                "Visitor pre-registered successfully"
-//        );
+//        Visit visit = mock(Visit.class);
+//        VisitBadge badge = mock(VisitBadge.class);
 //
-//        when(visitService.register(request))
-//                .thenReturn(expectedResponse);
+//        //When my code asks the repository for this visit ID,
+//        // pretend that the visit was found and return this fake visit object.
+//        when(visitRepository.findById(visitId))
+//                .thenReturn(Optional.of(visit));
 //
-//        ResponseEntity<RegistrationResponse> actualResponse =
-//                visitController.register(request);
+//        when(visitBadgeService.createBadge(visit))
+//                .thenReturn(badge);
 //
-//        assertEquals(HttpStatus.CREATED, actualResponse.getStatusCode());
-//        assertSame(expectedResponse, actualResponse.getBody());
+//        when(badge.getId())
+//                .thenReturn("VB-001");
 //
-//        verify(visitService).register(request);
-//        verifyNoMoreInteractions(visitService);
+//        when(badge.getVisit())
+//                .thenReturn(visit);
+//
+//        when(visit.getId())
+//                .thenReturn(visitId);
+//
+//        when(badge.getQrContainingToken())
+//                .thenReturn("qr-token-001");
+//
+//        when(qrCodeService.generateQrCode("qr-token-001"))
+//                .thenReturn("base64-qr-code");
+//
+//        LocalDateTime issuedAt =
+//                LocalDateTime.of(2026, 9, 21, 10, 0);
+//
+//        LocalDateTime validUntil =
+//                LocalDateTime.of(2026, 9, 21, 23, 59, 59);
+//
+//        when(badge.getIssuedAt())
+//                .thenReturn(issuedAt);
+//
+//        when(badge.getValidUntil())
+//                .thenReturn(validUntil);
+//
+//        when(badge.getStatus())
+//                .thenReturn(BadgeStatus.ACTIVE);
+//
+//
+//        mockMvc.perform(
+//                        post("/api/visit-badges/{visitId}", visitId)
+//                )
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.badgeId").value("VB-001"))
+//                .andExpect(jsonPath("$.visitId").value("vt-001"))
+//                .andExpect(jsonPath("$.qrContainingToken")
+//                        .value("qr-token-001"))
+//                .andExpect(jsonPath("$.qrCode")
+//                        .value("base64-qr-code"))
+//                .andExpect(jsonPath("$.status")
+//                        .value("ACTIVE"));
+//
+//
+//        verify(visitRepository)
+//                .findById(visitId);
+//
+//        verify(visitBadgeService)
+//                .createBadge(visit);
+//
+//        verify(qrCodeService)
+//                .generateQrCode("qr-token-001");
+//
+//        verify(emailService)
+//                .sendVisitBadgeEmail(
+//                        visit,
+//                        badge,
+//                        "base64-qr-code",
+//                        null
+//                );
+//    }
+//
+//
+//    // =========================================================
+//    // CREATE BADGE - VISIT NOT FOUND
+//    // =========================================================
+//
+//    @Test
+//    void createBadge_shouldReturn404_whenVisitDoesNotExist()
+//            throws Exception {
+//
+//        String visitId = "vt-999";
+//
+//        when(visitRepository.findById(visitId))
+//                .thenReturn(Optional.empty());
+//
+//
+//        mockMvc.perform(
+//                        post("/api/visit-badges/{visitId}", visitId)
+//                )
+//                .andExpect(status().isNotFound())
+//                .andExpect(jsonPath("$.status")
+//                        .value(404))
+//                .andExpect(jsonPath("$.error")
+//                        .value("Not Found"))
+//                .andExpect(jsonPath("$.message")
+//                        .value("Visit not found with id: vt-999"));
+//
+//
+//        verify(visitRepository)
+//                .findById(visitId);
+//
+//        verifyNoInteractions(visitBadgeService);
+//        verifyNoInteractions(qrCodeService);
+//        verifyNoInteractions(emailService);
+//    }
+//
+//
+//    // =========================================================
+//    // CREATE BADGE - BADGE ALREADY EXISTS
+//    // =========================================================
+//
+//    @Test
+//    void createBadge_shouldReturn409_whenBadgeAlreadyExists()
+//            throws Exception {
+//
+//        String visitId = "vt-001";
+//
+//        Visit visit = mock(Visit.class);
+//
+//        when(visitRepository.findById(visitId))
+//                .thenReturn(Optional.of(visit));
+//
+//        when(visitBadgeService.createBadge(visit))
+//                .thenThrow(
+//                        new BadgeAlreadyExistsException(
+//                                "Badge already exists for visit: " + visitId
+//                        )
+//                );
+//
+//
+//        mockMvc.perform(
+//                        post("/api/visit-badges/{visitId}", visitId)
+//                )
+//                .andExpect(status().isConflict())
+//                .andExpect(jsonPath("$.status")
+//                        .value(409))
+//                .andExpect(jsonPath("$.error")
+//                        .value("Conflict"))
+//                .andExpect(jsonPath("$.message")
+//                        .value("Badge already exists for visit: vt-001"));
+//
+//
+//        verify(visitRepository)
+//                .findById(visitId);
+//
+//        verify(visitBadgeService)
+//                .createBadge(visit);
+//
+//        verifyNoInteractions(qrCodeService);
+//        verifyNoInteractions(emailService);
+//    }
+//
+//
+//    // =========================================================
+//    // CREATE BADGE - UNEXPECTED ERROR
+//    // =========================================================
+//
+//    @Test
+//    void createBadge_shouldReturn500_whenUnexpectedErrorOccurs()
+//            throws Exception {
+//
+//        String visitId = "vt-001";
+//
+//        Visit visit = mock(Visit.class);
+//
+//        when(visitRepository.findById(visitId))
+//                .thenReturn(Optional.of(visit));
+//
+//        when(visitBadgeService.createBadge(visit))
+//                .thenThrow(
+//                        new RuntimeException("Unexpected error")
+//                );
+//
+//
+//        mockMvc.perform(
+//                        post("/api/visit-badges/{visitId}", visitId)
+//                )
+//                .andExpect(status().isInternalServerError())
+//                .andExpect(jsonPath("$.status")
+//                        .value(500))
+//                .andExpect(jsonPath("$.error")
+//                        .value("Internal Server Error"))
+//                .andExpect(jsonPath("$.message")
+//                        .value("An unexpected error occurred"));
+//
+//
+//        verify(visitRepository)
+//                .findById(visitId);
+//
+//        verify(visitBadgeService)
+//                .createBadge(visit);
+//
+//        verifyNoInteractions(qrCodeService);
+//        verifyNoInteractions(emailService);
+//    }
+//
+//
+//    // =========================================================
+//    // VALIDATE QR - ACTIVE
+//    // =========================================================
+//
+//    @Test
+//    void validateQr_shouldReturn200_whenQrIsActive()
+//            throws Exception {
+//
+//        String token = "qr-token-001";
+//
+//        when(visitBadgeService.validateQrToken(token))
+//                .thenReturn(BadgeStatus.ACTIVE);
+//
+//
+//        mockMvc.perform(
+//                        get("/api/visit-badges/validate")
+//                                .param("token", token)
+//                )
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.status")
+//                        .value("ACTIVE"))
+//                .andExpect(jsonPath("$.message")
+//                        .value("QR code is valid"));
+//
+//
+//        verify(visitBadgeService)
+//                .validateQrToken(token);
+//    }
+//
+//
+//    // =========================================================
+//    // VALIDATE QR - INVALID
+//    // =========================================================
+//
+//    @Test
+//    void validateQr_shouldReturn200_whenQrIsInvalid()
+//            throws Exception {
+//
+//        String token = "qr-token-expired";
+//
+//        when(visitBadgeService.validateQrToken(token))
+//                .thenReturn(BadgeStatus.INVALID);
+//
+//
+//        mockMvc.perform(
+//                        get("/api/visit-badges/validate")
+//                                .param("token", token)
+//                )
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.status")
+//                        .value("INVALID"))
+//                .andExpect(jsonPath("$.message")
+//                        .value("QR code is no longer valid"));
+//
+//
+//        verify(visitBadgeService)
+//                .validateQrToken(token);
+//    }
+//
+//
+//    // =========================================================
+//    // VALIDATE QR - TOKEN DOES NOT EXIST / INVALID TOKEN
+//    // =========================================================
+//
+//    @Test
+//    void validateQr_shouldReturn200_whenTokenDoesNotExist()
+//            throws Exception {
+//
+//        String token = "invalid-token";
+//
+//        when(visitBadgeService.validateQrToken(token))
+//                .thenThrow(
+//                        new IllegalArgumentException(
+//                                "Invalid QR token"
+//                        )
+//                );
+//
+//
+//        mockMvc.perform(
+//                        get("/api/visit-badges/validate")
+//                                .param("token", token)
+//                )
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.status")
+//                        .value("INVALID"))
+//                .andExpect(jsonPath("$.message")
+//                        .value("Invalid QR code"));
+//
+//
+//        verify(visitBadgeService)
+//                .validateQrToken(token);
 //    }
 //}
