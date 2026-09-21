@@ -16,19 +16,11 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Employee  {
+public class Employee {
 
     @Id
     @Column(name = "id", nullable = false, length = 20)
     private String id;
-
-    @Column(
-            name = "employee_code",
-            nullable = false,
-            unique = true,
-            length = 50
-    )
-    private String employeeCode;
 
     @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;

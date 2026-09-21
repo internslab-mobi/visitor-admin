@@ -20,5 +20,5 @@ public class IdSequence {
     private String sequenceName;
 
     @Column(name = "next_value", nullable = false)
-    private Long nextValue;
+    private long nextValue;
 }

@@ -10,9 +10,8 @@ import java.util.Optional;
 @Repository
 public interface BlacklistRepository extends JpaRepository<Blacklist, String> {
 
-    Optional<Blacklist> findByIdTypeAndIdNumberAndStatus(
-            String idType,
-            String idNumber,
+    Optional<Blacklist> findByVisitorIdAndStatus(
+            String visitorId,
             BlacklistStatus status
     );
 }

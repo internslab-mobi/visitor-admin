@@ -9,39 +9,21 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(
-        name = "vms_visitbadge",
-        indexes = {
-                @Index(
-                        name = "idx_vms_visitbadge_visitor_id",
-                        columnList = "visitor_id"
-                ),
-                @Index(
-                        name = "idx_vms_visitbadge_visit_id",
-                        columnList = "visit_id"
-                )
-        }
-)
+@Table(name = "vms_visitbadge")
 @Getter
 @Setter
 @NoArgsConstructor
 public class VisitBadge extends BaseEntity {
 
     @Id
-    @Column(name = "id", length = 20)
+    @Column(name = "id", nullable = false, length = 20)
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
-            name = "visitor_id",
-            nullable = false
-    )
-    private Visitor visitor;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
             name = "visit_id",
-            nullable = false
+            nullable = false,
+            unique = true
     )
     private Visit visit;
 
@@ -55,9 +37,6 @@ public class VisitBadge extends BaseEntity {
 
     @Column(name = "issued_at", nullable = false)
     private LocalDateTime issuedAt;
-
-    @Column(name = "valid_from", nullable = false)
-    private LocalDateTime validFrom;
 
     @Column(name = "valid_until", nullable = false)
     private LocalDateTime validUntil;

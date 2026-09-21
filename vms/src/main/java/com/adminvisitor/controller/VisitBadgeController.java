@@ -4,8 +4,8 @@ import com.adminvisitor.dto.responsedto.QrValidationResponse;
 import com.adminvisitor.entity.Visit;
 import com.adminvisitor.entity.VisitBadge;
 import com.adminvisitor.enums.BadgeStatus;
+import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.VisitRepository;
-import com.adminvisitor.service.EmailService;
 import com.adminvisitor.service.QrCodeService;
 import com.adminvisitor.service.VisitBadgeService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,6 @@ public class VisitBadgeController {
     private final VisitRepository visitRepository;
     private final VisitBadgeService visitBadgeService;
     private final QrCodeService qrCodeService;
-    private final EmailService emailService;
 
     @PostMapping("/{visitId}")
     public ResponseEntity<Map<String, Object>> createTestBadge(
@@ -32,7 +31,7 @@ public class VisitBadgeController {
 
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new ResourceNotFoundException(
                                 "Visit not found with id: " + visitId
                         )
                 );
@@ -45,17 +44,12 @@ public class VisitBadgeController {
                         badge.getQrContainingToken()
                 );
 
-        emailService.sendVisitBadgeEmail(
-                visit,
-                badge,
-                qrCode,
-                null //That is our temporary visitor-photo value.
-        );
+
         Map<String, Object> response =
                 new LinkedHashMap<>();
 
         response.put("badgeId", badge.getId());
-        response.put("visitorId", badge.getVisitor().getId());
+
         response.put("visitId", badge.getVisit().getId());
         response.put(
                 "qrContainingToken",
@@ -63,7 +57,6 @@ public class VisitBadgeController {
         );
         response.put("qrCode", qrCode);
         response.put("issuedAt", badge.getIssuedAt());
-        response.put("validFrom", badge.getValidFrom());
         response.put("validUntil", badge.getValidUntil());
         response.put("status", badge.getStatus());
 
