@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 public record VisitDetailResponse(
 
         String visitId,
-
         String visitReference,
         VisitorDetails visitor,
         VisitorType visitorType,
@@ -18,8 +17,9 @@ public record VisitDetailResponse(
         HostDetails host,
         LocalDateTime expectedArrivalAt,
         LocalDateTime expectedDepartureAt,
+        LocalDateTime checkedInAt,
+        LocalDateTime checkedOutAt,
         String remarks,
-        ProofDetails proof,
         VisitStatus status,
         AuditDetails audit
 
@@ -51,17 +51,6 @@ public record VisitDetailResponse(
             String departmentId,
 
             String departmentName
-
-    ) {
-    }
-
-    public record ProofDetails(
-
-            String proofType,
-
-            String proofNumber,
-
-            String proofImagePath
 
     ) {
     }

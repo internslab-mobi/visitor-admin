@@ -13,7 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Department  {
+public class Department {
 
     @Id
     @Column(name = "id", nullable = false, length = 20)
@@ -34,9 +34,6 @@ public class Department  {
             length = 100
     )
     private String departmentName;
-
-    @Column(name = "description", length = 255)
-    private String description;
 
     @Column(name = "status", nullable = false, length = 20)
     private String status;

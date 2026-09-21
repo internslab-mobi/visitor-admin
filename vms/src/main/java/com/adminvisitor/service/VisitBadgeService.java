@@ -47,11 +47,9 @@ public class VisitBadgeService {
         VisitBadge badge = new VisitBadge();
 
         badge.setId(badgeId);
-        badge.setVisitor(visit.getVisitor());
         badge.setVisit(visit);
         badge.setQrContainingToken(qrToken);
         badge.setIssuedAt(issuedAt);
-        badge.setValidFrom(validFrom);
         badge.setValidUntil(validUntil);
         badge.setStatus(BadgeStatus.ACTIVE);
 
@@ -93,10 +91,6 @@ public class VisitBadgeService {
         LocalDateTime now = LocalDateTime.now();
 
         if (badge.getStatus() != BadgeStatus.ACTIVE) {
-            return BadgeStatus.INVALID;
-        }
-
-        if (now.isBefore(badge.getValidFrom())) {
             return BadgeStatus.INVALID;
         }
 

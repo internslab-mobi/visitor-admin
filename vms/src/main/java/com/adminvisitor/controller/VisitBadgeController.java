@@ -55,7 +55,7 @@ public class VisitBadgeController {
                 new LinkedHashMap<>();
 
         response.put("badgeId", badge.getId());
-        response.put("visitorId", badge.getVisitor().getId());
+
         response.put("visitId", badge.getVisit().getId());
         response.put(
                 "qrContainingToken",
@@ -63,7 +63,6 @@ public class VisitBadgeController {
         );
         response.put("qrCode", qrCode);
         response.put("issuedAt", badge.getIssuedAt());
-        response.put("validFrom", badge.getValidFrom());
         response.put("validUntil", badge.getValidUntil());
         response.put("status", badge.getStatus());
 

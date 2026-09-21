@@ -110,7 +110,6 @@ public class VisitService {
         }
 
         visit.setHost(employee);
-        visit.setDepartment(employee.getDepartment());
 
         LocalDateTime expectedArrivalAt =
                 LocalDateTime.of(
@@ -129,12 +128,28 @@ public class VisitService {
 
         visit.setRemarks(request.remarks());
 
+        List<VisitStatus> activeStatuses = List.of(
+                VisitStatus.REGISTERED,
+                VisitStatus.CHECKED_IN
+        );
+
+        List<Visit> overlappingVisits = visitRepository.findOverlappingVisits(
+                visitor.getId(),
+                expectedArrivalAt,
+                expectedDepartureAt,
+                activeStatuses
+        );
+
+        if (!overlappingVisits.isEmpty()) {
+            throw new BusinessRuleException(
+                    "Visitor already has an active visit overlapping the requested time"
+            );
+        }
+
         /*
          * ID proof is optional for now.
          * Actual verification will happen during check-in.
          */
-        visit.setProofType(request.proofType());
-        visit.setProofNumber(request.proofNumber());
 
         visit.setStatus(VisitStatus.REGISTERED);
 
@@ -180,7 +195,6 @@ public class VisitService {
                 savedVisit.getRegistrationType(),
                 savedVisit.getPurpose(),
                 savedVisit.getHost().getId(),
-                savedVisit.getDepartment().getId(),
                 savedVisit.getExpectedArrivalAt(),
                 savedVisit.getExpectedDepartureAt(),
                 savedVisit.getRemarks(),
@@ -473,7 +487,6 @@ public class VisitService {
         String departmentName =
                 employee.getDepartment().getDepartmentName();
 
-
         return new VisitDetailResponse(
 
                 // Visit information
@@ -491,16 +504,14 @@ public class VisitService {
                 ),
 
                 visit.getVisitorType(),
-
                 visit.getRegistrationType(),
-
                 visit.getPurpose(),
 
                 // Host information
                 new VisitDetailResponse.HostDetails(
-                        visit.getHost().getId(),
+                        employee.getId(),
                         hostName,
-                        visit.getDepartment().getId(),
+                        employee.getDepartment().getId(),
                         departmentName
                 ),
 
@@ -508,17 +519,12 @@ public class VisitService {
                 visit.getExpectedArrivalAt(),
                 visit.getExpectedDepartureAt(),
 
+                // Actual visit times
+                visit.getCheckedInAt(),
+                visit.getCheckedOutAt(),
+
                 // Remarks
                 visit.getRemarks(),
-
-                // ID proof
-                new VisitDetailResponse.ProofDetails(
-                        visit.getProofType() != null
-                                ? visit.getProofType().name()
-                                : null,
-                        visit.getProofNumber(),
-                        visit.getProofImagePath()
-                ),
 
                 // Status
                 visit.getStatus(),
@@ -531,5 +537,37 @@ public class VisitService {
                         visit.getUpdatedBy()
                 )
         );
+    }
+
+    @Transactional
+    public VisitDetailResponse cancelVisit(String visitId) {
+
+        Visit visit = visitRepository.findById(visitId)
+                .orElseThrow(() ->
+                        new BusinessRuleException(
+                                "Visit not found with id: " + visitId
+                        )
+                );
+
+        if (visit.getStatus() != VisitStatus.REGISTERED) {
+            throw new BusinessRuleException(
+                    "Only a registered visit can be cancelled"
+            );
+        }
+
+        visit.setStatus(VisitStatus.CANCELLED);
+
+        Visit cancelledVisit = visitRepository.save(visit);
+
+        emailService.sendVisitCancellationEmail(cancelledVisit);
+
+        log.info(
+                "Visit cancelled successfully. visitId={}, visitReference={}, visitorId={}",
+                cancelledVisit.getId(),
+                cancelledVisit.getVisitReference(),
+                cancelledVisit.getVisitor().getId()
+        );
+
+        return toVisitDetailResponse(cancelledVisit);
     }
 }

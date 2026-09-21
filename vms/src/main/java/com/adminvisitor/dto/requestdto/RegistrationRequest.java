@@ -36,7 +36,6 @@ public record RegistrationRequest(
         )
         String mobileNumber,
 
-        @NotBlank(message = "Company name is required")
         @Size(max = 150, message = "Company name cannot exceed 150 characters")
         String companyName,
 

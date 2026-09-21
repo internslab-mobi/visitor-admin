@@ -1,6 +1,5 @@
 package com.adminvisitor.entity;
 
-import com.adminvisitor.enums.ProofType;
 import com.adminvisitor.enums.RegistrationType;
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.enums.VisitorType;
@@ -9,10 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -63,28 +59,20 @@ public class Visit extends BaseEntity {
     @JoinColumn(name = "host_id", nullable = false)
     private Employee host;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department_id")
-    private Department department;
-
     @Column(name = "expected_arrival_at", nullable = false)
     private LocalDateTime expectedArrivalAt;
 
     @Column(name = "expected_departure_at")
     private LocalDateTime expectedDepartureAt;
 
+    @Column(name = "checked_in_at")
+    private LocalDateTime checkedInAt;
+
+    @Column(name = "checked_out_at")
+    private LocalDateTime checkedOutAt;
+
     @Column(name = "remarks", length = 1000)
     private String remarks;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "proof_type", length = 30)
-    private ProofType proofType;
-
-    @Column(name = "proof_number", length = 100)
-    private String proofNumber;
-
-    @Column(name = "proof_image_path", length = 500)
-    private String proofImagePath;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)

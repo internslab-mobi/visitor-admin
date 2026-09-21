@@ -29,14 +29,11 @@ public class BlacklistService {
     private final IdGeneratorService idGeneratorService;
 
     @Transactional(readOnly = true)
-    public boolean isBlacklisted(
-            String idType,
-            String idNumber) {
+    public boolean isBlacklisted(String visitorId) {
 
         return blacklistRepository
-                .findByIdTypeAndIdNumberAndStatus(
-                        idType,
-                        idNumber,
+                .findByVisitorIdAndStatus(
+                        visitorId,
                         BlacklistStatus.ACTIVE
                 )
                 .isPresent();
@@ -45,9 +42,9 @@ public class BlacklistService {
     public BlacklistResponse addToBlacklist(
             BlacklistRequest request) {
 
-        if (isBlacklisted(request.getIdType(), request.getIdNumber())) {
+        if (isBlacklisted(request.getVisitorId())) {
             throw new BlacklistAlreadyExistsException(
-                    "Person is already in blacklist"
+                    "Visitor is already in blacklist"
             );
         }
 

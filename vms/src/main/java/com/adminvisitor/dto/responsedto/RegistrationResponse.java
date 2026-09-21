@@ -20,7 +20,6 @@ public record RegistrationResponse(
         RegistrationType registrationType,
         String purpose,
         String hostId,
-        String departmentId,
         LocalDateTime expectedArrivalAt,
         LocalDateTime expectedDepartureAt,
         String remarks,
