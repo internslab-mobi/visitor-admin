@@ -416,32 +416,32 @@ public class VisitService {
                 .toList();
     }
 
-    private VisitDashboardResponse toDashboardResponse(
-            Visit visit
-    ) {
+    private VisitDashboardResponse toDashboardResponse(Visit visit) {
 
         Visitor visitor = visit.getVisitor();
 
         String visitorName =
-                visitor.getFirstName()
-                        + " "
-                        + visitor.getLastName();
+                visitor.getFirstName() + " " + visitor.getLastName();
 
-        /*
-         * Host name will be populated once the
-         * Employee module is connected.
-         */
         String hostName = null;
 
         return new VisitDashboardResponse(
                 visit.getId(),
                 visit.getVisitReference(),
+
                 visitor.getId(),
                 visitorName,
+                visitor.getEmail(),
+                visitor.getMobileNumber(),
                 visitor.getCompanyName(),
+
                 visit.getVisitorType(),
+
                 visit.getPurpose(),
                 hostName,
+
+                visit.getExpectedArrivalAt().toLocalDate(),
+
                 visit.getStatus()
         );
     }
