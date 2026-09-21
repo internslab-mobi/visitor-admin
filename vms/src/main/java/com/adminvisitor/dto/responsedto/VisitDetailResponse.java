@@ -44,11 +44,11 @@ public record VisitDetailResponse(
 
     public record HostDetails(
 
-            Long hostId,
+            String hostId,
 
             String hostName,
 
-            Long departmentId,
+            String departmentId,
 
             String departmentName
 

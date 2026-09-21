@@ -257,6 +257,7 @@ public class GlobalExceptionHandler {
                 .body(errorResponse);
     }
 
+
     @ExceptionHandler(BadgeAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleBadgeAlreadyExists(
             BadgeAlreadyExistsException exception) {

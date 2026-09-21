@@ -93,7 +93,8 @@
 			<artifactId>springboot4-dotenv</artifactId>
 			<version>5.1.0</version>
 		</dependency>
-<!--QR GENERATION DEPENDENCY-->
+
+		<!--QR GENERATION DEPENDENCY-->
 		<dependency>
 			<groupId>com.google.zxing</groupId>
 			<artifactId>core</artifactId>
