@@ -1,10 +1,10 @@
 package com.adminvisitor.service;
 
+import com.adminvisitor.dto.responsedto.*;
 import com.adminvisitor.dto.requestdto.RegistrationRequest;
-import com.adminvisitor.dto.responsedto.RegistrationResponse;
-import com.adminvisitor.dto.responsedto.VisitDashboardResponse;
-import com.adminvisitor.dto.responsedto.VisitDetailResponse;
+import com.adminvisitor.dto.responsedto.HostCheckInEmailData;
 import com.adminvisitor.entity.Employee;
+import com.adminvisitor.entity.VisitBadge;
 import com.adminvisitor.entity.Visit;
 import com.adminvisitor.entity.Visitor;
 import com.adminvisitor.enums.RegistrationType;
@@ -40,6 +40,8 @@ public class VisitService {
     private final EmailService emailService;
     private final IdGeneratorService idGeneratorService;
     private final EmployeeRepository employeeRepository;
+    private final VisitBadgeService visitBadgeService;
+    private final QrCodeService qrCodeService;
 
     @Transactional
     public RegistrationResponse register(RegistrationRequest request) {
@@ -539,8 +541,88 @@ public class VisitService {
         );
     }
 
+
     @Transactional
     public VisitDetailResponse cancelVisit(String visitId) {
+
+        log.info("Cancellation started. visitId={}", visitId);
+
+        Visit visit = visitRepository.findById(visitId)
+                .orElseThrow(() ->
+                        new BusinessRuleException(
+                                "Visit not found with id: " + visitId
+                        )
+                );
+
+        log.info(
+                "Visit loaded. visitId={}, status={}",
+                visit.getId(),
+                visit.getStatus()
+        );
+
+        if (visit.getStatus() != VisitStatus.REGISTERED) {
+            throw new BusinessRuleException(
+                    "Only a registered visit can be cancelled"
+            );
+        }
+
+        log.info("Setting visit status to CANCELLED");
+
+        visit.setStatus(VisitStatus.CANCELLED);
+
+        log.info("Saving cancelled visit");
+
+        Visit cancelledVisit = visitRepository.save(visit);
+
+        log.info(
+                "Cancelled visit saved. visitId={}",
+                cancelledVisit.getId()
+        );
+
+        DateTimeFormatter formatter =
+                DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
+
+        CancellationEmailData emailData =
+                new CancellationEmailData(
+                        cancelledVisit.getVisitor().getFirstName()
+                                + " "
+                                + cancelledVisit.getVisitor().getLastName(),
+
+                        cancelledVisit.getVisitor().getEmail(),
+
+                        cancelledVisit.getVisitReference(),
+
+                        cancelledVisit.getPurpose(),
+
+                        cancelledVisit.getExpectedArrivalAt()
+                                .format(formatter),
+
+                        cancelledVisit.getExpectedDepartureAt()
+                                .format(formatter),
+
+                        cancelledVisit.getHost().getFirstName()
+                                + " "
+                                + cancelledVisit.getHost().getLastName()
+                );
+
+        log.info("Sending cancellation email");
+
+        emailService.sendVisitCancellationEmail(emailData);
+
+        log.info("Cancellation email triggered");
+
+        log.info(
+                "Visit cancelled successfully. visitId={}, visitReference={}, visitorId={}",
+                cancelledVisit.getId(),
+                cancelledVisit.getVisitReference(),
+                cancelledVisit.getVisitor().getId()
+        );
+
+        return toVisitDetailResponse(cancelledVisit);
+    }
+
+    @Transactional
+    public VisitDetailResponse checkIn(String visitId) {
 
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() ->
@@ -551,23 +633,141 @@ public class VisitService {
 
         if (visit.getStatus() != VisitStatus.REGISTERED) {
             throw new BusinessRuleException(
-                    "Only a registered visit can be cancelled"
+                    "Only a registered visit can be checked in"
             );
         }
 
-        visit.setStatus(VisitStatus.CANCELLED);
+        visit.setCheckedInAt(LocalDateTime.now());
+        visit.setStatus(VisitStatus.CHECKED_IN);
 
-        Visit cancelledVisit = visitRepository.save(visit);
+        Visit checkedInVisit = visitRepository.save(visit);
 
-        emailService.sendVisitCancellationEmail(cancelledVisit);
+        VisitBadge badge =
+                visitBadgeService.createBadge(checkedInVisit);
 
-        log.info(
-                "Visit cancelled successfully. visitId={}, visitReference={}, visitorId={}",
-                cancelledVisit.getId(),
-                cancelledVisit.getVisitReference(),
-                cancelledVisit.getVisitor().getId()
+        String qrCode = qrCodeService.generateQrCode(
+                badge.getQrContainingToken()
         );
 
-        return toVisitDetailResponse(cancelledVisit);
+        log.info(
+                "QR code generated successfully. visitId={}, qrLength={}",
+                checkedInVisit.getId(),
+                qrCode.length()
+        );
+
+        DateTimeFormatter formatter =
+                DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
+
+        BadgeEmailData emailData =
+                new BadgeEmailData(
+                        checkedInVisit.getVisitor().getFirstName()
+                                + " "
+                                + checkedInVisit.getVisitor().getLastName(),
+
+                        checkedInVisit.getVisitor().getEmail(),
+
+                        checkedInVisit.getVisitReference(),
+
+                        checkedInVisit.getHost().getFirstName()
+                                + " "
+                                + checkedInVisit.getHost().getLastName(),
+
+                        badge.getIssuedAt().format(formatter),
+
+                        badge.getValidUntil().format(formatter),
+
+                        qrCode,
+
+                        null
+                );
+
+        log.info(
+                "Visitor badge created successfully. visitId={}, badgeId={}",
+                checkedInVisit.getId(),
+                badge.getId()
+        );
+
+        emailService.sendVisitBadgeEmail(emailData);
+
+        HostCheckInEmailData hostEmailData =
+                new HostCheckInEmailData(
+                        checkedInVisit.getHost().getEmail(),
+
+                        checkedInVisit.getHost().getFirstName()
+                                + " "
+                                + checkedInVisit.getHost().getLastName(),
+
+                        checkedInVisit.getVisitor().getFirstName()
+                                + " "
+                                + checkedInVisit.getVisitor().getLastName(),
+
+                        checkedInVisit.getVisitorType().name(),
+
+                        checkedInVisit.getVisitor().getCompanyName(),
+
+                        checkedInVisit.getVisitReference(),
+
+                        checkedInVisit.getPurpose(),
+
+                        checkedInVisit.getCheckedInAt()
+                                .format(formatter)
+                );
+
+        emailService.sendHostCheckInNotification(
+                hostEmailData
+        );
+
+
+        log.info(
+                "Visitor checked in successfully. visitId={}, visitReference={}, visitorId={}, checkedInAt={}",
+                checkedInVisit.getId(),
+                checkedInVisit.getVisitReference(),
+                checkedInVisit.getVisitor().getId(),
+                checkedInVisit.getCheckedInAt()
+        );
+
+        return toVisitDetailResponse(checkedInVisit);
+    }
+
+    @Transactional
+    public VisitDetailResponse checkOut(String visitId) {
+
+        log.info("Checkout started. visitId={}", visitId);
+
+        Visit visit = visitRepository.findById(visitId)
+                .orElseThrow(() ->
+                        new BusinessRuleException(
+                                "Visit not found with id: " + visitId
+                        )
+                );
+
+        log.info(
+                "Visit loaded. visitId={}, status={}",
+                visit.getId(),
+                visit.getStatus()
+        );
+
+        if (visit.getStatus() != VisitStatus.CHECKED_IN) {
+            throw new BusinessRuleException(
+                    "Only a checked-in visit can be checked out"
+            );
+        }
+
+        LocalDateTime checkedOutAt = LocalDateTime.now();
+
+        visit.setCheckedOutAt(checkedOutAt);
+        visit.setStatus(VisitStatus.CHECKED_OUT);
+
+        Visit checkedOutVisit = visitRepository.save(visit);
+
+        log.info(
+                "Visitor checked out successfully. visitId={}, visitReference={}, visitorId={}, checkedOutAt={}",
+                checkedOutVisit.getId(),
+                checkedOutVisit.getVisitReference(),
+                checkedOutVisit.getVisitor().getId(),
+                checkedOutVisit.getCheckedOutAt()
+        );
+
+        return toVisitDetailResponse(checkedOutVisit);
     }
 }

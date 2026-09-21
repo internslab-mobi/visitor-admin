@@ -108,4 +108,23 @@ public class VisitController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PatchMapping("/{visitId}/check-in")
+    public ResponseEntity<VisitDetailResponse> checkIn(
+            @PathVariable String visitId) {
+
+        return ResponseEntity.ok(
+                visitService.checkIn(visitId)
+        );
+    }
+
+    @PatchMapping("/{visitId}/check-out")
+    public ResponseEntity<VisitDetailResponse> checkOut(
+            @PathVariable String visitId) {
+
+        VisitDetailResponse response =
+                visitService.checkOut(visitId);
+
+        return ResponseEntity.ok(response);
+    }
 }

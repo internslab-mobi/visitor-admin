@@ -1,7 +1,9 @@
 package com.adminvisitor.service;
 
+import com.adminvisitor.dto.responsedto.CancellationEmailData;
 import com.adminvisitor.entity.Visit;
-import com.adminvisitor.entity.VisitBadge;
+import com.adminvisitor.dto.responsedto.BadgeEmailData;
+import com.adminvisitor.dto.responsedto.HostCheckInEmailData;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.springframework.scheduling.annotation.Async;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 
 @Service
 @RequiredArgsConstructor
@@ -117,44 +120,33 @@ public class EmailService {
     }
 
     @Async
-    public void sendVisitBadgeEmail(
-            Visit visit,
-            VisitBadge badge,
-            String qrCode,
-            String visitorPhoto
-    ) {
-
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
-
-        String visitorName =
-                visit.getVisitor().getFirstName()
-                        + " "
-                        + visit.getVisitor().getLastName();
+    public void sendVisitBadgeEmail(BadgeEmailData data) {
 
         Context context = new Context();
 
-        context.setVariable("visitorName", visitorName);
+        context.setVariable(
+                "visitorName",
+                data.visitorName()
+        );
+
         context.setVariable(
                 "visitReference",
-                visit.getVisitReference()
+                data.visitReference()
         );
 
         context.setVariable(
                 "hostName",
-                visit.getHost().getFirstName()
-                        + " "
-                        + visit.getHost().getLastName()
+                data.hostName()
         );
 
         context.setVariable(
                 "issuedAt",
-                badge.getIssuedAt().format(formatter)
+                data.issuedAt()
         );
 
         context.setVariable(
                 "validUntil",
-                badge.getValidUntil().format(formatter)
+                data.validUntil()
         );
 
         /*
@@ -164,13 +156,14 @@ public class EmailService {
          */
         context.setVariable(
                 "visitorPhoto",
-                visitorPhoto
+                data.visitorPhoto()
         );
 
-        String htmlBody = templateEngine.process(
-                "emails/visit-badge",
-                context
-        );
+        String htmlBody =
+                templateEngine.process(
+                        "emails/visit-badge",
+                        context
+                );
 
         try {
 
@@ -187,19 +180,19 @@ public class EmailService {
             helper.setFrom(fromEmail);
 
             helper.setTo(
-                    visit.getVisitor().getEmail()
+                    data.visitorEmail()
             );
 
             helper.setCc(hostEmail);
 
             helper.setSubject(
                     "Your Visitor Badge - "
-                            + visit.getVisitReference()
+                            + data.visitReference()
             );
 
-           byte[] qrImageBytes =
-                    java.util.Base64.getDecoder()
-                            .decode(qrCode);
+            byte[] qrImageBytes =
+                    Base64.getDecoder()
+                            .decode(data.qrCode());
 
             helper.setText(
                     htmlBody,
@@ -214,7 +207,20 @@ public class EmailService {
 
             mailSender.send(message);
 
+            log.info(
+                    "Visitor badge email sent successfully. visitReference={}, recipient={}",
+                    data.visitReference(),
+                    data.visitorEmail()
+            );
+
         } catch (MessagingException exception) {
+
+            log.error(
+                    "Failed to send visitor badge email. visitReference={}, recipient={}",
+                    data.visitReference(),
+                    data.visitorEmail(),
+                    exception
+            );
 
             throw new IllegalStateException(
                     "Failed to prepare visitor badge email",
@@ -224,43 +230,52 @@ public class EmailService {
     }
 
     @Async
-    public void sendVisitCancellationEmail(Visit visit) {
-
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
-
-        String visitorName =
-                visit.getVisitor().getFirstName()
-                        + " "
-                        + visit.getVisitor().getLastName();
-
-        String hostName =
-                visit.getHost().getFirstName()
-                        + " "
-                        + visit.getHost().getLastName();
+    public void sendHostCheckInNotification(
+            HostCheckInEmailData data
+    ) {
 
         Context context = new Context();
 
-        context.setVariable("visitorName", visitorName);
-        context.setVariable("visitReference", visit.getVisitReference());
-        context.setVariable("purpose", visit.getPurpose());
-
         context.setVariable(
-                "expectedArrival",
-                visit.getExpectedArrivalAt().format(formatter)
+                "hostName",
+                data.hostName()
         );
 
         context.setVariable(
-                "expectedDeparture",
-                visit.getExpectedDepartureAt().format(formatter)
+                "visitorName",
+                data.visitorName()
         );
 
-        context.setVariable("hostName", hostName);
-
-        String htmlBody = templateEngine.process(
-                "emails/visit-cancellation",
-                context
+        context.setVariable(
+                "visitorType",
+                data.visitorType()
         );
+
+        context.setVariable(
+                "companyName",
+                data.companyName()
+        );
+
+        context.setVariable(
+                "visitReference",
+                data.visitReference()
+        );
+
+        context.setVariable(
+                "purpose",
+                data.purpose()
+        );
+
+        context.setVariable(
+                "checkedInAt",
+                data.checkedInAt()
+        );
+
+        String htmlBody =
+                templateEngine.process(
+                        "emails/host-check-in",
+                        context
+                );
 
         try {
 
@@ -277,18 +292,79 @@ public class EmailService {
             helper.setFrom(fromEmail);
 
             helper.setTo(
-                    visit.getVisitor().getEmail()
+                    data.hostEmail()
             );
 
             helper.setSubject(
-                    "Visit Cancellation - "
-                            + visit.getVisitReference()
+                    "Visitor Checked In - "
+                            + data.visitReference()
             );
 
             helper.setText(
                     htmlBody,
                     true
             );
+
+            mailSender.send(message);
+
+            log.info(
+                    "Host check-in notification sent successfully. visitReference={}, hostEmail={}",
+                    data.visitReference(),
+                    data.hostEmail()
+            );
+
+        } catch (MessagingException exception) {
+
+            log.error(
+                    "Failed to send host check-in notification. visitReference={}, hostEmail={}",
+                    data.visitReference(),
+                    data.hostEmail(),
+                    exception
+            );
+
+            throw new IllegalStateException(
+                    "Failed to send host check-in notification",
+                    exception
+            );
+        }
+    }
+
+    @Async
+    public void sendVisitCancellationEmail(CancellationEmailData data) {
+
+        Context context = new Context();
+
+        context.setVariable("visitorName", data.visitorName());
+        context.setVariable("visitReference", data.visitReference());
+        context.setVariable("purpose", data.purpose());
+        context.setVariable("expectedArrival", data.expectedArrival());
+        context.setVariable("expectedDeparture", data.expectedDeparture());
+        context.setVariable("hostName", data.hostName());
+
+        String htmlBody = templateEngine.process(
+                "emails/visit-cancellation",
+                context
+        );
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(
+                            message,
+                            true,
+                            "UTF-8"
+                    );
+
+            helper.setFrom(fromEmail);
+            helper.setTo(data.visitorEmail());
+
+            helper.setSubject(
+                    "Visit Cancellation - "
+                            + data.visitReference()
+            );
+
+            helper.setText(htmlBody, true);
 
             mailSender.send(message);
 
@@ -300,4 +376,5 @@ public class EmailService {
             );
         }
     }
+
 }
