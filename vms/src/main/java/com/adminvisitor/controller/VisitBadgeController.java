@@ -4,6 +4,7 @@ import com.adminvisitor.dto.responsedto.QrValidationResponse;
 import com.adminvisitor.entity.Visit;
 import com.adminvisitor.entity.VisitBadge;
 import com.adminvisitor.enums.BadgeStatus;
+import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.service.QrCodeService;
 import com.adminvisitor.service.VisitBadgeService;
@@ -30,7 +31,7 @@ public class VisitBadgeController {
 
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new ResourceNotFoundException(
                                 "Visit not found with id: " + visitId
                         )
                 );
