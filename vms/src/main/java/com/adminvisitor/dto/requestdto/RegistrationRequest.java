@@ -1,5 +1,6 @@
 package com.adminvisitor.dto.requestdto;
 
+import com.adminvisitor.enums.Nationality;
 import com.adminvisitor.enums.ProofType;
 import com.adminvisitor.enums.RegistrationType;
 import com.adminvisitor.enums.VisitorType;
@@ -61,6 +62,9 @@ public record RegistrationRequest(
 
         @Size(max = 1000, message = "Remarks cannot exceed 1000 characters")
         String remarks,
+
+        @NotNull(message = "Nationality is required")
+        Nationality nationality,
 
         ProofType proofType,
 

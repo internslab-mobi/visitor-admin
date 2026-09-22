@@ -42,6 +42,9 @@ public class VisitService {
     private final VisitBadgeService visitBadgeService;
     private final QrCodeService qrCodeService;
 
+    private final ProofValidationService proofValidationService;
+    private final BlacklistService blacklistService;
+
     private final DocumentService documentService;
     @Transactional
     public RegistrationResponse register(RegistrationRequest request) {
@@ -53,7 +56,10 @@ public class VisitService {
                 request.hostId()
         );
 
-        // 1. Validate visit timing
+        // 1. Validate ID proof and check blacklist
+        validateProofAndBlacklist(request);
+
+// 2. Validate visit timing
         long start = System.currentTimeMillis();
 
         validateVisitTiming(request);
@@ -812,5 +818,50 @@ public class VisitService {
                 ndaAvailable ? visitor.getCooldownUntil() : null,
                 ndaAvailable ? validNda.getId() : null
         );
+    }
+
+    private void validateProofAndBlacklist(
+            RegistrationRequest request) {
+
+        // No proof supplied → nothing to validate
+        if (request.proofType() == null
+                && request.proofNumber() == null) {
+            return;
+        }
+
+        // One supplied without the other
+        if (request.proofType() == null
+                || request.proofNumber() == null
+                || request.proofNumber().isBlank()) {
+
+            throw new BusinessRuleException(
+                    "Both proof type and proof number are required"
+            );
+        }
+
+        // Validate nationality + proof type combination
+        proofValidationService.validate(
+                request.nationality(),
+                request.proofType()
+        );
+
+        // Check active blacklist using HMAC blind index
+        boolean blacklisted =
+                blacklistService.isBlacklistedByProof(
+                        request.proofType(),
+                        request.proofNumber()
+                );
+
+        if (blacklisted) {
+
+            log.warn(
+                    "Visit registration rejected because proof is blacklisted. proofType={}",
+                    request.proofType()
+            );
+
+            throw new BusinessRuleException(
+                    "Person is in blacklist. Visit registration is not allowed"
+            );
+        }
     }
 }
