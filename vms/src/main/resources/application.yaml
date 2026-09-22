@@ -2,11 +2,22 @@ spring:
   application:
     name: vms
 
-#   Original company/shared database configuration
+  # Original company/shared database configuration
+  # datasource:
+  #   url: ${DB_URL}
+  #   username: ${DB_USERNAME}
+  #   password: ${DB_PASSWORD}
+
   datasource:
-     url: ${DB_URL}
-     username: ${DB_USERNAME}
-     password: ${DB_PASSWORD}
+    url: jdbc:mysql://localhost:3306/internsdb
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
 
   mail:
     host: smtp.gmail.com
@@ -39,7 +50,13 @@ vms:
     department-name: ${VMS_DEPARTMENT_NAME}
 
   document:
-    nda-upload-dir: C:/Users/anisha.z/Documents/VMS/NDA
+    nda-upload-dir: D:/VMS/NDA
+    photo-upload-dir: D:/VMS/VisitorPhotos
+
+crypto:
+  aes:
+    key: ${CRYPTO_AES_KEY}
+
 server:
   port: 8092
 

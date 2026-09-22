@@ -4,9 +4,7 @@ import com.adminvisitor.dto.responsedto.*;
 import com.adminvisitor.dto.requestdto.RegistrationRequest;
 import com.adminvisitor.dto.responsedto.HostCheckInEmailData;
 import com.adminvisitor.entity.*;
-import com.adminvisitor.enums.RegistrationType;
-import com.adminvisitor.enums.VisitStatus;
-import com.adminvisitor.enums.VisitorType;
+import com.adminvisitor.enums.*;
 import com.adminvisitor.exception.BusinessRuleException;
 import com.adminvisitor.exception.EmailAlreadyExistsException;
 import com.adminvisitor.exception.MobileNumberAlreadyExistsException;
@@ -15,7 +13,6 @@ import com.adminvisitor.repository.EmployeeRepository;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.repository.VisitorRepository;
 import com.adminvisitor.specification.VisitSpecification;
-import com.adminvisitor.enums.VisitView;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
@@ -59,7 +56,7 @@ public class VisitService {
         // 1. Validate ID proof and check blacklist
         validateProofAndBlacklist(request);
 
-// 2. Validate visit timing
+        // 2. Validate visit timing
         long start = System.currentTimeMillis();
 
         validateVisitTiming(request);
@@ -72,7 +69,17 @@ public class VisitService {
         // 2. Find existing visitor or create a new visitor
         start = System.currentTimeMillis();
 
+
+
         Visitor visitor = findOrCreateVisitor(request);
+
+        documentService.saveIdentityProofs(
+                visitor,
+                request.nationality(),
+                request.aadharNumber(),
+                request.panNumber(),
+                request.passportNumber()
+        );
 
         log.debug(
                 "Timing: findOrCreateVisitor={} ms",
@@ -823,45 +830,58 @@ public class VisitService {
     private void validateProofAndBlacklist(
             RegistrationRequest request) {
 
-        // No proof supplied → nothing to validate
-        if (request.proofType() == null
-                && request.proofNumber() == null) {
-            return;
-        }
-
-        // One supplied without the other
-        if (request.proofType() == null
-                || request.proofNumber() == null
-                || request.proofNumber().isBlank()) {
-
-            throw new BusinessRuleException(
-                    "Both proof type and proof number are required"
-            );
-        }
-
-        // Validate nationality + proof type combination
+        // 1. Validate nationality and required proof combination
         proofValidationService.validate(
                 request.nationality(),
-                request.proofType()
+                request.aadharNumber(),
+                request.panNumber(),
+                request.passportNumber()
         );
 
-        // Check active blacklist using HMAC blind index
-        boolean blacklisted =
-                blacklistService.isBlacklistedByProof(
-                        request.proofType(),
-                        request.proofNumber()
-                );
+        // 2. Check blacklist based on the applicable identity proofs
+        switch (request.nationality()) {
 
-        if (blacklisted) {
+            case DOMESTIC -> {
 
-            log.warn(
-                    "Visit registration rejected because proof is blacklisted. proofType={}",
-                    request.proofType()
-            );
+                boolean aadhaarBlacklisted =
+                        blacklistService.isBlacklistedByProof(
+                                ProofType.AADHAAR,
+                                request.aadharNumber()
+                        );
 
-            throw new BusinessRuleException(
-                    "Person is in blacklist. Visit registration is not allowed"
-            );
+                if (aadhaarBlacklisted) {
+                    throw new BusinessRuleException(
+                            "Person is in blacklist. Visit registration is not allowed"
+                    );
+                }
+
+                boolean panBlacklisted =
+                        blacklistService.isBlacklistedByProof(
+                                ProofType.PAN,
+                                request.panNumber()
+                        );
+
+                if (panBlacklisted) {
+                    throw new BusinessRuleException(
+                            "Person is in blacklist. Visit registration is not allowed"
+                    );
+                }
+            }
+
+            case INTERNATIONAL -> {
+
+                boolean passportBlacklisted =
+                        blacklistService.isBlacklistedByProof(
+                                ProofType.PASSPORT,
+                                request.passportNumber()
+                        );
+
+                if (passportBlacklisted) {
+                    throw new BusinessRuleException(
+                            "Person is in blacklist. Visit registration is not allowed"
+                    );
+                }
+            }
         }
     }
 }

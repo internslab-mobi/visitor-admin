@@ -1,6 +1,7 @@
 package com.adminvisitor.controller;
 
 import com.adminvisitor.dto.responsedto.DocumentResponse;
+import com.adminvisitor.dto.responsedto.IdentityProofResponse;
 import com.adminvisitor.entity.Document;
 import com.adminvisitor.service.DocumentService;
 import lombok.RequiredArgsConstructor;
@@ -72,5 +73,14 @@ public class DocumentController {
                         "inline; filename=\"" + resource.getFilename() + "\""
                 )
                 .body(resource);
+    }
+
+    @GetMapping("/{visitorId}/identity-proof")
+    public ResponseEntity<IdentityProofResponse> getIdentityProofs(
+            @PathVariable String visitorId
+    ) {
+        return ResponseEntity.ok(
+                documentService.getIdentityProofs(visitorId)
+        );
     }
 }
