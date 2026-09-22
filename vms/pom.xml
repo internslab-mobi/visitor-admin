@@ -155,6 +155,22 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- ==================== OneDrive / Microsoft Graph ==================== -->
+
+		<!-- Microsoft Graph Java SDK -->
+		<dependency>
+			<groupId>com.microsoft.graph</groupId>
+			<artifactId>microsoft-graph</artifactId>
+			<version>6.69.0</version>
+		</dependency>
+
+		<!-- Azure authentication -->
+		<dependency>
+			<groupId>com.azure</groupId>
+			<artifactId>azure-identity</artifactId>
+			<version>1.18.6</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

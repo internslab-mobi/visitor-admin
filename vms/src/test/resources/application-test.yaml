@@ -31,5 +31,8 @@ vms:
     host-name: Test Host
     department-name: Test Department
 
+  document:
+    nda-upload-dir: C:/Users/anisha.z/Documents/VMS/NDA
+
 server:
   port: 8060
