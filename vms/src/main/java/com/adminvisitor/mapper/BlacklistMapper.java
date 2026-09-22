@@ -16,6 +16,8 @@ public class BlacklistMapper {
         Blacklist blacklist = new Blacklist();
 
         blacklist.setVisitor(visitor);
+        blacklist.setNationality(request.getNationality());
+        blacklist.setProofType(request.getProofType());
         blacklist.setReason(request.getReason());
         blacklist.setCreatedBy(request.getCreatedBy());
 
@@ -27,6 +29,8 @@ public class BlacklistMapper {
         return new BlacklistResponse(
                 blacklist.getId(),
                 blacklist.getVisitor().getId(),
+                blacklist.getNationality(),
+                blacklist.getProofType(),
                 blacklist.getReason(),
                 blacklist.getStatus(),
                 blacklist.getCreatedBy(),

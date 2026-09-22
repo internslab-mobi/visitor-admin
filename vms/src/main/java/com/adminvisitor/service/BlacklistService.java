@@ -13,6 +13,7 @@ import com.adminvisitor.mapper.BlacklistMapper;
 import com.adminvisitor.repository.BlacklistRepository;
 import com.adminvisitor.repository.VisitorRepository;
 import lombok.RequiredArgsConstructor;
+import com.adminvisitor.enums.ProofType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,9 @@ public class BlacklistService {
     private final BlacklistMapper blacklistMapper;
     private final IdGeneratorService idGeneratorService;
 
+    private final HmacBlindIndexService hmacBlindIndexService;
+    private final ProofValidationService proofValidationService;
+
     @Transactional(readOnly = true)
     public boolean isBlacklisted(String visitorId) {
 
@@ -39,35 +43,97 @@ public class BlacklistService {
                 .isPresent();
     }
 
+    @Transactional(readOnly = true)
+    public boolean isBlacklistedByProof(
+            ProofType proofType,
+            String proofNumber) {
+
+        String proofBlindIndex =
+                hmacBlindIndexService.generateBlindIndex(
+                        proofType,
+                        proofNumber
+                );
+
+        return blacklistRepository
+                .findByProofTypeAndProofBlindIndexAndStatus(
+                        proofType,
+                        proofBlindIndex,
+                        BlacklistStatus.ACTIVE
+                )
+                .isPresent();
+    }
+
     public BlacklistResponse addToBlacklist(
             BlacklistRequest request) {
 
-        if (isBlacklisted(request.getVisitorId())) {
+        // 1. Validate nationality + proof type
+        proofValidationService.validate(
+                request.getNationality(),
+                request.getProofType()
+        );
+
+        // 2. Generate blind index from normalized proof number
+        String proofBlindIndex =
+                hmacBlindIndexService.generateBlindIndex(
+                        request.getProofType(),
+                        request.getProofNumber()
+                );
+
+        // 3. Check whether this proof is already actively blacklisted
+        boolean alreadyBlacklisted =
+                blacklistRepository
+                        .findByProofTypeAndProofBlindIndexAndStatus(
+                                request.getProofType(),
+                                proofBlindIndex,
+                                BlacklistStatus.ACTIVE
+                        )
+                        .isPresent();
+
+        if (alreadyBlacklisted) {
             throw new BlacklistAlreadyExistsException(
-                    "Visitor is already in blacklist"
+                    "Person is already in blacklist"
             );
         }
 
-        Visitor visitor = visitorRepository.findById(request.getVisitorId())
-                .orElseThrow(() ->
-                        new VisitorNotFoundException(
-                                "Visitor not found"
-                        )
+        // 4. Find visitor
+        Visitor visitor =
+                visitorRepository.findById(request.getVisitorId())
+                        .orElseThrow(() ->
+                                new VisitorNotFoundException(
+                                        "Visitor not found"
+                                )
+                        );
+
+        // 5. Map request → entity
+        Blacklist blacklist =
+                blacklistMapper.toEntity(
+                        request,
+                        visitor
                 );
 
-        Blacklist blacklist =
-                blacklistMapper.toEntity(request, visitor);
+        // 6. Store blind index
+        blacklist.setProofBlindIndex(proofBlindIndex);
 
+        // 7. Generate blacklist ID
         blacklist.setId(
-                idGeneratorService.generateId("BLACKLIST", "BL")
+                idGeneratorService.generateId(
+                        "BLACKLIST",
+                        "BL"
+                )
         );
 
-        blacklist.setStatus(BlacklistStatus.ACTIVE);
+        // 8. Set active status
+        blacklist.setStatus(
+                BlacklistStatus.ACTIVE
+        );
 
+        // 9. Save
         Blacklist savedBlacklist =
                 blacklistRepository.save(blacklist);
 
-        return blacklistMapper.toResponse(savedBlacklist);
+        return blacklistMapper.toResponse(
+                savedBlacklist
+        );
     }
 
     public BlacklistResponse removeFromBlacklist(

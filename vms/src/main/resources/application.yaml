@@ -29,6 +29,10 @@ app:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:4200}
 
 vms:
+  security:
+    hmac:
+      blind-index-key: ${VMS_HMAC_BLIND_INDEX_KEY}
+
   notification:
     host-email: ${VMS_HOST_EMAIL}
     host-name: ${VMS_HOST_NAME}
