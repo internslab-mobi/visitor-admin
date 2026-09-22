@@ -1,11 +1,21 @@
 package com.adminvisitor.service;
 
+import com.adminvisitor.dto.responsedto.NdaStatusResponse;
 import com.adminvisitor.entity.Document;
+import com.adminvisitor.entity.Visit;
 import com.adminvisitor.entity.Visitor;
+import com.adminvisitor.enums.VisitorType;
+import com.adminvisitor.exception.BadgeAlreadyExistsException;
+import com.adminvisitor.exception.BusinessRuleException;
+import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.DocumentRepository;
+import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.repository.VisitorRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -24,7 +34,7 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final VisitorRepository visitorRepository;
     private final IdGeneratorService idGeneratorService;
-
+private final VisitRepository visitRepository;
     /**
      * Upload and save a newly signed NDA for a visitor.
      */
@@ -53,6 +63,14 @@ public class DocumentService {
                                 "Visitor not found: " + visitorId
                         )
                 );
+
+
+        // 3. Check NDA validity
+        if (!isNdaRequired(visitor)) {
+            throw new BadgeAlreadyExistsException(
+                    "Valid NDA already exists for visitor: " + visitorId
+            );
+        }
 
         // 3. Generate document ID
         String documentId =
@@ -122,28 +140,34 @@ public class DocumentService {
         LocalDateTime cooldownUntil =
                 visitor.getCooldownUntil();
 
-        // No previous valid NDA
+        // No valid cooldown
         if (cooldownUntil == null) {
             return true;
         }
 
-        // NDA expired
-        return cooldownUntil.isBefore(
-                LocalDateTime.now()
-        );
-    }
+        // Cooldown expired
+        if (cooldownUntil.isBefore(LocalDateTime.now())) {
+            return true;
+        }
 
+        // Cooldown is valid, but does an NDA actually exist?
+        return documentRepository
+                .findTopByVisitorIdAndNdaDocumentIsNotNullOrderByCreatedAtDesc(
+                        visitor.getId()
+                )
+                .isEmpty();
+    }
     /**
      * Retrieve the latest signed NDA for a visitor.
      */
     public Document getLatestNda(String visitorId) {
 
         return documentRepository
-                .findTopByVisitorIdOrderByCreatedAtDesc(
+                .findTopByVisitorIdAndNdaDocumentIsNotNullOrderByCreatedAtDesc(
                         visitorId
                 )
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new ResourceNotFoundException(
                                 "No NDA found for visitor: "
                                         + visitorId
                         )
@@ -168,5 +192,37 @@ public class DocumentService {
                         .endsWith(".pdf");
 
         return validContentType && validExtension;
+    }
+
+    public Document getValidNda(Visitor visitor) {
+
+        LocalDateTime cooldownUntil = visitor.getCooldownUntil();
+
+        if (cooldownUntil == null) {
+            return null;
+        }
+
+        if (cooldownUntil.isBefore(LocalDateTime.now())) {
+            return null;
+        }
+
+        return documentRepository
+                .findTopByVisitorIdAndNdaDocumentIsNotNullOrderByCreatedAtDesc(
+                        visitor.getId()
+                )
+                .orElse(null);
+    }
+
+    public Resource getNdaFile(String visitorId) {
+
+        Document document = getLatestNda(visitorId);
+
+        Path filePath = Paths.get(document.getNdaDocument());
+
+        if (!Files.exists(filePath)) {
+            throw new IllegalArgumentException("NDA file not found");
+        }
+
+        return new FileSystemResource(filePath);
     }
 }

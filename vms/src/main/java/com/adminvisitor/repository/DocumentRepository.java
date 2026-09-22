@@ -11,4 +11,8 @@ public interface DocumentRepository
     Optional<Document> findTopByVisitorIdOrderByCreatedAtDesc(
             String visitorId
     );
+
+    Optional<Document> findTopByVisitorIdAndNdaDocumentIsNotNullOrderByCreatedAtDesc(
+            String visitorId
+    );
 }

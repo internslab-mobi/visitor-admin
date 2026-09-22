@@ -1,6 +1,7 @@
 package com.adminvisitor.controller;
 
 import com.adminvisitor.dto.requestdto.RegistrationRequest;
+import com.adminvisitor.dto.responsedto.NdaStatusResponse;
 import com.adminvisitor.dto.responsedto.RegistrationResponse;
 import com.adminvisitor.dto.responsedto.VisitDashboardResponse;
 import com.adminvisitor.dto.responsedto.VisitDetailResponse;
@@ -126,5 +127,14 @@ public class VisitController {
                 visitService.checkOut(visitId);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{visitId}/nda-status")
+    public ResponseEntity<NdaStatusResponse> getNdaStatus(
+            @PathVariable String visitId) {
+
+        return ResponseEntity.ok(
+                visitService.getNdaStatus(visitId)
+        );
     }
 }

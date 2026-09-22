@@ -3,15 +3,14 @@ package com.adminvisitor.service;
 import com.adminvisitor.dto.responsedto.*;
 import com.adminvisitor.dto.requestdto.RegistrationRequest;
 import com.adminvisitor.dto.responsedto.HostCheckInEmailData;
-import com.adminvisitor.entity.Employee;
-import com.adminvisitor.entity.VisitBadge;
-import com.adminvisitor.entity.Visit;
-import com.adminvisitor.entity.Visitor;
+import com.adminvisitor.entity.*;
 import com.adminvisitor.enums.RegistrationType;
 import com.adminvisitor.enums.VisitStatus;
+import com.adminvisitor.enums.VisitorType;
 import com.adminvisitor.exception.BusinessRuleException;
 import com.adminvisitor.exception.EmailAlreadyExistsException;
 import com.adminvisitor.exception.MobileNumberAlreadyExistsException;
+import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.EmployeeRepository;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.repository.VisitorRepository;
@@ -43,6 +42,7 @@ public class VisitService {
     private final VisitBadgeService visitBadgeService;
     private final QrCodeService qrCodeService;
 
+    private final DocumentService documentService;
     @Transactional
     public RegistrationResponse register(RegistrationRequest request) {
 
@@ -478,6 +478,7 @@ public class VisitService {
     private VisitDetailResponse toVisitDetailResponse(Visit visit) {
 
         Visitor visitor = visit.getVisitor();
+        Document validNda = documentService.getValidNda(visitor);
 
         Employee employee = visit.getHost();
 
@@ -502,7 +503,10 @@ public class VisitService {
                         visitor.getLastName(),
                         visitor.getEmail(),
                         visitor.getMobileNumber(),
-                        visitor.getCompanyName()
+                        visitor.getCompanyName(),
+                        validNda != null,
+                        validNda != null ? validNda.getId() : null,
+                        validNda != null ? visitor.getCooldownUntil() : null
                 ),
 
                 visit.getVisitorType(),
@@ -637,6 +641,18 @@ public class VisitService {
             );
         }
 
+        // NDA safety check
+        if (visit.getVisitorType() == VisitorType.VENDOR) {
+
+            Document validNda = documentService.getValidNda(visit.getVisitor());
+
+            if (validNda == null) {
+                throw new BusinessRuleException(
+                        "A valid NDA is required for this vendor before check-in"
+                );
+            }
+        }
+
         visit.setCheckedInAt(LocalDateTime.now());
         visit.setStatus(VisitStatus.CHECKED_IN);
 
@@ -769,5 +785,32 @@ public class VisitService {
         );
 
         return toVisitDetailResponse(checkedOutVisit);
+    }
+
+    @Transactional(readOnly = true)
+    public NdaStatusResponse getNdaStatus(String visitId) {
+
+        Visit visit = visitRepository.findById(visitId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Visit not found with id: " + visitId));
+
+        Visitor visitor = visit.getVisitor();
+
+        Document validNda = documentService.getValidNda(visitor);
+
+        boolean ndaAvailable = validNda != null;
+
+        boolean ndaRequired =
+                visit.getVisitorType() == VisitorType.VENDOR
+                        && !ndaAvailable;
+
+        return new NdaStatusResponse(
+                visitor.getId(),
+                visit.getVisitorType().name(),
+                ndaRequired,
+                ndaAvailable,
+                ndaAvailable ? visitor.getCooldownUntil() : null,
+                ndaAvailable ? validNda.getId() : null
+        );
     }
 }
