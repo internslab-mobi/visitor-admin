@@ -3,6 +3,7 @@ package com.adminvisitor.repository;
 import com.adminvisitor.entity.Document;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface DocumentRepository
@@ -15,4 +16,7 @@ public interface DocumentRepository
     Optional<Document> findTopByVisitorIdAndNdaDocumentIsNotNullOrderByCreatedAtDesc(
             String visitorId
     );
+
+    List<Document> findByVisitorId(String visitorId);
+
 }

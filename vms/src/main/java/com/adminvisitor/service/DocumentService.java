@@ -1,5 +1,6 @@
 package com.adminvisitor.service;
 
+import com.adminvisitor.dto.responsedto.DocumentResponse;
 import com.adminvisitor.dto.responsedto.NdaStatusResponse;
 import com.adminvisitor.dto.responsedto.IdentityProofResponse;
 import com.adminvisitor.entity.Document;
@@ -25,6 +26,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 @Service
 @RequiredArgsConstructor
@@ -67,6 +70,21 @@ public class DocumentService {
                                 "Visitor not found: " + visitorId
                         )
                 );
+
+        // 3. NDA is allowed only for vendors
+        Visit visit = visitRepository
+                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "No visit found for visitor: " + visitorId
+                        )
+                );
+
+        if (visit.getVisitorType() != VisitorType.VENDOR) {
+            throw new BusinessRuleException(
+                    "NDA can only be uploaded for vendor visitors"
+            );
+        }
 
 
         // 3. Check NDA validity
@@ -118,7 +136,7 @@ public class DocumentService {
                     documentRepository.save(document);
 
             // 9. NDA is valid for 6 months
-            visitor.setCooldownUntil(
+            visitor.setValidity(
                     LocalDateTime.now().plusMonths(6)
             );
 
@@ -141,16 +159,16 @@ public class DocumentService {
      */
     public boolean isNdaRequired(Visitor visitor) {
 
-        LocalDateTime cooldownUntil =
-                visitor.getCooldownUntil();
+        LocalDateTime validity =
+                visitor.getValidity();
 
         // No valid cooldown
-        if (cooldownUntil == null) {
+        if (validity == null) {
             return true;
         }
 
         // Cooldown expired
-        if (cooldownUntil.isBefore(LocalDateTime.now())) {
+        if (validity.isBefore(LocalDateTime.now())) {
             return true;
         }
 
@@ -200,13 +218,13 @@ public class DocumentService {
 
     public Document getValidNda(Visitor visitor) {
 
-        LocalDateTime cooldownUntil = visitor.getCooldownUntil();
+        LocalDateTime validity = visitor.getValidity();
 
-        if (cooldownUntil == null) {
+        if (validity == null) {
             return null;
         }
 
-        if (cooldownUntil.isBefore(LocalDateTime.now())) {
+        if (validity.isBefore(LocalDateTime.now())) {
             return null;
         }
 
@@ -352,5 +370,25 @@ public class DocumentService {
                 + passportNumber.substring(
                 passportNumber.length() - 4
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<DocumentResponse> getAllDocuments(String visitorId) {
+
+        visitorRepository.findById(visitorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Visitor not found: " + visitorId
+                        )
+                );
+
+        return documentRepository.findByVisitorId(visitorId)
+                .stream()
+                .map(document -> new DocumentResponse(
+                        document.getNdaDocument(),
+                        document.getCreatedAt().toString(),
+                        document.getUpdatedAt().toString()
+                ))
+                .toList();
     }
 }

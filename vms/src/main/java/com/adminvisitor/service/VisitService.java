@@ -10,6 +10,7 @@ import com.adminvisitor.exception.EmailAlreadyExistsException;
 import com.adminvisitor.exception.MobileNumberAlreadyExistsException;
 import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.EmployeeRepository;
+import com.adminvisitor.repository.VendorRepository;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.repository.VisitorRepository;
 import com.adminvisitor.specification.VisitSpecification;
@@ -24,6 +25,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -38,6 +40,7 @@ public class VisitService {
     private final EmployeeRepository employeeRepository;
     private final VisitBadgeService visitBadgeService;
     private final QrCodeService qrCodeService;
+    private final VendorRepository vendorRepository;
 
     private final ProofValidationService proofValidationService;
     private final BlacklistService blacklistService;
@@ -86,6 +89,7 @@ public class VisitService {
                 System.currentTimeMillis() - start
         );
 
+        createVendorIfRequired(visitor, request);
         // 3. Create Visit
         Visit visit = new Visit();
 
@@ -219,7 +223,7 @@ public class VisitService {
     }
 
     private Visitor findOrCreateVisitor(RegistrationRequest request) {
-
+        validateVisitorValidity(request);
         String email = request.email();
         String mobileNumber = request.mobileNumber();
 
@@ -251,6 +255,13 @@ public class VisitService {
                     "Existing visitor found. visitorId={}",
                     visitorByEmail.getId()
             );
+
+
+            if (request.visitorType() == VisitorType.VENDOR) {
+                visitorByEmail.setValidity(request.validity());
+                visitorRepository.save(visitorByEmail);
+            }
+
 
             return visitorByEmail;
         }
@@ -301,7 +312,7 @@ public class VisitService {
         newVisitor.setEmail(email);
         newVisitor.setMobileNumber(mobileNumber);
         newVisitor.setCompanyName(request.companyName());
-
+        newVisitor.setValidity(request.validity());
         Visitor savedVisitor = visitorRepository.save(newVisitor);
 
         log.info(
@@ -310,6 +321,25 @@ public class VisitService {
         );
 
         return savedVisitor;
+    }
+
+    private void validateVisitorValidity(RegistrationRequest request) {
+
+        if (request.visitorType() == VisitorType.VENDOR
+                && request.validity() == null) {
+
+            throw new BusinessRuleException(
+                    "Validity is required for vendor visitors"
+            );
+        }
+
+        if (request.visitorType() != VisitorType.VENDOR
+                && request.validity() != null) {
+
+            throw new BusinessRuleException(
+                    "Validity must be null for non-vendor visitors"
+            );
+        }
     }
 
     private void validateVisitTiming(RegistrationRequest request) {
@@ -519,7 +549,7 @@ public class VisitService {
                         visitor.getCompanyName(),
                         validNda != null,
                         validNda != null ? validNda.getId() : null,
-                        validNda != null ? visitor.getCooldownUntil() : null
+                        validNda != null ? visitor.getValidity() : null
                 ),
 
                 visit.getVisitorType(),
@@ -822,8 +852,52 @@ public class VisitService {
                 visit.getVisitorType().name(),
                 ndaRequired,
                 ndaAvailable,
-                ndaAvailable ? visitor.getCooldownUntil() : null,
+                ndaAvailable ? visitor.getValidity() : null,
                 ndaAvailable ? validNda.getId() : null
+        );
+    }
+
+    private void createVendorIfRequired(
+            Visitor visitor,
+            RegistrationRequest request) {
+
+        if (request.visitorType() != VisitorType.VENDOR) {
+            return;
+        }
+
+        Optional<Vendor> existingVendor =
+                vendorRepository.findByVisitorId(visitor.getId());
+
+        if (existingVendor.isPresent()) {
+            log.info(
+                    "Vendor already exists for visitor. visitorId={}, vendorId={}",
+                    visitor.getId(),
+                    existingVendor.get().getId()
+            );
+
+            return;
+        }
+
+        Vendor vendor = new Vendor();
+
+        vendor.setId(
+                idGeneratorService.generateId("VENDOR", "VND")
+        );
+
+        vendor.setVisitor(visitor);
+        vendor.setFirstName(visitor.getFirstName());
+        vendor.setLastName(visitor.getLastName());
+        vendor.setEmail(visitor.getEmail());
+        vendor.setMobileNumber(visitor.getMobileNumber());
+        vendor.setCompanyName(visitor.getCompanyName());
+        vendor.setValidity(visitor.getValidity());
+
+        vendorRepository.save(vendor);
+
+        log.info(
+                "Vendor created successfully. vendorId={}, visitorId={}",
+                vendor.getId(),
+                visitor.getId()
         );
     }
 

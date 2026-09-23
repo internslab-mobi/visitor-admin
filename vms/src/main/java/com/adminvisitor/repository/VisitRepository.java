@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface VisitRepository extends JpaRepository<Visit, String>, JpaSpecificationExecutor<Visit> {
@@ -30,4 +31,6 @@ public interface VisitRepository extends JpaRepository<Visit, String>, JpaSpecif
                 @Param("newDepartureAt") LocalDateTime newDepartureAt,
                 @Param("statuses") Collection<VisitStatus> statuses
         );
+
+        Optional<Visit> findTopByVisitorIdOrderByCreatedAtDesc(String visitorId);
 }

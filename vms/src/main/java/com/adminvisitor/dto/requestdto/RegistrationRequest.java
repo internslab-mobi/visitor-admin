@@ -7,6 +7,7 @@ import com.adminvisitor.enums.VisitorType;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public record RegistrationRequest(
@@ -69,6 +70,10 @@ public record RegistrationRequest(
         @Size(max = 50, message = "Aadhaar number cannot exceed 50 characters")
         String aadharNumber,
 
+        @Size(max = 100, message = "Proof number cannot exceed 100 characters")
+        String proofNumber,
+        LocalDateTime validity,
+
         @Size(max = 50, message = "PAN number cannot exceed 50 characters")
         String panNumber,
 
@@ -76,4 +81,5 @@ public record RegistrationRequest(
         String passportNumber
 
 ) {
+
 }

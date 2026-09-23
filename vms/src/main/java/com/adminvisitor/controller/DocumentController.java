@@ -11,6 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.MediaType;
+
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/documents")
 @RequiredArgsConstructor
@@ -52,7 +55,7 @@ public class DocumentController {
         DocumentResponse response =
                 new DocumentResponse(
                         document.getId(),
-                        document.getVisitor().getId(),
+                      //  document.getVisitor().getId(),
                         document.getNdaDocument(),
                         document.getCreatedAt().toString()
                 );
@@ -73,6 +76,15 @@ public class DocumentController {
                         "inline; filename=\"" + resource.getFilename() + "\""
                 )
                 .body(resource);
+    }
+
+    @GetMapping("/visitor/{visitorId}")
+    public ResponseEntity<List<DocumentResponse>> getAllDocuments(
+            @PathVariable String visitorId) {
+
+        return ResponseEntity.ok(
+                documentService.getAllDocuments(visitorId)
+        );
     }
 
     @GetMapping("/{visitorId}/identity-proof")
