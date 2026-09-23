@@ -3,21 +3,10 @@ spring:
     name: vms
 
   # Original company/shared database configuration
-  # datasource:
-  #   url: ${DB_URL}
-  #   username: ${DB_USERNAME}
-  #   password: ${DB_PASSWORD}
-
   datasource:
-    url: jdbc:mysql://localhost:3306/internsdb
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: false
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
   mail:
     host: smtp.gmail.com

@@ -18,7 +18,7 @@ public record VisitDetailResponse(
         LocalDateTime expectedArrivalAt,
         LocalDateTime expectedDepartureAt,
         LocalDateTime checkedInAt,
-        LocalDateTime checkedOutAt,
+        Local4DateTime checkedOutAt,
         String remarks,
         VisitStatus status,
         AuditDetails audit
