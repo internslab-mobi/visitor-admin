@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/visitors")
 @RequiredArgsConstructor
@@ -32,6 +34,15 @@ public class VisitorController {
 
         VisitorResponse response =
                 visitorService.updateVisitor(visitorId, request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<VisitorResponse>> getAllVisitors() {
+
+        List<VisitorResponse> response =
+                visitorService.getAllVisitors();
 
         return ResponseEntity.ok(response);
     }

@@ -6,11 +6,14 @@ import com.adminvisitor.entity.Visitor;
 import com.adminvisitor.exception.EmailAlreadyExistsException;
 import com.adminvisitor.exception.MobileNumberAlreadyExistsException;
 import com.adminvisitor.exception.VisitorNotFoundException;
+import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.repository.VisitorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.adminvisitor.entity.Visit;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +22,7 @@ public class VisitorService {
 
     private final VisitorRepository visitorRepository;
 
+    private final VisitRepository visitRepository;
     @Transactional(readOnly = true)
     public VisitorResponse getVisitor(String visitorId) {
 
@@ -32,6 +36,16 @@ public class VisitorService {
         return toVisitorResponse(visitor);
     }
 
+    @Transactional(readOnly = true)
+    public List<VisitorResponse> getAllVisitors() {
+
+        log.info("Fetching all visitors");
+
+        return visitorRepository.findAll()
+                .stream()
+                .map(this::toVisitorResponse)
+                .toList();
+    }
     @Transactional
     public VisitorResponse updateVisitor(
             String visitorId,
@@ -83,14 +97,34 @@ public class VisitorService {
 
     private VisitorResponse toVisitorResponse(Visitor visitor) {
 
+        Visit latestVisit =
+                visitRepository
+                        .findTopByVisitorIdOrderByCreatedAtDesc(
+                                visitor.getId()
+                        )
+                        .orElse(null);
+
         return new VisitorResponse(
+
                 visitor.getId(),
+
                 visitor.getFirstName(),
+
                 visitor.getLastName(),
+
                 visitor.getEmail(),
+
                 visitor.getMobileNumber(),
-                visitor.getCompanyName()
-             //   visitor.getValidity()
+
+                visitor.getCompanyName(),
+
+                latestVisit != null
+                        ? latestVisit.getVisitorType().name()
+                        : null,
+
+                latestVisit != null
+                        ? latestVisit.getExpectedArrivalAt()
+                        : null
         );
     }
 }
