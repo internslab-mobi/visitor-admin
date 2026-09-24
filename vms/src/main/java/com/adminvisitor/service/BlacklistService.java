@@ -212,67 +212,74 @@ public class BlacklistService {
         blacklist.setCreatedBy(request.getCreatedBy());
         blacklist.setStatus(BlacklistStatus.ACTIVE);
 
-        // 5. Add Aadhaar proof if available
-        if (document.getAadharNumber() != null
-                && !document.getAadharNumber().isBlank()) {
+        // 5. Add proofs based on nationality
+        switch (document.getNationality()) {
 
-            addBlacklistProof(
-                    blacklist,
-                    ProofType.AADHAAR,
-                    document.getAadharNumber(),
-                    request.getCreatedBy()
-            );
+            case DOMESTIC -> {
+
+                if (document.getAadharNumber() != null
+                        && !document.getAadharNumber().isBlank()) {
+
+                    addBlacklistProof(
+                            blacklist,
+                            ProofType.AADHAAR,
+                            document.getAadharNumber(),
+                            request.getCreatedBy()
+                    );
+                }
+
+                if (document.getPanNumber() != null
+                        && !document.getPanNumber().isBlank()) {
+
+                    addBlacklistProof(
+                            blacklist,
+                            ProofType.PAN,
+                            document.getPanNumber(),
+                            request.getCreatedBy()
+                    );
+                }
+            }
+
+            case INTERNATIONAL -> {
+
+                if (document.getPassportNumber() != null
+                        && !document.getPassportNumber().isBlank()) {
+
+                    addBlacklistProof(
+                            blacklist,
+                            ProofType.PASSPORT,
+                            document.getPassportNumber(),
+                            request.getCreatedBy()
+                    );
+                }
+            }
         }
 
-        // 6. Add PAN proof if available
-        if (document.getPanNumber() != null
-                && !document.getPanNumber().isBlank()) {
-
-            addBlacklistProof(
-                    blacklist,
-                    ProofType.PAN,
-                    document.getPanNumber(),
-                    request.getCreatedBy()
-            );
-        }
-
-        // 7. Add Passport proof if available
-        if (document.getPassportNumber() != null
-                && !document.getPassportNumber().isBlank()) {
-
-            addBlacklistProof(
-                    blacklist,
-                    ProofType.PASSPORT,
-                    document.getPassportNumber(),
-                    request.getCreatedBy()
-            );
-        }
-
-        // 8. Make sure at least one proof exists
+        // 6. Required proof must exist
         if (blacklist.getProofs().isEmpty()) {
             throw new IllegalArgumentException(
-                    "No valid proof found for visitor"
+                    "No valid identity proof found for visitor"
             );
         }
 
-        // 9. Save parent + child proofs
+        // 7. Save parent + child proofs
         Blacklist savedBlacklist =
                 blacklistRepository.save(blacklist);
 
         return blacklistMapper.toResponse(savedBlacklist);
     }
 
+
     private void addBlacklistProof(
             Blacklist blacklist,
             ProofType proofType,
-            String proofNumber,
+            String proofBlindIndex,
             String createdBy) {
 
-        String proofBlindIndex =
-                hmacBlindIndexService.generateBlindIndex(
-                        proofType,
-                        proofNumber
-                );
+        // IMPORTANT:
+        // proofBlindIndex is already an HMAC-SHA-256 blind index
+        // from vms_document.
+        // DO NOT HMAC it again.
 
         boolean alreadyBlacklisted =
                 blacklistProofRepository
@@ -285,7 +292,8 @@ public class BlacklistService {
 
         if (alreadyBlacklisted) {
             throw new BlacklistAlreadyExistsException(
-                    "Person with " + proofType + " proof is already in blacklist"
+                    "Person with " + proofType
+                            + " proof is already in blacklist"
             );
         }
 
@@ -301,7 +309,10 @@ public class BlacklistService {
 
         blacklistProof.setBlacklist(blacklist);
         blacklistProof.setProofType(proofType);
+
+        // Copy the existing blind index directly
         blacklistProof.setProofBlindIndex(proofBlindIndex);
+
         blacklistProof.setCreatedBy(createdBy);
 
         blacklist.getProofs().add(blacklistProof);

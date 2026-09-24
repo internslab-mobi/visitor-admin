@@ -32,13 +32,13 @@ public class Document extends BaseEntity {
      * These columns contain HMAC-SHA-256 blind indexes.
      * They do NOT contain the original Aadhaar/PAN/Passport numbers.
      */
-    @Column(name = "aadhar_number", length = 50)
+    @Column(name = "aadhar_number", length = 64)
     private String aadharNumber;
 
-    @Column(name = "pan_number", length = 50)
+    @Column(name = "pan_number", length = 64)
     private String panNumber;
 
-    @Column(name = "passport_number", length = 50)
+    @Column(name = "passport_number", length = 64)
     private String passportNumber;
 
     @OneToMany(

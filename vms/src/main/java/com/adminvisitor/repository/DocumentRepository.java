@@ -13,10 +13,10 @@ public interface DocumentRepository
             String visitorId
     );
 
-    Optional<Document> findTopByVisitorIdAndNdaDocumentIsNotNullOrderByCreatedAtDesc(
-            String visitorId
-    );
+//    Optional<Document> findTopByVisitorIdAndNdaDocumentIsNotNullOrderByCreatedAtDesc(
+//            String visitorId
+//    );
 
-    List<Document> findByVisitorId(String visitorId);
+    //List<Document> findByVisitorId(String visitorId);
 
 }

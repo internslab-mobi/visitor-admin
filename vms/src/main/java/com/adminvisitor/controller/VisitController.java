@@ -129,14 +129,14 @@ public class VisitController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{visitId}/nda-status")
-    public ResponseEntity<NdaStatusResponse> getNdaStatus(
-            @PathVariable String visitId) {
-
-        return ResponseEntity.ok(
-                visitService.getNdaStatus(visitId)
-        );
-    }
+//    @GetMapping("/{visitId}/nda-status")
+//    public ResponseEntity<NdaStatusResponse> getNdaStatus(
+//            @PathVariable String visitId) {
+//
+//        return ResponseEntity.ok(
+//                visitService.getNdaStatus(visitId)
+//        );
+//    }
 
 
 }
