@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "vms_document")
 @Getter
@@ -22,27 +25,26 @@ public class Document extends BaseEntity {
     private Visitor visitor;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "nationality", nullable = false, length = 20)
+    @Column(name = "nationality", length = 100)
     private Nationality nationality;
 
-    @Column(name = "aadhar_number", length = 100)
+    /*
+     * These columns contain HMAC-SHA-256 blind indexes.
+     * They do NOT contain the original Aadhaar/PAN/Passport numbers.
+     */
+    @Column(name = "aadhar_number", length = 64)
     private String aadharNumber;
 
-    @Column(name = "aadhar_document", length = 500)
-    private String aadharDocument;
-
-    @Column(name = "pan_number", length = 100)
+    @Column(name = "pan_number", length = 64)
     private String panNumber;
 
-    @Column(name = "pan_document", length = 500)
-    private String panDocument;
-
-    @Column(name = "passport_number", length = 100)
+    @Column(name = "passport_number", length = 64)
     private String passportNumber;
 
-    @Column(name = "passport_document", length = 500)
-    private String passportDocument;
-
-    @Column(name = "nda_document", length = 500)
-    private String ndaDocument;
+    @OneToMany(
+            mappedBy = "document",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<DocumentMetadata> metadata = new ArrayList<>();
 }

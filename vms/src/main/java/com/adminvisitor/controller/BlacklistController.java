@@ -1,5 +1,6 @@
 package com.adminvisitor.controller;
 
+import com.adminvisitor.dto.requestdto.AddVisitorToBlacklistRequest;
 import com.adminvisitor.dto.requestdto.BlacklistRequest;
 import com.adminvisitor.dto.responsedto.BlacklistResponse;
 import com.adminvisitor.service.BlacklistService;
@@ -59,5 +60,21 @@ public class BlacklistController {
         return ResponseEntity.ok(
                 blacklistService.getBlacklistById(id)
         );
+    }
+
+    @PostMapping("/visitor/{visitorId}")
+    public ResponseEntity<BlacklistResponse> addExistingVisitorToBlacklist(
+            @PathVariable String visitorId,
+            @Valid @RequestBody AddVisitorToBlacklistRequest request) {
+
+        BlacklistResponse response =
+                blacklistService.addExistingVisitorToBlacklist(
+                        visitorId,
+                        request
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 }

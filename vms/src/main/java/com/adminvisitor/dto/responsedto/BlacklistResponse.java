@@ -10,7 +10,6 @@ public record BlacklistResponse(
         String id,
         String visitorId,
         Nationality nationality,
-        ProofType proofType,
         String reason,
         BlacklistStatus status,
         String createdBy,
