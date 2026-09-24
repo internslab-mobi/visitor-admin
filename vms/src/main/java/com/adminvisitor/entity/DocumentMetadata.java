@@ -1,10 +1,11 @@
 package com.adminvisitor.entity;
 
+import com.adminvisitor.enums.DocumentType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 @Entity
 @Table(name = "vms_document_metadata")
 @Getter
@@ -18,6 +19,7 @@ public class DocumentMetadata extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "document_id", nullable = false)
+    @JsonIgnore
     private Document document;
 
     @Column(name = "document_path", nullable = false, length = 500)

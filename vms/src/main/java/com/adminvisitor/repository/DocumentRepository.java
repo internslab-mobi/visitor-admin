@@ -17,6 +17,6 @@ public interface DocumentRepository
 //            String visitorId
 //    );
 
-    //List<Document> findByVisitorId(String visitorId);
+    List<Document> findByVisitorId(String visitorId);
 
 }
