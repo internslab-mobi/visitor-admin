@@ -222,8 +222,109 @@ public class VisitService {
         );
     }
 
+//    private Visitor findOrCreateVisitor(RegistrationRequest request) {
+//        validateVisitorValidity(request);
+//        String email = request.email();
+//        String mobileNumber = request.mobileNumber();
+//
+//        /*
+//         * Check whether a visitor already exists with the supplied email.
+//         */
+//        Visitor visitorByEmail = visitorRepository
+//                .findByEmail(email)
+//                .orElse(null);
+//
+//        /*
+//         * Check whether a visitor already exists with the supplied mobile number.
+//         */
+//        Visitor visitorByMobileNumber = visitorRepository
+//                .findByMobileNumber(mobileNumber)
+//                .orElse(null);
+//
+//        /*
+//         * Case 1:
+//         * Both email and mobile belong to the same visitor.
+//         *
+//         * This is the valid existing visitor case.
+//         */
+//        if (visitorByEmail != null
+//                && visitorByMobileNumber != null
+//                && visitorByEmail.getId().equals(visitorByMobileNumber.getId())) {
+//
+//            log.info(
+//                    "Existing visitor found. visitorId={}",
+//                    visitorByEmail.getId()
+//            );
+//
+//
+//            if (request.visitorType() == VisitorType.VENDOR) {
+//                visitorByEmail.setValidity(request.validity());
+//                visitorRepository.save(visitorByEmail);
+//            }
+//
+//
+//            return visitorByEmail;
+//        }
+//
+//        /*
+//         * Case 2:
+//         * Email exists, but mobile is different or belongs to another visitor.
+//         */
+//        if (visitorByEmail != null) {
+//
+//            log.warn(
+//                    "Visitor registration rejected because the supplied email is already associated with another visitor"
+//            );
+//
+//            throw new EmailAlreadyExistsException(
+//                    "This email is already associated with another visitor"
+//            );
+//        }
+//
+//        /*
+//         * Case 3:
+//         * Mobile exists, but email is different or belongs to another visitor.
+//         */
+//        if (visitorByMobileNumber != null) {
+//
+//            log.warn(
+//                    "Visitor registration rejected because the supplied mobile number is already associated with another visitor"
+//            );
+//
+//            throw new MobileNumberAlreadyExistsException(
+//                    "This mobile number is already associated with another visitor"
+//            );
+//        }
+//
+//        /*
+//         * Case 4:
+//         * Neither email nor mobile exists.
+//         * Create a new Visitor profile.
+//         */
+//        Visitor newVisitor = new Visitor();
+//
+//        newVisitor.setId(
+//                idGeneratorService.generateId("VISITOR", "VTR")
+//        );
+//
+//        newVisitor.setFirstName(request.firstName());
+//        newVisitor.setLastName(request.lastName());
+//        newVisitor.setEmail(email);
+//        newVisitor.setMobileNumber(mobileNumber);
+//        newVisitor.setCompanyName(request.companyName());
+//        newVisitor.setValidity(request.validity());
+//        Visitor savedVisitor = visitorRepository.save(newVisitor);
+//
+//        log.info(
+//                "New visitor profile created. visitorId={}",
+//                savedVisitor.getId()
+//        );
+//
+//        return savedVisitor;
+//    }
+
     private Visitor findOrCreateVisitor(RegistrationRequest request) {
-        validateVisitorValidity(request);
+
         String email = request.email();
         String mobileNumber = request.mobileNumber();
 
@@ -256,12 +357,64 @@ public class VisitService {
                     visitorByEmail.getId()
             );
 
-
+            /*
+             * Only vendor visitors have NDA validity.
+             */
             if (request.visitorType() == VisitorType.VENDOR) {
+
+                LocalDateTime now = LocalDateTime.now();
+
+                /*
+                 * Existing NDA is still valid.
+                 *
+                 * Do not overwrite the existing validity.
+                 */
+                if (visitorByEmail.getValidity() != null
+                        && visitorByEmail.getValidity().isAfter(now)) {
+
+                    log.info(
+                            "Existing vendor has a valid NDA. visitorId={}, validity={}",
+                            visitorByEmail.getId(),
+                            visitorByEmail.getValidity()
+                    );
+
+                    return visitorByEmail;
+                }
+
+                /*
+                 * Existing vendor has no validity or the previous
+                 * validity has expired.
+                 *
+                 * A new validity must be supplied.
+                 */
+                if (request.validity() == null) {
+                    throw new BusinessRuleException(
+                            "A new NDA validity is required because the previous NDA has expired"
+                    );
+                }
+
+                /*
+                 * Save the newly entered NDA validity.
+                 */
                 visitorByEmail.setValidity(request.validity());
                 visitorRepository.save(visitorByEmail);
-            }
 
+                log.info(
+                        "Vendor NDA validity updated. visitorId={}, validity={}",
+                        visitorByEmail.getId(),
+                        request.validity()
+                );
+            } else {
+
+                /*
+                 * Non-vendor visitors must not have NDA validity.
+                 */
+                if (request.validity() != null) {
+                    throw new BusinessRuleException(
+                            "Validity must be null for non-vendor visitors"
+                    );
+                }
+            }
 
             return visitorByEmail;
         }
@@ -299,8 +452,25 @@ public class VisitService {
         /*
          * Case 4:
          * Neither email nor mobile exists.
+         *
          * Create a new Visitor profile.
          */
+        if (request.visitorType() == VisitorType.VENDOR
+                && request.validity() == null) {
+
+            throw new BusinessRuleException(
+                    "Validity is required for vendor visitors"
+            );
+        }
+
+        if (request.visitorType() != VisitorType.VENDOR
+                && request.validity() != null) {
+
+            throw new BusinessRuleException(
+                    "Validity must be null for non-vendor visitors"
+            );
+        }
+
         Visitor newVisitor = new Visitor();
 
         newVisitor.setId(
@@ -313,6 +483,7 @@ public class VisitService {
         newVisitor.setMobileNumber(mobileNumber);
         newVisitor.setCompanyName(request.companyName());
         newVisitor.setValidity(request.validity());
+
         Visitor savedVisitor = visitorRepository.save(newVisitor);
 
         log.info(
