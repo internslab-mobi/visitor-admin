@@ -518,75 +518,75 @@ public class VisitService {
         return toVisitDetailResponse(visit);
     }
 
-    private VisitDetailResponse toVisitDetailResponse(Visit visit) {
-
-        Visitor visitor = visit.getVisitor();
-        Document validNda = documentService.getValidNda(visitor);
-
-        Employee employee = visit.getHost();
-
-        String hostName =
-                employee.getFirstName()
-                        + " "
-                        + employee.getLastName();
-
-        String departmentName =
-                employee.getDepartment().getDepartmentName();
-
-        return new VisitDetailResponse(
-
-                // Visit information
-                visit.getId(),
-                visit.getVisitReference(),
-
-                // Visitor information
-                new VisitDetailResponse.VisitorDetails(
-                        visitor.getId(),
-                        visitor.getFirstName(),
-                        visitor.getLastName(),
-                        visitor.getEmail(),
-                        visitor.getMobileNumber(),
-                        visitor.getCompanyName(),
-                        validNda != null,
-                        validNda != null ? validNda.getId() : null,
-                        validNda != null ? visitor.getValidity() : null
-                ),
-
-                visit.getVisitorType(),
-                visit.getRegistrationType(),
-                visit.getPurpose(),
-
-                // Host information
-                new VisitDetailResponse.HostDetails(
-                        employee.getId(),
-                        hostName,
-                        employee.getDepartment().getId(),
-                        departmentName
-                ),
-
-                // Schedule
-                visit.getExpectedArrivalAt(),
-                visit.getExpectedDepartureAt(),
-
-                // Actual visit times
-                visit.getCheckedInAt(),
-                visit.getCheckedOutAt(),
-
-                // Remarks
-                visit.getRemarks(),
-
-                // Status
-                visit.getStatus(),
-
-                // Audit information
-                new VisitDetailResponse.AuditDetails(
-                        visit.getCreatedAt(),
-                        visit.getUpdatedAt(),
-                        visit.getCreatedBy(),
-                        visit.getUpdatedBy()
-                )
-        );
-    }
+//    private VisitDetailResponse toVisitDetailResponse(Visit visit) {
+//
+//        Visitor visitor = visit.getVisitor();
+//        Document validNda = documentService.getValidNda(visitor);
+//
+//        Employee employee = visit.getHost();
+//
+//        String hostName =
+//                employee.getFirstName()
+//                        + " "
+//                        + employee.getLastName();
+//
+//        String departmentName =
+//                employee.getDepartment().getDepartmentName();
+//
+//        return new VisitDetailResponse(
+//
+//                // Visit information
+//                visit.getId(),
+//                visit.getVisitReference(),
+//
+//                // Visitor information
+//                new VisitDetailResponse.VisitorDetails(
+//                        visitor.getId(),
+//                        visitor.getFirstName(),
+//                        visitor.getLastName(),
+//                        visitor.getEmail(),
+//                        visitor.getMobileNumber(),
+//                        visitor.getCompanyName(),
+//                        validNda != null,
+//                        validNda != null ? validNda.getId() : null,
+//                        validNda != null ? visitor.getValidity() : null
+//                ),
+//
+//                visit.getVisitorType(),
+//                visit.getRegistrationType(),
+//                visit.getPurpose(),
+//
+//                // Host information
+//                new VisitDetailResponse.HostDetails(
+//                        employee.getId(),
+//                        hostName,
+//                        employee.getDepartment().getId(),
+//                        departmentName
+//                ),
+//
+//                // Schedule
+//                visit.getExpectedArrivalAt(),
+//                visit.getExpectedDepartureAt(),
+//
+//                // Actual visit times
+//                visit.getCheckedInAt(),
+//                visit.getCheckedOutAt(),
+//
+//                // Remarks
+//                visit.getRemarks(),
+//
+//                // Status
+//                visit.getStatus(),
+//
+//                // Audit information
+//                new VisitDetailResponse.AuditDetails(
+//                        visit.getCreatedAt(),
+//                        visit.getUpdatedAt(),
+//                        visit.getCreatedBy(),
+//                        visit.getUpdatedBy()
+//                )
+//        );
+//    }
 
 
     @Transactional

@@ -1,56 +1,54 @@
 package com.adminvisitor.service;
 
-import com.adminvisitor.dto.responsedto.DocumentResponse;
-import com.adminvisitor.dto.responsedto.NdaStatusResponse;
 import com.adminvisitor.dto.responsedto.IdentityProofResponse;
+// import com.adminvisitor.dto.responsedto.DocumentResponse;
 import com.adminvisitor.entity.Document;
-import com.adminvisitor.entity.Visit;
 import com.adminvisitor.entity.Visitor;
-import com.adminvisitor.enums.VisitorType;
 import com.adminvisitor.enums.Nationality;
-import com.adminvisitor.exception.BadgeAlreadyExistsException;
-import com.adminvisitor.exception.BusinessRuleException;
+import com.adminvisitor.enums.ProofType;
 import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.DocumentRepository;
-import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.repository.VisitorRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
 @Service
 @RequiredArgsConstructor
 public class DocumentService {
 
-    @Value("${vms.document.nda-upload-dir}")
-    private String ndaUploadDir;
-
     private final DocumentRepository documentRepository;
     private final VisitorRepository visitorRepository;
     private final IdGeneratorService idGeneratorService;
-    private final VisitRepository visitRepository;
-    private final AesEncryptionService aesEncryptionService;
 
-    /**
-     * Upload and save a newly signed NDA for a visitor.
+    /*
+     * Active service for generating HMAC-SHA-256 blind indexes.
      */
+    private final HmacBlindIndexService hmacBlindIndexService;
+
+    /*
+     * ============================================================
+     * OLD NDA / FILE HANDLING
+     * ============================================================
+     *
+     * NDA handling belongs to another module/owner for now.
+     * The old implementation is intentionally kept commented
+     * so it can be restored/reworked later.
+     */
+
+    /*
+    @Value("${vms.document.nda-upload-dir}")
+    private String ndaUploadDir;
+
+    private final VisitRepository visitRepository;
+
     public Document uploadSignedNda(
             String visitorId,
             MultipartFile file
     ) {
 
-        // 1. Validate file
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException(
                     "Signed NDA file is required"
@@ -63,7 +61,6 @@ public class DocumentService {
             );
         }
 
-        // 2. Find visitor
         Visitor visitor = visitorRepository.findById(visitorId)
                 .orElseThrow(() ->
                         new IllegalArgumentException(
@@ -71,7 +68,6 @@ public class DocumentService {
                         )
                 );
 
-        // 3. NDA is allowed only for vendors
         Visit visit = visitRepository
                 .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
                 .orElseThrow(() ->
@@ -86,15 +82,12 @@ public class DocumentService {
             );
         }
 
-
-        // 3. Check NDA validity
         if (!isNdaRequired(visitor)) {
             throw new BadgeAlreadyExistsException(
                     "Valid NDA already exists for visitor: " + visitorId
             );
         }
 
-        // 3. Generate document ID
         String documentId =
                 idGeneratorService.generateId(
                         "DOCUMENT",
@@ -103,7 +96,6 @@ public class DocumentService {
 
         try {
 
-            // 4. Create visitor-specific directory
             Path visitorDirectory = Paths.get(
                     ndaUploadDir,
                     visitorId
@@ -111,38 +103,32 @@ public class DocumentService {
 
             Files.createDirectories(visitorDirectory);
 
-            // 5. Create unique file name
             String fileName = documentId + ".pdf";
 
             Path filePath = visitorDirectory.resolve(fileName);
 
-            // 6. Save PDF to local filesystem
             Files.write(
                     filePath,
                     file.getBytes()
             );
 
-            // 7. Create document record
             Document document = new Document();
 
             document.setId(documentId);
             document.setVisitor(visitor);
-            document.setNdaDocument(
-                    filePath.toString()
-            );
 
-            // 8. Save document record in database
+            // Old NDA path storage
+            // document.setNdaDocument(filePath.toString());
+
             Document savedDocument =
                     documentRepository.save(document);
 
-            // 9. NDA is valid for 6 months
             visitor.setValidity(
                     LocalDateTime.now().plusMonths(6)
             );
 
             visitorRepository.save(visitor);
 
-            // 10. Return saved document
             return savedDocument;
 
         } catch (IOException exception) {
@@ -154,34 +140,26 @@ public class DocumentService {
         }
     }
 
-    /**
-     * Check whether an NDA file is required for the visitor.
-     */
     public boolean isNdaRequired(Visitor visitor) {
 
         LocalDateTime validity =
                 visitor.getValidity();
 
-        // No valid cooldown
         if (validity == null) {
             return true;
         }
 
-        // Cooldown expired
         if (validity.isBefore(LocalDateTime.now())) {
             return true;
         }
 
-        // Cooldown is valid, but does an NDA actually exist?
         return documentRepository
                 .findTopByVisitorIdAndNdaDocumentIsNotNullOrderByCreatedAtDesc(
                         visitor.getId()
                 )
                 .isEmpty();
     }
-    /**
-     * Retrieve the latest signed NDA for a visitor.
-     */
+
     public Document getLatestNda(String visitorId) {
 
         return documentRepository
@@ -196,9 +174,6 @@ public class DocumentService {
                 );
     }
 
-    /**
-     * Validate that the uploaded file is a PDF.
-     */
     private boolean isPdf(MultipartFile file) {
 
         String contentType = file.getContentType();
@@ -218,7 +193,8 @@ public class DocumentService {
 
     public Document getValidNda(Visitor visitor) {
 
-        LocalDateTime validity = visitor.getValidity();
+        LocalDateTime validity =
+                visitor.getValidity();
 
         if (validity == null) {
             return null;
@@ -239,14 +215,40 @@ public class DocumentService {
 
         Document document = getLatestNda(visitorId);
 
-        Path filePath = Paths.get(document.getNdaDocument());
+        Path filePath = Paths.get(
+                document.getNdaDocument()
+        );
 
         if (!Files.exists(filePath)) {
-            throw new IllegalArgumentException("NDA file not found");
+            throw new IllegalArgumentException(
+                    "NDA file not found"
+            );
         }
 
         return new FileSystemResource(filePath);
     }
+    */
+
+
+    /*
+     * ============================================================
+     * IDENTITY PROOF
+     * ============================================================
+     *
+     * Current flow:
+     *
+     * Raw Aadhaar/PAN/Passport
+     *          ↓
+     * ProofValidationService
+     *          ↓
+     * HmacBlindIndexService
+     *          ↓
+     * HMAC-SHA-256 blind index
+     *          ↓
+     * vms_document
+     *
+     * The raw proof number is NOT stored in the database.
+     */
 
     @Transactional
     public Document saveIdentityProofs(
@@ -267,22 +269,105 @@ public class DocumentService {
 
         document.setId(documentId);
         document.setVisitor(visitor);
+        document.setNationality(nationality);
 
+        /*
+         * Aadhaar
+         */
+        if (aadharNumber != null && !aadharNumber.isBlank()) {
+
+            document.setAadharNumber(
+                    hmacBlindIndexService.generateBlindIndex(
+                            ProofType.AADHAAR,
+                            aadharNumber
+                    )
+            );
+        }
+
+        /*
+         * PAN
+         */
+        if (panNumber != null && !panNumber.isBlank()) {
+
+            document.setPanNumber(
+                    hmacBlindIndexService.generateBlindIndex(
+                            ProofType.PAN,
+                            panNumber
+                    )
+            );
+        }
+
+        /*
+         * Passport
+         */
+        if (passportNumber != null && !passportNumber.isBlank()) {
+
+            document.setPassportNumber(
+                    hmacBlindIndexService.generateBlindIndex(
+                            ProofType.PASSPORT,
+                            passportNumber
+                    )
+            );
+        }
+
+        return documentRepository.save(document);
+    }
+
+
+    /*
+     * ============================================================
+     * OLD AES ENCRYPTION FLOW
+     * ============================================================
+     *
+     * Kept for future reference.
+     *
+     * IMPORTANT:
+     * Do NOT use this flow for the current vms_document
+     * identity-proof columns.
+     *
+     * Current columns contain HMAC blind indexes.
+     */
+
+    /*
+    private final AesEncryptionService aesEncryptionService;
+
+    @Transactional
+    public Document saveIdentityProofsUsingAes(
+            Visitor visitor,
+            Nationality nationality,
+            String aadharNumber,
+            String panNumber,
+            String passportNumber
+    ) {
+
+        String documentId =
+                idGeneratorService.generateId(
+                        "DOCUMENT",
+                        "doc"
+                );
+
+        Document document = new Document();
+
+        document.setId(documentId);
+        document.setVisitor(visitor);
         document.setNationality(nationality);
 
         if (aadharNumber != null && !aadharNumber.isBlank()) {
+
             document.setAadharNumber(
                     aesEncryptionService.encrypt(aadharNumber)
             );
         }
 
         if (panNumber != null && !panNumber.isBlank()) {
+
             document.setPanNumber(
                     aesEncryptionService.encrypt(panNumber)
             );
         }
 
         if (passportNumber != null && !passportNumber.isBlank()) {
+
             document.setPassportNumber(
                     aesEncryptionService.encrypt(passportNumber)
             );
@@ -291,7 +376,9 @@ public class DocumentService {
         return documentRepository.save(document);
     }
 
-    public IdentityProofResponse getIdentityProofs(String visitorId) {
+    public IdentityProofResponse getIdentityProofsUsingAes(
+            String visitorId
+    ) {
 
         Document document =
                 documentRepository
@@ -308,6 +395,7 @@ public class DocumentService {
         String passportNumber = null;
 
         if (document.getAadharNumber() != null) {
+
             aadharNumber =
                     maskAadhar(
                             aesEncryptionService.decrypt(
@@ -317,6 +405,7 @@ public class DocumentService {
         }
 
         if (document.getPanNumber() != null) {
+
             panNumber =
                     maskPan(
                             aesEncryptionService.decrypt(
@@ -326,6 +415,7 @@ public class DocumentService {
         }
 
         if (document.getPassportNumber() != null) {
+
             passportNumber =
                     maskPassport(
                             aesEncryptionService.decrypt(
@@ -348,16 +438,16 @@ public class DocumentService {
 
         return "XXXX XXXX "
                 + aadharNumber.substring(
-                aadharNumber.length() - 4
-        );
+                        aadharNumber.length() - 4
+                );
     }
 
     private String maskPan(String panNumber) {
 
         return "XXXXXX"
                 + panNumber.substring(
-                panNumber.length() - 4
-        );
+                        panNumber.length() - 4
+                );
     }
 
     private String maskPassport(String passportNumber) {
@@ -368,12 +458,26 @@ public class DocumentService {
 
         return "XXXX"
                 + passportNumber.substring(
-                passportNumber.length() - 4
-        );
+                        passportNumber.length() - 4
+                );
     }
+    */
 
+
+    /*
+     * ============================================================
+     * OLD DOCUMENT/NDA LISTING
+     * ============================================================
+     *
+     * Currently disabled because document paths are now handled
+     * separately through vms_document_metadata.
+     */
+
+    /*
     @Transactional(readOnly = true)
-    public List<DocumentResponse> getAllDocuments(String visitorId) {
+    public List<DocumentResponse> getAllDocuments(
+            String visitorId
+    ) {
 
         visitorRepository.findById(visitorId)
                 .orElseThrow(() ->
@@ -391,4 +495,5 @@ public class DocumentService {
                 ))
                 .toList();
     }
+    */
 }
