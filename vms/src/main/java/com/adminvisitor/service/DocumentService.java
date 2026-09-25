@@ -60,6 +60,8 @@ public class DocumentService {
     @Value("${vms.document.nda-upload-dir}")
     private String ndaUploadDir;
 
+    @Value("${vms.document.upload-dir}")
+    private String documentUploadDir;
     private final VisitRepository visitRepository;
 
 //    public Document uploadSignedNda(
@@ -721,5 +723,178 @@ public class DocumentService {
                         metadata.getCreatedAt().toString()
                 ))
                 .toList();
+    }
+
+
+
+
+
+    @Transactional
+    public List<DocumentMetadata> uploadProofDocuments(
+            String visitorId,
+            List<MultipartFile> files
+    ) {
+
+
+        if (visitorId == null || visitorId.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Visitor ID is required"
+            );
+        }
+
+
+
+        if (files == null || files.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "At least one proof document is required"
+            );
+        }
+
+
+        Visitor visitor = visitorRepository.findById(visitorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Visitor not found: " + visitorId
+                        )
+                );
+
+
+
+        Document document = documentRepository
+                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Document not found for visitor: "
+                                        + visitorId
+                        )
+                );
+
+
+
+        List<DocumentMetadata> existingDocuments =
+                documentMetadataRepository
+                        .findByDocumentId(document.getId());
+
+        if (!existingDocuments.isEmpty()) {
+            return existingDocuments;
+        }
+
+
+        final long MAX_FILE_SIZE =
+                5 * 1024 * 1024; // 5 MB
+
+        for (MultipartFile file : files) {
+
+            if (file == null || file.isEmpty()) {
+
+                throw new IllegalArgumentException(
+                        "Proof document cannot be empty"
+                );
+            }
+
+            if (file.getSize() > MAX_FILE_SIZE) {
+
+                throw new IllegalArgumentException(
+                        "Proof document '"
+                                + file.getOriginalFilename()
+                                + "' exceeds the maximum size of 5 MB"
+                );
+            }
+        }
+
+
+        Path visitorDirectory =
+                Paths.get(
+                        documentUploadDir,
+                        visitorId
+                );
+
+
+        try {
+
+            Files.createDirectories(visitorDirectory);
+
+
+            List<DocumentMetadata> uploadedDocuments =
+                    new java.util.ArrayList<>();
+
+
+            for (MultipartFile file : files) {
+
+                String metadataId =
+                        idGeneratorService.generateId(
+                                "DOCUMENT_METADATA",
+                                "DMD"
+                        );
+
+
+
+                String originalFileName =
+                        file.getOriginalFilename();
+
+                String extension = "";
+
+                if (originalFileName != null
+                        && originalFileName.contains(".")) {
+
+                    extension =
+                            originalFileName.substring(
+                                    originalFileName.lastIndexOf(".")
+                            );
+                }
+
+
+                String storedFileName =
+                        metadataId + extension;
+
+
+                Path filePath =
+                        visitorDirectory.resolve(
+                                storedFileName
+                        );
+
+
+                Files.write(
+                        filePath,
+                        file.getBytes()
+                );
+
+
+                DocumentMetadata metadata =
+                        new DocumentMetadata();
+
+                metadata.setId(metadataId);
+
+                metadata.setDocument(
+                        document
+                );
+
+                metadata.setDocumentPath(
+                        filePath.toString()
+                );
+
+
+                DocumentMetadata savedMetadata =
+                        documentMetadataRepository.save(
+                                metadata
+                        );
+
+
+                uploadedDocuments.add(
+                        savedMetadata
+                );
+            }
+
+
+            return uploadedDocuments;
+
+
+        } catch (IOException exception) {
+
+            throw new RuntimeException(
+                    "Failed to save proof documents",
+                    exception
+            );
+        }
     }
 }
