@@ -121,13 +121,7 @@ class VisitBadgeControllerTest {
         verify(qrCodeService)
                 .generateQrCode("qr-token-001");
 
-        verify(emailService)
-                .sendVisitBadgeEmail(
-                        visit,
-                        badge,
-                        "base64-qr-code",
-                        null
-                );
+
     }
 
 

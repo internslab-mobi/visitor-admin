@@ -2,6 +2,7 @@ package com.adminvisitor.service;
 
 import com.adminvisitor.dto.responsedto.*;
 import com.adminvisitor.dto.requestdto.RegistrationRequest;
+import com.adminvisitor.dto.requestdto.CheckInRequest;
 import com.adminvisitor.dto.responsedto.HostCheckInEmailData;
 import com.adminvisitor.entity.*;
 import com.adminvisitor.enums.*;
@@ -845,7 +846,10 @@ public class VisitService {
     // ============================================================
 
     @Transactional
-    public VisitDetailResponse checkIn(String visitId) {
+    public VisitDetailResponse checkIn(
+            String visitId,
+            CheckInRequest request
+    ){
 
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() ->
@@ -858,6 +862,66 @@ public class VisitService {
             throw new BusinessRuleException(
                     "Only a registered visit can be checked in"
             );
+        }
+
+        if (!visit.getExpectedArrivalAt().toLocalDate().equals(LocalDate.now())) {
+            throw new BusinessRuleException(
+                    "Visit can only be checked in on the scheduled visit date"
+            );
+        }
+
+        Document identityDocument =
+                documentService.getLatestIdentityDocument(
+                        visit.getVisitor().getId()
+                );
+
+        Nationality nationality =
+                identityDocument.getNationality();
+
+        proofValidationService.validate(
+                nationality,
+                request.aadharNumber(),
+                request.panNumber(),
+                request.passportNumber()
+        );
+
+        if (nationality == Nationality.DOMESTIC) {
+
+            boolean aadhaarMatches =
+                    documentService.verifyIdentityProof(
+                            visit.getVisitor(),
+                            ProofType.AADHAAR,
+                            request.aadharNumber()
+                    );
+
+            boolean panMatches =
+                    documentService.verifyIdentityProof(
+                            visit.getVisitor(),
+                            ProofType.PAN,
+                            request.panNumber()
+                    );
+
+            if (!aadhaarMatches || !panMatches) {
+                throw new BusinessRuleException(
+                        "Identity verification failed"
+                );
+            }
+        }
+
+        if (nationality == Nationality.INTERNATIONAL) {
+
+            boolean passportMatches =
+                    documentService.verifyIdentityProof(
+                            visit.getVisitor(),
+                            ProofType.PASSPORT,
+                            request.passportNumber()
+                    );
+
+            if (!passportMatches) {
+                throw new BusinessRuleException(
+                        "Identity verification failed"
+                );
+            }
         }
 
 

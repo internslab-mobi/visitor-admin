@@ -466,6 +466,75 @@ public class DocumentService {
         return documentRepository.save(document);
     }
 
+    public Document getLatestIdentityDocument(String visitorId) {
+
+        return documentRepository
+                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Identity document not found for visitor: " + visitorId
+                        )
+                );
+    }
+
+    public boolean verifyIdentityProof(
+            Visitor visitor,
+            ProofType proofType,
+            String proofNumber
+    ) {
+
+        if (visitor == null) {
+            throw new IllegalArgumentException(
+                    "Visitor is required"
+            );
+        }
+
+        if (proofType == null) {
+            throw new IllegalArgumentException(
+                    "Proof type is required"
+            );
+        }
+
+        if (proofNumber == null || proofNumber.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Proof number is required"
+            );
+        }
+
+        String blindIndex =
+                hmacBlindIndexService.generateBlindIndex(
+                        proofType,
+                        proofNumber
+                );
+
+        return switch (proofType) {
+
+            case AADHAAR ->
+                    documentRepository
+                            .findByVisitorIdAndAadharNumber(
+                                    visitor.getId(),
+                                    blindIndex
+                            )
+                            .isPresent();
+
+            case PAN ->
+                    documentRepository
+                            .findByVisitorIdAndPanNumber(
+                                    visitor.getId(),
+                                    blindIndex
+                            )
+                            .isPresent();
+
+            case PASSPORT ->
+                    documentRepository
+                            .findByVisitorIdAndPassportNumber(
+                                    visitor.getId(),
+                                    blindIndex
+                            )
+                            .isPresent();
+        };
+    }
+
 
     /*
      * ============================================================

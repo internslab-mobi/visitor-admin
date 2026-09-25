@@ -1,5 +1,6 @@
 package com.adminvisitor.controller;
 
+import com.adminvisitor.dto.requestdto.CheckInRequest;
 import com.adminvisitor.dto.requestdto.RegistrationRequest;
 import com.adminvisitor.dto.responsedto.NdaStatusResponse;
 import com.adminvisitor.dto.responsedto.RegistrationResponse;
@@ -112,10 +113,11 @@ public class VisitController {
 
     @PatchMapping("/{visitId}/check-in")
     public ResponseEntity<VisitDetailResponse> checkIn(
-            @PathVariable String visitId) {
+            @PathVariable String visitId,
+            @Valid @RequestBody CheckInRequest request) {
 
         return ResponseEntity.ok(
-                visitService.checkIn(visitId)
+                visitService.checkIn(visitId, request)
         );
     }
 

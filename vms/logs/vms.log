@@ -1,0 +1,52 @@
+2026-09-25 06:24:24.608 INFO  [restartedMain] com.adminvisitor.VMSApplication - Starting VMSApplication using Java 21.0.10 with PID 24792 (D:\Projects\visitor-admin\vms\target\classes started by logeshwaran.j in D:\Projects\visitor-admin\vms)
+2026-09-25 06:24:24.611 DEBUG [restartedMain] com.adminvisitor.VMSApplication - Running with Spring Boot v4.1.1, Spring v7.0.9
+2026-09-25 06:24:24.612 INFO  [restartedMain] com.adminvisitor.VMSApplication - No active profile set, falling back to 1 default profile: "default"
+2026-09-25 06:24:24.670 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-09-25 06:24:24.670 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-09-25 06:24:24.991 INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.3.Final
+2026-09-25 06:24:25.638 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-25 06:24:25.875 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 226 ms. Found 11 JPA repository interfaces.
+2026-09-25 06:24:26.767 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8092 (http)
+2026-09-25 06:24:26.782 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8092"]
+2026-09-25 06:24:26.785 INFO  [restartedMain] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-09-25 06:24:26.786 INFO  [restartedMain] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.24]
+2026-09-25 06:24:26.894 INFO  [restartedMain] o.s.b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 2223 ms
+2026-09-25 06:24:27.101 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-09-25 06:24:28.712 INFO  [restartedMain] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3773dda3
+2026-09-25 06:24:28.715 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-09-25 06:24:28.738 INFO  [restartedMain] org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-25 06:24:28.791 INFO  [restartedMain] org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.5.Final
+2026-09-25 06:24:29.256 INFO  [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-25 06:24:29.806 INFO  [restartedMain] o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://192.168.11.101:3306/Interns_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.40
+	Default catalog/schema: Interns_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-25 06:24:30.975 INFO  [restartedMain] org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-25 06:24:30.982 INFO  [restartedMain] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-25 06:24:31.098 INFO  [restartedMain] o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-25 06:24:32.254 WARN  [restartedMain] o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-25 06:24:32.946 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8092"]
+2026-09-25 06:24:32.979 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat started on port 8092 (http) with context path '/'
+2026-09-25 06:24:32.985 INFO  [restartedMain] com.adminvisitor.VMSApplication - Started VMSApplication in 9.037 seconds (process running for 10.048)
+2026-09-25 06:24:32.987 WARN  [restartedMain] o.s.c.events.SpringDocAppInitializer - SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-09-25 06:24:32.987 WARN  [restartedMain] o.s.c.events.SpringDocAppInitializer - SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-09-25 06:24:54.232 INFO  [http-nio-8092-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-25 06:24:54.232 INFO  [http-nio-8092-exec-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-09-25 06:24:54.234 INFO  [http-nio-8092-exec-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-09-25 06:24:54.409 INFO  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_COMPLETED controller=SwaggerConfigResource method=openapiJson durationMs=0
+2026-09-25 06:24:54.945 INFO  [http-nio-8092-exec-8] o.s.api.AbstractOpenApiResource - Init duration for springdoc-openapi is: 483 ms
+2026-09-25 06:24:54.966 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=OpenApiWebMvcResource method=openapiJson durationMs=504
+2026-09-25 06:25:25.157 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=HealthController method=health durationMs=0
+2026-09-25 06:25:35.033 INFO  [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-09-25 06:25:35.044 INFO  [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-09-25 06:25:35.092 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-25 06:25:35.095 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-09-25 06:25:35.193 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.

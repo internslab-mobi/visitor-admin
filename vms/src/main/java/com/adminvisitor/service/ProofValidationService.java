@@ -70,6 +70,8 @@ public class ProofValidationService {
         }
     }
 
+
+
     public void validate(
             Nationality nationality,
             ProofType proofType) {
