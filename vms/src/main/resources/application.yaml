@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: vms
+
+  # Original company/shared database configuration
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 6000
+          timeout: 6000
+          writetimeout: 6000
+
+app:
+  cors:
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:4200}
+
+vms:
+  security:
+    hmac:
+      blind-index-key: ${VMS_HMAC_BLIND_INDEX_KEY}
+
+  notification:
+    host-email: ${VMS_HOST_EMAIL}
+    host-name: ${VMS_HOST_NAME}
+    department-name: ${VMS_DEPARTMENT_NAME}
+
+  document:
+    nda-upload-dir: D:/VMS/NDA
+    upload-dir: D:/VMS/Proof
+    photo-upload-dir: D:/VMS/VisitorPhotos
+
+crypto:
+  aes:
+    key: ${CRYPTO_AES_KEY}
+
+server:
+  port: 8092
+
+logging:
+  level:
+    com.adminvisitor: DEBUG
