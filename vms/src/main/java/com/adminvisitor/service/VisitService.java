@@ -9,7 +9,6 @@ import com.adminvisitor.enums.*;
 import com.adminvisitor.exception.BusinessRuleException;
 import com.adminvisitor.exception.EmailAlreadyExistsException;
 import com.adminvisitor.exception.MobileNumberAlreadyExistsException;
-import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.EmployeeRepository;
 import com.adminvisitor.repository.VendorRepository;
 import com.adminvisitor.repository.VisitRepository;
