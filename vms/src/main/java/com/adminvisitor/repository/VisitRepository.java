@@ -33,4 +33,14 @@ public interface VisitRepository extends JpaRepository<Visit, String>, JpaSpecif
         );
 
         Optional<Visit> findTopByVisitorIdOrderByCreatedAtDesc(String visitorId);
+
+        List<Visit> findByStatusAndExpectedArrivalAtBefore(
+                VisitStatus status,
+                LocalDateTime time
+        );
+
+        List<Visit> findByStatusAndCheckedInAtBefore(
+                VisitStatus status,
+                LocalDateTime time
+        );
 }
