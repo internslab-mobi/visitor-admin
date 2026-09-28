@@ -129,4 +129,14 @@ public class DocumentController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/{visitorId}/nda/all")
+    public ResponseEntity<List<DocumentResponse>> getAllNdas(
+            @PathVariable String visitorId
+    ) {
+
+        return ResponseEntity.ok(
+                documentService.getAllNdas(visitorId)
+        );
+    }
 }

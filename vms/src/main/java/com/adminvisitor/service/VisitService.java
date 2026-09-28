@@ -251,7 +251,7 @@ public class VisitService {
 
     private Visitor findOrCreateVisitor(RegistrationRequest request) {
 
-        validateVisitorValidity(request);
+//        validateVisitorValidity(request);
 
         String email = request.email();
         String mobileNumber = request.mobileNumber();
@@ -285,12 +285,7 @@ public class VisitService {
                     visitorByEmail.getId()
             );
 
-            if (request.visitorType() == VisitorType.VENDOR) {
 
-                visitorByEmail.setValidity(request.validity());
-
-                visitorRepository.save(visitorByEmail);
-            }
 
             return visitorByEmail;
         }
@@ -330,6 +325,8 @@ public class VisitService {
          * Neither email nor mobile exists.
          * Create a new Visitor profile.
          */
+
+        validateVisitorValidity(request);
         Visitor newVisitor = new Visitor();
 
         newVisitor.setId(

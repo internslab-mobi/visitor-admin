@@ -4,5 +4,6 @@ public enum DocumentType {
     AADHAAR,
     PAN,
     PASSPORT,
-    NDA
+    NDA,
+    VISITOR_PHOTO
 }
