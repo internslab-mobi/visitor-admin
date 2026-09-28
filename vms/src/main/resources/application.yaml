@@ -40,6 +40,7 @@ vms:
 
   document:
     nda-upload-dir: D:/VMS/NDA
+    upload-dir: D:/VMS/Proof
     photo-upload-dir: D:/VMS/VisitorPhotos
 
 crypto:

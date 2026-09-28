@@ -95,4 +95,38 @@ public class DocumentController {
 //                documentService.getIdentityProofs(visitorId)
 //        );
 //    }
+
+
+
+
+    @PostMapping(
+            value = "/api/proof-documents/upload/{visitorId}",
+            consumes = "multipart/form-data"
+    )
+    public ResponseEntity<List<DocumentResponse>> uploadProofDocuments(
+            @PathVariable String visitorId,
+            @RequestParam("files") List<MultipartFile> files
+    ) {
+
+        List<DocumentMetadata> uploadedDocuments =
+                documentService.uploadProofDocuments(
+                        visitorId,
+                        files
+                );
+
+        List<DocumentResponse> response =
+                uploadedDocuments.stream()
+                        .map(metadata ->
+                                new DocumentResponse(
+                                        metadata.getId(),
+                                        metadata.getDocumentPath(),
+                                        metadata.getCreatedAt() != null
+                                                ? metadata.getCreatedAt().toString()
+                                                : null
+                                )
+                        )
+                        .toList();
+
+        return ResponseEntity.ok(response);
+    }
 }
