@@ -1,6 +1,7 @@
 package com.adminvisitor.repository;
 
 import com.adminvisitor.entity.DocumentMetadata;
+import com.adminvisitor.enums.DocumentType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -13,5 +14,11 @@ public interface DocumentMetadataRepository
 
     Optional<DocumentMetadata> findTopByDocumentIdOrderByCreatedAtDesc(
             String documentId
+    );
+
+    Optional<DocumentMetadata>
+    findTopByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+            String visitorId,
+            DocumentType documentType
     );
 }

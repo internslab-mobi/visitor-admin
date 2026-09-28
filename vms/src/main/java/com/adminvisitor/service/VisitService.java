@@ -20,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -847,7 +848,8 @@ public class VisitService {
     @Transactional
     public VisitDetailResponse checkIn(
             String visitId,
-            CheckInRequest request
+            CheckInRequest request,
+            MultipartFile photo
     ){
 
         Visit visit = visitRepository.findById(visitId)
@@ -923,6 +925,12 @@ public class VisitService {
             }
         }
 
+        DocumentMetadata visitorPhoto =
+                documentService.uploadVisitorPhoto(
+                        visit.getVisitor().getId(),
+                        photo
+                );
+
 
         /*
          * ========================================================
@@ -993,7 +1001,7 @@ public class VisitService {
 
                         qrCode,
 
-                        null
+                        visitorPhoto.getDocumentPath()
                 );
 
         log.info(
@@ -1079,6 +1087,11 @@ public class VisitService {
         visit.setStatus(VisitStatus.CHECKED_OUT);
 
         Visit checkedOutVisit = visitRepository.save(visit);
+
+        visitBadgeService.invalidateBadgeOnCheckout(
+                visitId,
+                checkedOutAt
+        );
 
         log.info(
                 "Visitor checked out successfully. visitId={}, visitReference={}, visitorId={}, checkedOutAt={}",
