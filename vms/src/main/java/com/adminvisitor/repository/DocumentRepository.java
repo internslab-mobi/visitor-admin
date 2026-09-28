@@ -13,17 +13,17 @@ public interface DocumentRepository
             String visitorId
     );
 
-    Optional<Document> findByVisitorIdAndAadharNumber(
+    boolean existsByVisitorIdAndAadharNumber(
             String visitorId,
             String aadharNumber
     );
 
-    Optional<Document> findByVisitorIdAndPanNumber(
+    boolean existsByVisitorIdAndPanNumber(
             String visitorId,
             String panNumber
     );
 
-    Optional<Document> findByVisitorIdAndPassportNumber(
+    boolean existsByVisitorIdAndPassportNumber(
             String visitorId,
             String passportNumber
     );

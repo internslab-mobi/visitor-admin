@@ -55,6 +55,9 @@ public class DocumentService {
     private String documentUploadDir;
     private final VisitRepository visitRepository;
 
+    @Value("${vms.document.photo-upload-dir}")
+    private String photoUploadDir;
+
 //    public Document uploadSignedNda(
 //            String visitorId,
 //            MultipartFile file
@@ -150,6 +153,129 @@ public class DocumentService {
 //            );
 //        }
 //    }
+
+    @Transactional
+    public DocumentMetadata uploadVisitorPhoto(
+            String visitorId,
+            MultipartFile file
+    ) {
+
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Visitor photo is required"
+            );
+        }
+
+        Visitor visitor = visitorRepository.findById(visitorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Visitor not found: " + visitorId
+                        )
+                );
+
+        Document document = documentRepository
+                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Document not found for visitor: " + visitorId
+                        )
+                );
+
+        /*
+         * Maximum visitor photo size: 5 MB.
+         */
+        final long MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException(
+                    "Visitor photo cannot exceed 5 MB"
+            );
+        }
+
+        /*
+         * Only image files are allowed.
+         */
+        String contentType = file.getContentType();
+
+        if (contentType == null
+                || !contentType.startsWith("image/")) {
+
+            throw new IllegalArgumentException(
+                    "Only image files are allowed for visitor photo"
+            );
+        }
+
+        String metadataId =
+                idGeneratorService.generateId(
+                        "DOCUMENT_METADATA",
+                        "DMD"
+                );
+
+        try {
+
+            /*
+             * Store photos in a visitor-specific directory.
+             *
+             * Example:
+             * visitor-photo/VTR-022/DMD001.jpg
+             */
+            Path visitorDirectory =
+                    Paths.get(
+                            photoUploadDir,
+                            visitorId
+                    );
+
+            Files.createDirectories(visitorDirectory);
+
+            String originalFileName =
+                    file.getOriginalFilename();
+
+            String extension = "";
+
+            if (originalFileName != null
+                    && originalFileName.contains(".")) {
+
+                extension =
+                        originalFileName.substring(
+                                originalFileName.lastIndexOf(".")
+                        );
+            }
+
+            String storedFileName =
+                    metadataId + extension;
+
+            Path filePath =
+                    visitorDirectory.resolve(
+                            storedFileName
+                    );
+
+            Files.write(
+                    filePath,
+                    file.getBytes()
+            );
+
+            DocumentMetadata metadata =
+                    new DocumentMetadata();
+
+            metadata.setId(metadataId);
+            metadata.setDocument(document);
+            metadata.setDocumentType(
+                    DocumentType.VISITOR_PHOTO
+            );
+            metadata.setDocumentPath(
+                    filePath.toString()
+            );
+
+            return documentMetadataRepository.save(metadata);
+
+        } catch (IOException exception) {
+
+            throw new RuntimeException(
+                    "Failed to save visitor photo",
+                    exception
+            );
+        }
+    }
 
 
     @Transactional
@@ -249,16 +375,17 @@ public class DocumentService {
             // IMPORTANT
             metadata.setDocumentType(DocumentType.NDA);
 
+            metadata.setDocumentType(DocumentType.NDA);
             metadata.setDocumentPath(filePath.toString());
 
             documentMetadataRepository.save(metadata);
 
             // 13. Start a new 6-month validity period
-            visitor.setValidity(
-                    LocalDateTime.now().plusMonths(6)
-            );
-
-            visitorRepository.save(visitor);
+//            visitor.setValidity(
+//                    LocalDateTime.now().plusMonths(6)
+//            );
+//
+//            visitorRepository.save(visitor);
 
             return document;
 
@@ -337,6 +464,22 @@ public class DocumentService {
                         )
                 );
     }
+
+    @Transactional(readOnly = true)
+    public DocumentMetadata getLatestVisitorPhoto(String visitorId) {
+
+        return documentMetadataRepository
+                .findTopByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+                        visitorId,
+                        DocumentType.VISITOR_PHOTO
+                )
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Visitor photo not found for visitor: " + visitorId
+                        )
+                );
+    }
+
     private boolean isPdf(MultipartFile file) {
 
         String contentType = file.getContentType();
@@ -523,27 +666,24 @@ public class DocumentService {
 
             case AADHAAR ->
                     documentRepository
-                            .findByVisitorIdAndAadharNumber(
+                            .existsByVisitorIdAndAadharNumber(
                                     visitor.getId(),
                                     blindIndex
-                            )
-                            .isPresent();
+                            );
 
             case PAN ->
                     documentRepository
-                            .findByVisitorIdAndPanNumber(
+                            .existsByVisitorIdAndPanNumber(
                                     visitor.getId(),
                                     blindIndex
-                            )
-                            .isPresent();
+                            );
 
             case PASSPORT ->
                     documentRepository
-                            .findByVisitorIdAndPassportNumber(
+                            .existsByVisitorIdAndPassportNumber(
                                     visitor.getId(),
                                     blindIndex
-                            )
-                            .isPresent();
+                            );
         };
     }
 

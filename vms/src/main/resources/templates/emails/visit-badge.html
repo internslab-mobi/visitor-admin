@@ -103,9 +103,33 @@
                                 <td align="center"
                                     style="padding: 28px;">
 
-                                    <!-- Temporary placeholder -->
+                                    <!-- Visitor photo -->
+                                    <div th:if="${visitorPhoto != null and visitorPhoto != ''}">
+
+                                        <img src="cid:visitorPhoto"
+                                             width="150"
+                                             height="150"
+                                             alt="Visitor Photo"
+                                             style="display: block;
+                                                    width: 150px;
+                                                    height: 150px;
+                                                    object-fit: cover;
+                                                    border-radius: 10px;">
+
+                                    </div>
+
+                                    <!-- Placeholder -->
                                     <div th:if="${visitorPhoto == null or visitorPhoto == ''}"
-                                         style="width: 150px; height: 150px; border: 2px dashed #b8d8e8; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #78909c; font-size: 13px; text-align: center;">
+                                         style="width: 150px;
+                                                height: 150px;
+                                                border: 2px dashed #b8d8e8;
+                                                border-radius: 10px;
+                                                display: flex;
+                                                align-items: center;
+                                                justify-content: center;
+                                                color: #78909c;
+                                                font-size: 13px;
+                                                text-align: center;">
 
                                         Visitor photo<br>
                                         will be available<br>

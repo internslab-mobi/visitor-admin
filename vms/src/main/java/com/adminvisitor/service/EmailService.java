@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -148,12 +149,6 @@ public class EmailService {
                 "validUntil",
                 data.validUntil()
         );
-
-        /*
-         * Visitor photo is not implemented yet.
-         * For now this remains null and the template
-         * displays a placeholder.
-         */
         context.setVariable(
                 "visitorPhoto",
                 data.visitorPhoto()
@@ -203,6 +198,22 @@ public class EmailService {
                     "qrCode",
                     new ByteArrayResource(qrImageBytes),
                     "image/png"
+            );
+
+            FileSystemResource visitorPhoto =
+                    new FileSystemResource(data.visitorPhoto());
+
+            if (!visitorPhoto.exists() || !visitorPhoto.isReadable()) {
+                throw new IllegalStateException(
+                        "Visitor photo file not found: "
+                                + data.visitorPhoto()
+                );
+            }
+
+            helper.addInline(
+                    "visitorPhoto",
+                    visitorPhoto,
+                    "image/jpeg"
             );
 
             mailSender.send(message);

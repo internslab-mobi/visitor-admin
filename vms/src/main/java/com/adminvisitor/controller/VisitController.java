@@ -9,12 +9,17 @@ import com.adminvisitor.dto.responsedto.VisitDetailResponse;
 import com.adminvisitor.service.VisitService;
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.enums.VisitView;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.multipart.MultipartFile;
+import io.swagger.v3.oas.annotations.media.Content;
+import org.springframework.http.MediaType;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -111,13 +116,34 @@ public class VisitController {
         return ResponseEntity.ok(response);
     }
 
-    @PatchMapping("/{visitId}/check-in")
+    @PatchMapping(
+            value = "/{visitId}/check-in",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public ResponseEntity<VisitDetailResponse> checkIn(
             @PathVariable String visitId,
-            @Valid @RequestBody CheckInRequest request) {
 
+            @RequestPart("request")
+            @Parameter(
+                    description = "Check-in identity verification data",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(
+                                    implementation = CheckInRequest.class
+                            )
+                    )
+            )
+            @Valid CheckInRequest request,
+
+            @RequestPart("photo")
+            MultipartFile photo
+    ) {
         return ResponseEntity.ok(
-                visitService.checkIn(visitId, request)
+                visitService.checkIn(
+                        visitId,
+                        request,
+                        photo
+                )
         );
     }
 
