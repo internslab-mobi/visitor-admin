@@ -1,11 +1,13 @@
 package com.adminvisitor.dto.requestdto;
 
+import com.adminvisitor.enums.Nationality;
 import com.adminvisitor.enums.ProofType;
 import com.adminvisitor.enums.RegistrationType;
 import com.adminvisitor.enums.VisitorType;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public record RegistrationRequest(
@@ -62,10 +64,21 @@ public record RegistrationRequest(
         @Size(max = 1000, message = "Remarks cannot exceed 1000 characters")
         String remarks,
 
-        ProofType proofType,
+        @NotNull(message = "Nationality is required")
+        Nationality nationality,
 
-        @Size(max = 100, message = "Proof number cannot exceed 100 characters")
-        String proofNumber
+        @Size(max = 50, message = "Aadhaar number cannot exceed 50 characters")
+        String aadharNumber,
+
+
+        LocalDateTime validity,
+
+        @Size(max = 50, message = "PAN number cannot exceed 50 characters")
+        String panNumber,
+
+        @Size(max = 50, message = "Passport number cannot exceed 50 characters")
+        String passportNumber
 
 ) {
+
 }

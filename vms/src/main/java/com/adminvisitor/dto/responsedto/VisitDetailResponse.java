@@ -37,7 +37,11 @@ public record VisitDetailResponse(
 
             String mobileNumber,
 
-            String companyName
+            String companyName,
+
+            boolean ndaAvailable,
+            String ndaDocumentId,
+            LocalDateTime ndaValidUntil
 
     ) {
     }

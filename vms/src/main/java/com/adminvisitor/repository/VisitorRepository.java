@@ -12,4 +12,5 @@ public interface VisitorRepository extends JpaRepository<Visitor, String> {
     Optional<Visitor> findByEmail(String email);
 
     Optional<Visitor> findByMobileNumber(String mobileNumber);
+
 }
