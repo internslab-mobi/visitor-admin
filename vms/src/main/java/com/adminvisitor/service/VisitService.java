@@ -9,10 +9,7 @@ import com.adminvisitor.enums.*;
 import com.adminvisitor.exception.BusinessRuleException;
 import com.adminvisitor.exception.EmailAlreadyExistsException;
 import com.adminvisitor.exception.MobileNumberAlreadyExistsException;
-import com.adminvisitor.repository.EmployeeRepository;
-import com.adminvisitor.repository.VendorRepository;
-import com.adminvisitor.repository.VisitRepository;
-import com.adminvisitor.repository.VisitorRepository;
+import com.adminvisitor.repository.*;
 import com.adminvisitor.specification.VisitSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +41,7 @@ public class VisitService {
 
     private final ProofValidationService proofValidationService;
     private final BlacklistService blacklistService;
+    private final DocumentRepository documentRepository;
 
     /*
      * DocumentService is still required for identity-proof handling.
@@ -59,6 +57,7 @@ public class VisitService {
     // ============================================================
     // VISIT REGISTRATION
     // ============================================================
+
 
     @Transactional
     public RegistrationResponse register(RegistrationRequest request) {
@@ -83,38 +82,121 @@ public class VisitService {
                 System.currentTimeMillis() - start
         );
 
-        // 2. Find existing visitor or create a new visitor
+        // 3. Find existing visitor or create a new visitor
         start = System.currentTimeMillis();
 
         Visitor visitor = findOrCreateVisitor(request);
 
         /*
-         * Save identity proofs.
+         * FIX:
+         * Check whether this visitor already has identity proof records.
          *
-         * The raw proof values are converted into HMAC-SHA-256
-         * blind indexes inside DocumentService.
-         *
-         * No raw Aadhaar/PAN/Passport value is stored.
+         * A Document with a non-null nationality is treated as an
+         * identity proof record. Uploaded document metadata is separate.
          */
-        documentService.saveIdentityProofs(
-                visitor,
-                request.nationality(),
-                request.aadharNumber(),
-                request.panNumber(),
-                request.passportNumber()
-        );
+        boolean existingVisitor =
+                documentRepository.findByVisitorId(visitor.getId())
+                        .stream()
+                        .anyMatch(document ->
+                                document.getNationality() != null
+                        );
+
+        if (existingVisitor) {
+
+            // Retrieve the existing identity proof record
+            Document existingDocument =
+                    documentService.getLatestIdentityDocument(
+                            visitor.getId()
+                    );
+
+            // Nationality must match the existing identity record
+            if (existingDocument.getNationality()
+                    != request.nationality()) {
+
+                throw new BusinessRuleException(
+                        "Nationality does not match the existing visitor's identity record"
+                );
+            }
+
+            /*
+             * Verify submitted proof numbers against stored HMAC
+             * blind indexes. Do not save identity proofs again.
+             */
+            switch (request.nationality()) {
+
+                case DOMESTIC -> {
+
+                    boolean aadhaarMatches =
+                            documentService.verifyIdentityProof(
+                                    visitor,
+                                    ProofType.AADHAAR,
+                                    request.aadharNumber()
+                            );
+
+                    boolean panMatches =
+                            documentService.verifyIdentityProof(
+                                    visitor,
+                                    ProofType.PAN,
+                                    request.panNumber()
+                            );
+
+                    if (!aadhaarMatches || !panMatches) {
+
+                        throw new BusinessRuleException(
+                                "Aadhaar or PAN does not match the existing visitor's identity records"
+                        );
+                    }
+                }
+
+                case INTERNATIONAL -> {
+
+                    boolean passportMatches =
+                            documentService.verifyIdentityProof(
+                                    visitor,
+                                    ProofType.PASSPORT,
+                                    request.passportNumber()
+                            );
+
+                    if (!passportMatches) {
+
+                        throw new BusinessRuleException(
+                                "Passport does not match the existing visitor's identity record"
+                        );
+                    }
+                }
+            }
+
+            log.info(
+                    "Existing visitor identity verified. visitorId={}",
+                    visitor.getId()
+            );
+
+        } else {
+
+            /*
+             * New visitor:
+             * Save identity proof blind indexes for the first time.
+             */
+            documentService.saveIdentityProofs(
+                    visitor,
+                    request.nationality(),
+                    request.aadharNumber(),
+                    request.panNumber(),
+                    request.passportNumber()
+            );
+        }
 
         log.debug(
-                "Timing: findOrCreateVisitor={} ms",
+                "Timing: findOrCreateVisitor and identity validation={} ms",
                 System.currentTimeMillis() - start
         );
 
+        // 4. Create vendor if required
         createVendorIfRequired(visitor, request);
 
-        // 3. Create Visit
+        // 5. Create Visit
         Visit visit = new Visit();
 
-        // 4. Generate Visit ID
         start = System.currentTimeMillis();
 
         visit.setId(
@@ -144,6 +226,7 @@ public class VisitService {
                 );
 
         if (!"ACTIVE".equalsIgnoreCase(employee.getStatus())) {
+
             throw new BusinessRuleException(
                     "Selected employee is not active"
             );
@@ -173,14 +256,16 @@ public class VisitService {
                 VisitStatus.CHECKED_IN
         );
 
-        List<Visit> overlappingVisits = visitRepository.findOverlappingVisits(
-                visitor.getId(),
-                expectedArrivalAt,
-                expectedDepartureAt,
-                activeStatuses
-        );
+        List<Visit> overlappingVisits =
+                visitRepository.findOverlappingVisits(
+                        visitor.getId(),
+                        expectedArrivalAt,
+                        expectedDepartureAt,
+                        activeStatuses
+                );
 
         if (!overlappingVisits.isEmpty()) {
+
             throw new BusinessRuleException(
                     "Visitor already has an active visit overlapping the requested time"
             );
@@ -193,7 +278,7 @@ public class VisitService {
 
         visit.setStatus(VisitStatus.REGISTERED);
 
-        // 5. Save Visit
+        // 6. Save Visit
         start = System.currentTimeMillis();
 
         Visit savedVisit = visitRepository.save(visit);
@@ -221,7 +306,7 @@ public class VisitService {
                 savedVisit.getStatus()
         );
 
-        // 6. Build response
+        // 7. Build response
         return new RegistrationResponse(
                 savedVisit.getId(),
                 savedVisit.getVisitReference(),

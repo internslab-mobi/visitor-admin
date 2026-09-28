@@ -1730,3 +1730,279 @@ Caused by: java.net.ConnectException: Connection refused: getsockopt
 2026-09-25 17:44:45.395 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
 2026-09-25 17:44:45.403 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
 >>>>>>> 2da827dc4f8b2fe242d717ae607dd7093cf95227
+2026-09-28 10:12:25.418 INFO  [restartedMain] com.adminvisitor.VMSApplication - Starting VMSApplication using Java 21.0.9 with PID 26352 (C:\vistior-management\vms\target\classes started by nethra.r in C:\vistior-management\vms)
+2026-09-28 10:12:25.421 DEBUG [restartedMain] com.adminvisitor.VMSApplication - Running with Spring Boot v4.1.1, Spring v7.0.9
+2026-09-28 10:12:25.422 INFO  [restartedMain] com.adminvisitor.VMSApplication - No active profile set, falling back to 1 default profile: "default"
+2026-09-28 10:12:25.488 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-09-28 10:12:25.488 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-09-28 10:12:26.011 INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.3.Final
+2026-09-28 10:12:26.941 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-28 10:12:27.747 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 793 ms. Found 11 JPA repository interfaces.
+2026-09-28 10:12:33.034 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8092 (http)
+2026-09-28 10:12:33.108 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8092"]
+2026-09-28 10:12:33.123 INFO  [restartedMain] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-09-28 10:12:33.125 INFO  [restartedMain] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.24]
+2026-09-28 10:12:33.901 INFO  [restartedMain] o.s.b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 8412 ms
+2026-09-28 10:12:35.044 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-09-28 10:12:37.016 INFO  [restartedMain] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@30359de4
+2026-09-28 10:12:37.027 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-09-28 10:12:37.178 INFO  [restartedMain] org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-28 10:12:37.660 INFO  [restartedMain] org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.5.Final
+2026-09-28 10:12:41.050 INFO  [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-28 10:12:41.721 INFO  [restartedMain] o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://192.168.11.101:3306/Interns_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.40
+	Default catalog/schema: Interns_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-28 10:12:48.907 INFO  [restartedMain] org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-28 10:12:48.961 INFO  [restartedMain] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 10:12:49.656 INFO  [restartedMain] o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-28 10:12:56.333 WARN  [restartedMain] o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-28 10:13:00.333 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8092"]
+2026-09-28 10:13:00.445 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat started on port 8092 (http) with context path '/'
+2026-09-28 10:13:00.478 INFO  [restartedMain] com.adminvisitor.VMSApplication - Started VMSApplication in 35.959 seconds (process running for 37.354)
+2026-09-28 10:13:00.491 WARN  [restartedMain] o.s.c.events.SpringDocAppInitializer - SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-09-28 10:13:00.492 WARN  [restartedMain] o.s.c.events.SpringDocAppInitializer - SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-09-28 10:13:01.804 INFO  [http-nio-8092-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-28 10:13:01.805 INFO  [http-nio-8092-exec-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-09-28 10:13:01.811 INFO  [http-nio-8092-exec-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 5 ms
+2026-09-28 10:13:02.528 INFO  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_COMPLETED controller=SwaggerConfigResource method=openapiJson durationMs=4.693
+2026-09-28 10:13:05.644 INFO  [http-nio-8092-exec-9] o.s.api.AbstractOpenApiResource - Init duration for springdoc-openapi is: 2881 ms
+2026-09-28 10:13:05.770 INFO  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_COMPLETED controller=OpenApiWebMvcResource method=openapiJson durationMs=3008.274801
+2026-09-28 10:29:41.361 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@5a33597e (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 10:29:42.147 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@7af3bab1 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 10:29:43.600 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@30359de4 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 10:29:47.279 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@42b82765 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 10:30:05.213 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@7a569e92 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 10:30:08.003 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@e1b896d (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 10:30:14.142 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@39cec663 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 10:30:22.419 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@6c5f601f (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 10:30:26.035 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@6463343f (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 10:30:57.945 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@3a7e7b6e (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 10:54:42.951 INFO  [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-09-28 10:54:42.958 INFO  [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-09-28 10:54:42.965 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 10:54:42.969 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-09-28 10:54:42.975 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-09-28 10:54:47.015 INFO  [restartedMain] com.adminvisitor.VMSApplication - Starting VMSApplication using Java 21.0.9 with PID 26600 (C:\vistior-management\vms\target\classes started by nethra.r in C:\vistior-management\vms)
+2026-09-28 10:54:47.018 DEBUG [restartedMain] com.adminvisitor.VMSApplication - Running with Spring Boot v4.1.1, Spring v7.0.9
+2026-09-28 10:54:47.019 INFO  [restartedMain] com.adminvisitor.VMSApplication - No active profile set, falling back to 1 default profile: "default"
+2026-09-28 10:54:47.075 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-09-28 10:54:47.076 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-09-28 10:54:47.429 INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.3.Final
+2026-09-28 10:54:48.205 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-28 10:54:48.458 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 243 ms. Found 11 JPA repository interfaces.
+2026-09-28 10:54:49.511 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8092 (http)
+2026-09-28 10:54:49.527 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8092"]
+2026-09-28 10:54:49.531 INFO  [restartedMain] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-09-28 10:54:49.531 INFO  [restartedMain] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.24]
+2026-09-28 10:54:49.664 INFO  [restartedMain] o.s.b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 2587 ms
+2026-09-28 10:54:49.918 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-09-28 10:54:50.350 INFO  [restartedMain] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@30359de4
+2026-09-28 10:54:50.354 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-09-28 10:54:50.404 INFO  [restartedMain] org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-28 10:54:50.491 INFO  [restartedMain] org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.5.Final
+2026-09-28 10:54:51.199 INFO  [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-28 10:54:51.352 INFO  [restartedMain] o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://192.168.11.101:3306/Interns_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.40
+	Default catalog/schema: Interns_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-28 10:54:52.916 INFO  [restartedMain] org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-28 10:54:52.927 INFO  [restartedMain] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 10:54:53.074 INFO  [restartedMain] o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-28 10:54:54.777 WARN  [restartedMain] o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-28 10:54:55.670 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8092"]
+2026-09-28 10:54:55.696 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat started on port 8092 (http) with context path '/'
+2026-09-28 10:54:55.705 INFO  [restartedMain] com.adminvisitor.VMSApplication - Started VMSApplication in 9.515 seconds (process running for 10.752)
+2026-09-28 10:54:55.708 WARN  [restartedMain] o.s.c.events.SpringDocAppInitializer - SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-09-28 10:54:55.708 WARN  [restartedMain] o.s.c.events.SpringDocAppInitializer - SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-09-28 10:56:27.230 INFO  [http-nio-8092-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-28 10:56:27.231 INFO  [http-nio-8092-exec-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-09-28 10:56:27.233 INFO  [http-nio-8092-exec-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-09-28 10:56:27.789 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=uploadProofDocuments durationMs=407.135101
+2026-09-28 11:02:38.691 DEBUG [http-nio-8092-exec-3] c.adminvisitor.service.VisitService - Starting visit registration. registrationType=PRE_REGISTRATION, visitorType=GUEST, hostId=EMP-005
+2026-09-28 11:02:38.727 DEBUG [http-nio-8092-exec-3] c.adminvisitor.service.VisitService - Timing: validateVisitTiming=0 ms
+2026-09-28 11:02:38.802 INFO  [http-nio-8092-exec-3] c.adminvisitor.service.VisitService - New visitor profile created. visitorId=VTR-042
+2026-09-28 11:02:38.892 DEBUG [http-nio-8092-exec-3] c.adminvisitor.service.VisitService - Timing: findOrCreateVisitor=165 ms
+2026-09-28 11:02:38.922 DEBUG [http-nio-8092-exec-3] c.adminvisitor.service.VisitService - Timing: generateVisitId=30 ms
+2026-09-28 11:02:38.961 WARN  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_FAILED controller=VisitController method=register durationMs=278.580299 exception=BusinessRuleException
+2026-09-28 11:02:38.967 WARN  [http-nio-8092-exec-3] c.a.exception.GlobalExceptionHandler - Business rule violation: Employee not found with id: EMP-005
+2026-09-28 11:02:39.023 WARN  [http-nio-8092-exec-3] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.BusinessRuleException: Employee not found with id: EMP-005]
+2026-09-28 11:02:49.569 DEBUG [http-nio-8092-exec-4] c.adminvisitor.service.VisitService - Starting visit registration. registrationType=PRE_REGISTRATION, visitorType=GUEST, hostId=EMP005
+2026-09-28 11:02:49.593 DEBUG [http-nio-8092-exec-4] c.adminvisitor.service.VisitService - Timing: validateVisitTiming=0 ms
+2026-09-28 11:02:49.631 INFO  [http-nio-8092-exec-4] c.adminvisitor.service.VisitService - New visitor profile created. visitorId=VTR-042
+2026-09-28 11:02:49.664 DEBUG [http-nio-8092-exec-4] c.adminvisitor.service.VisitService - Timing: findOrCreateVisitor=71 ms
+2026-09-28 11:02:49.687 DEBUG [http-nio-8092-exec-4] c.adminvisitor.service.VisitService - Timing: generateVisitId=23 ms
+2026-09-28 11:02:49.768 DEBUG [http-nio-8092-exec-4] c.adminvisitor.service.VisitService - Timing: visitRepository.save=16 ms
+2026-09-28 11:02:49.771 DEBUG [http-nio-8092-exec-4] c.adminvisitor.service.VisitService - Timing: sendVisitConfirmationEmail=3 ms
+2026-09-28 11:02:49.772 INFO  [http-nio-8092-exec-4] c.adminvisitor.service.VisitService - Visit registered successfully. visitId=VIS-072, visitReference=VIS-20260928110249-FAFE8985, visitorId=VTR-042, registrationType=PRE_REGISTRATION, status=REGISTERED
+2026-09-28 11:02:49.845 INFO  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=register durationMs=290.0359
+2026-09-28 11:02:50.517 DEBUG [task-1] c.adminvisitor.service.EmailService - Timing: emailTemplateProcessing=717 ms
+2026-09-28 11:02:52.741 ERROR [task-1] com.adminvisitor.config.AsyncConfig - Async operation failed. method=sendVisitConfirmationEmail
+org.springframework.mail.MailSendException: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: smtp.gmail.com, 587; timeout 6000;
+  nested exception is:
+	java.net.ConnectException: Connection refused: getsockopt; message exceptions (1) are:
+Failed message 1: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: smtp.gmail.com, 587; timeout 6000;
+  nested exception is:
+	java.net.ConnectException: Connection refused: getsockopt
+	at org.springframework.mail.javamail.JavaMailSenderImpl.doSend(JavaMailSenderImpl.java:397)
+	at org.springframework.mail.javamail.JavaMailSenderImpl.send(JavaMailSenderImpl.java:337)
+	at org.springframework.mail.javamail.JavaMailSender.send(JavaMailSender.java:101)
+	at com.adminvisitor.service.EmailService.sendVisitConfirmationEmail(EmailService.java:106)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:190)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:158)
+	at org.springframework.aop.interceptor.AsyncExecutionInterceptor.lambda$invoke$0(AsyncExecutionInterceptor.java:112)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: smtp.gmail.com, 587; timeout 6000;
+  nested exception is:
+	java.net.ConnectException: Connection refused: getsockopt
+	at org.eclipse.angus.mail.smtp.SMTPTransport.openServer(SMTPTransport.java:2243)
+	at org.eclipse.angus.mail.smtp.SMTPTransport.protocolConnect(SMTPTransport.java:729)
+	at jakarta.mail.Service.connect(Service.java:345)
+	at org.springframework.mail.javamail.JavaMailSenderImpl.connectTransport(JavaMailSenderImpl.java:467)
+	at org.springframework.mail.javamail.JavaMailSenderImpl.doSend(JavaMailSenderImpl.java:386)
+	... 13 common frames omitted
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:690)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:549)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.eclipse.angus.mail.util.WriteTimeoutSocket.connect(WriteTimeoutSocket.java:118)
+	at org.eclipse.angus.mail.util.SocketFetcher.createSocket(SocketFetcher.java:366)
+	at org.eclipse.angus.mail.util.SocketFetcher.getSocket(SocketFetcher.java:243)
+	at org.eclipse.angus.mail.smtp.SMTPTransport.openServer(SMTPTransport.java:2193)
+	... 17 common frames omitted
+2026-09-28 11:07:37.820 INFO  [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-09-28 11:07:37.828 INFO  [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-09-28 11:07:37.833 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 11:07:37.838 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-09-28 11:07:37.849 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-09-28 11:07:41.566 INFO  [restartedMain] com.adminvisitor.VMSApplication - Starting VMSApplication using Java 21.0.9 with PID 772 (C:\vistior-management\vms\target\classes started by nethra.r in C:\vistior-management\vms)
+2026-09-28 11:07:41.569 DEBUG [restartedMain] com.adminvisitor.VMSApplication - Running with Spring Boot v4.1.1, Spring v7.0.9
+2026-09-28 11:07:41.569 INFO  [restartedMain] com.adminvisitor.VMSApplication - No active profile set, falling back to 1 default profile: "default"
+2026-09-28 11:07:41.636 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-09-28 11:07:41.637 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-09-28 11:07:42.089 INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.3.Final
+2026-09-28 11:07:42.890 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-28 11:07:43.126 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 225 ms. Found 11 JPA repository interfaces.
+2026-09-28 11:07:44.202 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8092 (http)
+2026-09-28 11:07:44.217 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8092"]
+2026-09-28 11:07:44.220 INFO  [restartedMain] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-09-28 11:07:44.220 INFO  [restartedMain] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.24]
+2026-09-28 11:07:44.345 INFO  [restartedMain] o.s.b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 2708 ms
+2026-09-28 11:07:44.613 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-09-28 11:07:45.106 INFO  [restartedMain] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@d187ae0
+2026-09-28 11:07:45.110 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-09-28 11:07:45.153 INFO  [restartedMain] org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-28 11:07:45.236 INFO  [restartedMain] org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.5.Final
+2026-09-28 11:07:45.902 INFO  [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-28 11:07:46.062 INFO  [restartedMain] o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://192.168.11.101:3306/Interns_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.40
+	Default catalog/schema: Interns_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-28 11:07:47.593 INFO  [restartedMain] org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-28 11:07:47.606 INFO  [restartedMain] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 11:07:47.770 INFO  [restartedMain] o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-28 11:07:49.304 WARN  [restartedMain] o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-28 11:07:50.169 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8092"]
+2026-09-28 11:07:50.203 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat started on port 8092 (http) with context path '/'
+2026-09-28 11:07:50.211 INFO  [restartedMain] com.adminvisitor.VMSApplication - Started VMSApplication in 9.384 seconds (process running for 10.636)
+2026-09-28 11:07:50.214 WARN  [restartedMain] o.s.c.events.SpringDocAppInitializer - SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-09-28 11:07:50.214 WARN  [restartedMain] o.s.c.events.SpringDocAppInitializer - SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-09-28 11:19:21.381 INFO  [http-nio-8092-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-28 11:19:21.381 INFO  [http-nio-8092-exec-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-09-28 11:19:21.383 INFO  [http-nio-8092-exec-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-09-28 11:19:21.894 WARN  [http-nio-8092-exec-1] c.a.exception.GlobalExceptionHandler - Validation failed for request with 1 error(s)
+2026-09-28 11:19:22.060 WARN  [http-nio-8092-exec-1] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.web.bind.MethodArgumentNotValidException: Validation failed for argument [0] in public org.springframework.http.ResponseEntity<com.adminvisitor.dto.responsedto.RegistrationResponse> com.adminvisitor.controller.VisitController.register(com.adminvisitor.dto.requestdto.RegistrationRequest): [Field error in object 'registrationRequest' on field 'mobileNumber': rejected value [99199876532]; codes [Pattern.registrationRequest.mobileNumber,Pattern.mobileNumber,Pattern.java.lang.String,Pattern]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [registrationRequest.mobileNumber,mobileNumber]; arguments []; default message [mobileNumber],[Ljakarta.validation.constraints.Pattern$Flag;@1a6e431d,^[6-9][0-9]{9}$]; default message [Mobile number must be a valid 10-digit number]] ]
+2026-09-28 11:19:42.243 DEBUG [http-nio-8092-exec-3] c.adminvisitor.service.VisitService - Starting visit registration. registrationType=PRE_REGISTRATION, visitorType=VENDOR, hostId=EMP005
+2026-09-28 11:19:42.554 DEBUG [http-nio-8092-exec-3] c.adminvisitor.service.VisitService - Timing: validateVisitTiming=0 ms
+2026-09-28 11:19:42.573 WARN  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_FAILED controller=VisitController method=register durationMs=357.0308 exception=BusinessRuleException
+2026-09-28 11:19:42.577 WARN  [http-nio-8092-exec-3] c.a.exception.GlobalExceptionHandler - Business rule violation: Validity is required for vendor visitors
+2026-09-28 11:19:42.581 WARN  [http-nio-8092-exec-3] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.BusinessRuleException: Validity is required for vendor visitors]
+2026-09-28 11:20:25.960 DEBUG [http-nio-8092-exec-2] c.adminvisitor.service.VisitService - Starting visit registration. registrationType=PRE_REGISTRATION, visitorType=VENDOR, hostId=EMP005
+2026-09-28 11:20:25.988 DEBUG [http-nio-8092-exec-2] c.adminvisitor.service.VisitService - Timing: validateVisitTiming=0 ms
+2026-09-28 11:20:26.058 INFO  [http-nio-8092-exec-2] c.adminvisitor.service.VisitService - Existing visitor found. visitorId=VTR-041
+2026-09-28 11:20:26.249 DEBUG [http-nio-8092-exec-2] c.adminvisitor.service.VisitService - Timing: findOrCreateVisitor=260 ms
+2026-09-28 11:20:26.286 INFO  [http-nio-8092-exec-2] c.adminvisitor.service.VisitService - Vendor already exists for visitor. visitorId=VTR-041, vendorId=VND-007
+2026-09-28 11:20:26.363 DEBUG [http-nio-8092-exec-2] c.adminvisitor.service.VisitService - Timing: generateVisitId=76 ms
+2026-09-28 11:20:26.425 WARN  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_FAILED controller=VisitController method=register durationMs=475.5399 exception=BusinessRuleException
+2026-09-28 11:20:26.427 WARN  [http-nio-8092-exec-2] c.a.exception.GlobalExceptionHandler - Business rule violation: Visitor already has an active visit overlapping the requested time
+2026-09-28 11:20:26.429 WARN  [http-nio-8092-exec-2] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.BusinessRuleException: Visitor already has an active visit overlapping the requested time]
+2026-09-28 11:20:45.172 DEBUG [http-nio-8092-exec-4] c.adminvisitor.service.VisitService - Starting visit registration. registrationType=PRE_REGISTRATION, visitorType=VENDOR, hostId=EMP005
+2026-09-28 11:20:45.185 DEBUG [http-nio-8092-exec-4] c.adminvisitor.service.VisitService - Timing: validateVisitTiming=0 ms
+2026-09-28 11:20:45.199 INFO  [http-nio-8092-exec-4] c.adminvisitor.service.VisitService - Existing visitor found. visitorId=VTR-041
+2026-09-28 11:20:45.213 DEBUG [http-nio-8092-exec-4] c.adminvisitor.service.VisitService - Timing: findOrCreateVisitor=27 ms
+2026-09-28 11:20:45.222 INFO  [http-nio-8092-exec-4] c.adminvisitor.service.VisitService - Vendor already exists for visitor. visitorId=VTR-041, vendorId=VND-007
+2026-09-28 11:20:45.244 DEBUG [http-nio-8092-exec-4] c.adminvisitor.service.VisitService - Timing: generateVisitId=22 ms
+2026-09-28 11:20:45.292 WARN  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_FAILED controller=VisitController method=register durationMs=131.410799 exception=BusinessRuleException
+2026-09-28 11:20:45.293 WARN  [http-nio-8092-exec-4] c.a.exception.GlobalExceptionHandler - Business rule violation: Visitor already has an active visit overlapping the requested time
+2026-09-28 11:20:45.295 WARN  [http-nio-8092-exec-4] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.BusinessRuleException: Visitor already has an active visit overlapping the requested time]
+2026-09-28 11:21:07.053 DEBUG [http-nio-8092-exec-5] c.adminvisitor.service.VisitService - Starting visit registration. registrationType=PRE_REGISTRATION, visitorType=VENDOR, hostId=EMP005
+2026-09-28 11:21:07.076 DEBUG [http-nio-8092-exec-5] c.adminvisitor.service.VisitService - Timing: validateVisitTiming=0 ms
+2026-09-28 11:21:07.095 INFO  [http-nio-8092-exec-5] c.adminvisitor.service.VisitService - Existing visitor found. visitorId=VTR-041
+2026-09-28 11:21:07.111 DEBUG [http-nio-8092-exec-5] c.adminvisitor.service.VisitService - Timing: findOrCreateVisitor=34 ms
+2026-09-28 11:21:07.120 INFO  [http-nio-8092-exec-5] c.adminvisitor.service.VisitService - Vendor already exists for visitor. visitorId=VTR-041, vendorId=VND-007
+2026-09-28 11:21:07.148 DEBUG [http-nio-8092-exec-5] c.adminvisitor.service.VisitService - Timing: generateVisitId=27 ms
+2026-09-28 11:21:07.182 WARN  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_FAILED controller=VisitController method=register durationMs=148.2423 exception=BusinessRuleException
+2026-09-28 11:21:07.183 WARN  [http-nio-8092-exec-5] c.a.exception.GlobalExceptionHandler - Business rule violation: Visitor already has an active visit overlapping the requested time
+2026-09-28 11:21:07.185 WARN  [http-nio-8092-exec-5] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.BusinessRuleException: Visitor already has an active visit overlapping the requested time]
+2026-09-28 11:21:58.538 DEBUG [http-nio-8092-exec-6] c.adminvisitor.service.VisitService - Starting visit registration. registrationType=PRE_REGISTRATION, visitorType=VENDOR, hostId=EMP005
+2026-09-28 11:21:58.559 DEBUG [http-nio-8092-exec-6] c.adminvisitor.service.VisitService - Timing: validateVisitTiming=0 ms
+2026-09-28 11:21:58.572 WARN  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_FAILED controller=VisitController method=register durationMs=48.374 exception=BusinessRuleException
+2026-09-28 11:21:58.572 WARN  [http-nio-8092-exec-6] c.a.exception.GlobalExceptionHandler - Business rule violation: Validity is required for vendor visitors
+2026-09-28 11:21:58.575 WARN  [http-nio-8092-exec-6] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.BusinessRuleException: Validity is required for vendor visitors]
+2026-09-28 11:23:30.886 WARN  [http-nio-8092-exec-7] c.a.exception.GlobalExceptionHandler - Request body could not be parsed: Invalid date 'SEPTEMBER 31'
+2026-09-28 11:23:30.893 WARN  [http-nio-8092-exec-7] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.http.converter.HttpMessageNotReadableException: JSON parse error: Cannot deserialize value of type `java.time.LocalDateTime` from String "2026-09-31T05:06:13": Failed to deserialize `java.time.LocalDateTime` (with format 'ParseCaseSensitive(false)(Value(Year,4,10,EXCEEDS_PAD)'-'Value(MonthOfYear,2)'-'Value(DayOfMonth,2))'T'(Value(HourOfDay,2)':'Value(MinuteOfHour,2)[':'Value(SecondOfMinute,2)[Fraction(NanoOfSecond,0,9,DecimalPoint)]])'): (java.time.format.DateTimeParseException) Text '2026-09-31T05:06:13' could not be parsed: Invalid date 'SEPTEMBER 31']
+2026-09-28 11:29:42.840 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@7af624aa (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 11:29:43.046 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@4e41462 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 11:29:46.429 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@3fdb62ca (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 11:30:10.904 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@313c388d (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 11:30:19.756 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@7e8d5261 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 11:30:27.473 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@5ac2fb0 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 11:30:51.129 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@59c6b1e9 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 11:31:09.245 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@408fe0f0 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 11:31:16.855 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@6122b22f (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 11:31:21.839 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@d187ae0 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 11:48:05.760 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=BlacklistController method=getBlacklistById durationMs=128.9707
+2026-09-28 11:48:09.685 INFO  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=getDashboardVisits durationMs=245.1253
+2026-09-28 11:48:11.754 INFO  [http-nio-8092-exec-10] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=39.6879
+2026-09-28 12:29:48.818 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@ef2a786 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 12:30:12.669 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@3eac38e8 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 12:30:18.272 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@334074ef (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 12:30:32.751 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@73f3a36 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 12:30:44.190 INFO  [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-09-28 12:30:44.215 INFO  [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-09-28 12:30:44.243 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 12:30:44.272 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-09-28 12:30:44.281 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
