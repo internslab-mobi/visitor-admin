@@ -3124,3 +3124,445 @@ java.lang.RuntimeException: Unexpected error
 	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
 	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
 	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+2026-09-28 14:49:28.749 INFO  [restartedMain] com.adminvisitor.VMSApplication - Starting VMSApplication using Java 21.0.9 with PID 3512 (C:\Users\anisha.z\Documents\VMS\BACKEND\vms\target\classes started by anisha.z in C:\Users\anisha.z\Documents\VMS\BACKEND\vms)
+2026-09-28 14:49:28.751 DEBUG [restartedMain] com.adminvisitor.VMSApplication - Running with Spring Boot v4.1.1, Spring v7.0.9
+2026-09-28 14:49:28.752 INFO  [restartedMain] com.adminvisitor.VMSApplication - No active profile set, falling back to 1 default profile: "default"
+2026-09-28 14:49:28.795 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-09-28 14:49:28.795 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-09-28 14:49:29.069 INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.3.Final
+2026-09-28 14:49:29.778 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-28 14:49:29.981 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 195 ms. Found 11 JPA repository interfaces.
+2026-09-28 14:49:30.812 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8092 (http)
+2026-09-28 14:49:30.826 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8092"]
+2026-09-28 14:49:30.829 INFO  [restartedMain] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-09-28 14:49:30.829 INFO  [restartedMain] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.24]
+2026-09-28 14:49:30.925 INFO  [restartedMain] o.s.b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 2130 ms
+2026-09-28 14:49:31.120 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-09-28 14:49:31.615 INFO  [restartedMain] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@7e427e89
+2026-09-28 14:49:31.617 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-09-28 14:49:31.635 INFO  [restartedMain] org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-28 14:49:31.689 INFO  [restartedMain] org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.5.Final
+2026-09-28 14:49:32.140 INFO  [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-28 14:49:32.272 INFO  [restartedMain] o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://192.168.11.101:3306/Interns_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.40
+	Default catalog/schema: Interns_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-28 14:49:33.515 INFO  [restartedMain] org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-28 14:49:33.522 INFO  [restartedMain] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 14:49:33.644 INFO  [restartedMain] o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-28 14:49:35.050 WARN  [restartedMain] o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-28 14:49:35.792 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8092"]
+2026-09-28 14:49:35.798 WARN  [restartedMain] o.s.b.w.s.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2026-09-28 14:49:35.800 INFO  [restartedMain] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 14:49:35.803 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-09-28 14:49:35.810 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-09-28 14:49:35.824 INFO  [restartedMain] o.s.b.a.l.ConditionEvaluationReportLogger - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-09-28 14:49:35.840 ERROR [restartedMain] o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8092 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8092 or configure this application to listen on another port.
+
+2026-09-28 14:51:29.299 INFO  [restartedMain] com.adminvisitor.VMSApplication - Starting VMSApplication using Java 21.0.9 with PID 6436 (C:\Users\anisha.z\Documents\VMS\BACKEND\vms\target\classes started by anisha.z in C:\Users\anisha.z\Documents\VMS\BACKEND\vms)
+2026-09-28 14:51:29.304 DEBUG [restartedMain] com.adminvisitor.VMSApplication - Running with Spring Boot v4.1.1, Spring v7.0.9
+2026-09-28 14:51:29.305 INFO  [restartedMain] com.adminvisitor.VMSApplication - No active profile set, falling back to 1 default profile: "default"
+2026-09-28 14:51:29.389 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-09-28 14:51:29.390 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-09-28 14:51:29.798 INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.3.Final
+2026-09-28 14:51:30.486 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-28 14:51:30.668 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 174 ms. Found 11 JPA repository interfaces.
+2026-09-28 14:51:31.504 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8092 (http)
+2026-09-28 14:51:31.518 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8092"]
+2026-09-28 14:51:31.521 INFO  [restartedMain] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-09-28 14:51:31.522 INFO  [restartedMain] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.24]
+2026-09-28 14:51:31.624 INFO  [restartedMain] o.s.b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 2234 ms
+2026-09-28 14:51:31.823 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-09-28 14:51:32.205 INFO  [restartedMain] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@73c487c0
+2026-09-28 14:51:32.208 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-09-28 14:51:32.228 INFO  [restartedMain] org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-28 14:51:32.279 INFO  [restartedMain] org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.5.Final
+2026-09-28 14:51:32.760 INFO  [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-28 14:51:32.879 INFO  [restartedMain] o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://192.168.11.101:3306/Interns_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.40
+	Default catalog/schema: Interns_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-28 14:51:34.106 INFO  [restartedMain] org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-28 14:51:34.115 INFO  [restartedMain] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 14:51:34.239 INFO  [restartedMain] o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-28 14:51:35.405 WARN  [restartedMain] o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-28 14:51:36.115 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8092"]
+2026-09-28 14:51:36.119 WARN  [restartedMain] o.s.b.w.s.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2026-09-28 14:51:36.121 INFO  [restartedMain] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 14:51:36.124 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-09-28 14:51:36.131 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-09-28 14:51:36.145 INFO  [restartedMain] o.s.b.a.l.ConditionEvaluationReportLogger - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-09-28 14:51:36.162 ERROR [restartedMain] o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8092 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8092 or configure this application to listen on another port.
+
+2026-09-28 14:53:52.891 INFO  [restartedMain] com.adminvisitor.VMSApplication - Starting VMSApplication using Java 21.0.9 with PID 24824 (C:\Users\anisha.z\Documents\VMS\BACKEND\vms\target\classes started by anisha.z in C:\Users\anisha.z\Documents\VMS\BACKEND\vms)
+2026-09-28 14:53:52.894 DEBUG [restartedMain] com.adminvisitor.VMSApplication - Running with Spring Boot v4.1.1, Spring v7.0.9
+2026-09-28 14:53:52.894 INFO  [restartedMain] com.adminvisitor.VMSApplication - No active profile set, falling back to 1 default profile: "default"
+2026-09-28 14:53:52.937 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-09-28 14:53:52.937 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-09-28 14:53:53.235 INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.3.Final
+2026-09-28 14:53:53.828 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-28 14:53:54.010 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 174 ms. Found 11 JPA repository interfaces.
+2026-09-28 14:53:54.844 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8092 (http)
+2026-09-28 14:53:54.855 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8092"]
+2026-09-28 14:53:54.858 INFO  [restartedMain] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-09-28 14:53:54.859 INFO  [restartedMain] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.24]
+2026-09-28 14:53:54.962 INFO  [restartedMain] o.s.b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 2025 ms
+2026-09-28 14:53:55.152 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-09-28 14:53:55.509 INFO  [restartedMain] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@73c487c0
+2026-09-28 14:53:55.511 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-09-28 14:53:55.547 INFO  [restartedMain] org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-28 14:53:55.605 INFO  [restartedMain] org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.5.Final
+2026-09-28 14:53:56.068 INFO  [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-28 14:53:56.218 INFO  [restartedMain] o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://192.168.11.101:3306/Interns_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.40
+	Default catalog/schema: Interns_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-28 14:53:57.217 INFO  [restartedMain] org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-28 14:53:57.222 INFO  [restartedMain] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 14:53:57.322 INFO  [restartedMain] o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-28 14:53:58.263 WARN  [restartedMain] o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-28 14:53:58.808 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8092"]
+2026-09-28 14:53:58.812 WARN  [restartedMain] o.s.b.w.s.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2026-09-28 14:53:58.814 INFO  [restartedMain] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 14:53:58.816 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-09-28 14:53:58.825 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-09-28 14:53:58.836 INFO  [restartedMain] o.s.b.a.l.ConditionEvaluationReportLogger - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-09-28 14:53:58.849 ERROR [restartedMain] o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8092 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8092 or configure this application to listen on another port.
+
+2026-09-28 14:55:48.216 INFO  [restartedMain] com.adminvisitor.VMSApplication - Starting VMSApplication using Java 21.0.9 with PID 21684 (C:\Users\anisha.z\Documents\VMS\BACKEND\vms\target\classes started by anisha.z in C:\Users\anisha.z\Documents\VMS\BACKEND\vms)
+2026-09-28 14:55:48.218 DEBUG [restartedMain] com.adminvisitor.VMSApplication - Running with Spring Boot v4.1.1, Spring v7.0.9
+2026-09-28 14:55:48.218 INFO  [restartedMain] com.adminvisitor.VMSApplication - No active profile set, falling back to 1 default profile: "default"
+2026-09-28 14:55:48.261 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-09-28 14:55:48.261 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-09-28 14:55:48.538 INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.3.Final
+2026-09-28 14:55:49.105 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-28 14:55:49.288 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 171 ms. Found 11 JPA repository interfaces.
+2026-09-28 14:55:50.044 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8092 (http)
+2026-09-28 14:55:50.056 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8092"]
+2026-09-28 14:55:50.058 INFO  [restartedMain] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-09-28 14:55:50.058 INFO  [restartedMain] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.24]
+2026-09-28 14:55:50.148 INFO  [restartedMain] o.s.b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 1886 ms
+2026-09-28 14:55:50.326 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-09-28 14:55:50.762 INFO  [restartedMain] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2d0bb392
+2026-09-28 14:55:50.764 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-09-28 14:55:50.796 INFO  [restartedMain] org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-28 14:55:50.849 INFO  [restartedMain] org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.5.Final
+2026-09-28 14:55:51.290 INFO  [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-28 14:55:51.432 INFO  [restartedMain] o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://192.168.11.101:3306/Interns_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.40
+	Default catalog/schema: Interns_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-28 14:55:52.521 INFO  [restartedMain] org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-28 14:55:52.529 INFO  [restartedMain] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 14:55:52.645 INFO  [restartedMain] o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-28 14:55:53.617 WARN  [restartedMain] o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-28 14:55:54.157 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8092"]
+2026-09-28 14:55:54.172 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat started on port 8092 (http) with context path '/'
+2026-09-28 14:55:54.179 INFO  [restartedMain] com.adminvisitor.VMSApplication - Started VMSApplication in 6.523 seconds (process running for 7.352)
+2026-09-28 14:55:54.185 WARN  [restartedMain] o.s.c.events.SpringDocAppInitializer - SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-09-28 14:55:54.185 WARN  [restartedMain] o.s.c.events.SpringDocAppInitializer - SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-09-28 14:59:41.242 INFO  [http-nio-8092-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-28 14:59:41.242 INFO  [http-nio-8092-exec-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-09-28 14:59:41.246 INFO  [http-nio-8092-exec-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+2026-09-28 14:59:41.614 INFO  [http-nio-8092-exec-10] c.a.config.ApiLoggingAspect - API_COMPLETED controller=SwaggerConfigResource method=openapiJson durationMs=1.6364
+2026-09-28 14:59:44.027 INFO  [http-nio-8092-exec-6] o.s.api.AbstractOpenApiResource - Init duration for springdoc-openapi is: 2221 ms
+2026-09-28 14:59:44.120 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=OpenApiWebMvcResource method=openapiJson durationMs=2327.8398
+2026-09-28 15:01:25.578 WARN  [http-nio-8092-exec-7] c.a.exception.GlobalExceptionHandler - Request body could not be parsed: Cannot construct instance of `com.adminvisitor.dto.requestdto.RegistrationRequest` (although at least one Creator exists): no String-argument constructor/factory method to deserialize from String value ('registrationType')
+ at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); byte offset: #0]
+2026-09-28 15:01:25.617 WARN  [http-nio-8092-exec-7] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.http.converter.HttpMessageNotReadableException: JSON parse error: Cannot construct instance of `com.adminvisitor.dto.requestdto.RegistrationRequest` (although at least one Creator exists): no String-argument constructor/factory method to deserialize from String value ('registrationType')]
+2026-09-28 15:04:36.814 WARN  [http-nio-8092-exec-1] c.a.exception.GlobalExceptionHandler - Request body could not be parsed: Unexpected character (''' (code 39)): was expecting double-quote to start property name
+ at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); byte offset: #110]
+2026-09-28 15:04:36.817 WARN  [http-nio-8092-exec-1] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.http.converter.HttpMessageNotReadableException: JSON parse error: Unexpected character (''' (code 39)): was expecting double-quote to start property name]
+2026-09-28 15:05:16.435 WARN  [http-nio-8092-exec-2] c.a.exception.GlobalExceptionHandler - Request body could not be parsed: Unexpected character (''' (code 39)): was expecting double-quote to start property name
+ at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); byte offset: #110]
+2026-09-28 15:05:16.439 WARN  [http-nio-8092-exec-2] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.http.converter.HttpMessageNotReadableException: JSON parse error: Unexpected character (''' (code 39)): was expecting double-quote to start property name]
+2026-09-28 15:05:28.962 WARN  [http-nio-8092-exec-10] c.a.exception.GlobalExceptionHandler - Request body could not be parsed: Unexpected character (''' (code 39)): was expecting double-quote to start property name
+ at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); byte offset: #110]
+2026-09-28 15:05:28.965 WARN  [http-nio-8092-exec-10] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.http.converter.HttpMessageNotReadableException: JSON parse error: Unexpected character (''' (code 39)): was expecting double-quote to start property name]
+2026-09-28 15:05:40.480 DEBUG [http-nio-8092-exec-6] c.adminvisitor.service.VisitService - Starting visit registration. registrationType=PRE_REGISTRATION, visitorType=VENDOR, hostId=EMP004
+2026-09-28 15:05:40.952 DEBUG [http-nio-8092-exec-6] c.adminvisitor.service.VisitService - Timing: validateVisitTiming=1 ms
+2026-09-28 15:05:41.020 INFO  [http-nio-8092-exec-6] c.adminvisitor.service.VisitService - Existing visitor found. visitorId=VTR-043
+2026-09-28 15:05:41.191 INFO  [http-nio-8092-exec-6] c.adminvisitor.service.VisitService - Existing visitor identity verified. visitorId=VTR-043
+2026-09-28 15:05:41.192 DEBUG [http-nio-8092-exec-6] c.adminvisitor.service.VisitService - Timing: findOrCreateVisitor and identity validation=240 ms
+2026-09-28 15:05:41.227 INFO  [http-nio-8092-exec-6] c.adminvisitor.service.VisitService - Vendor already exists for visitor. visitorId=VTR-043, vendorId=VND-008
+2026-09-28 15:05:41.300 DEBUG [http-nio-8092-exec-6] c.adminvisitor.service.VisitService - Timing: generateVisitId=73 ms
+2026-09-28 15:05:41.489 DEBUG [http-nio-8092-exec-6] c.adminvisitor.service.VisitService - Timing: visitRepository.save=72 ms
+2026-09-28 15:05:41.494 DEBUG [http-nio-8092-exec-6] c.adminvisitor.service.VisitService - Timing: sendVisitConfirmationEmail=4 ms
+2026-09-28 15:05:41.495 INFO  [http-nio-8092-exec-6] c.adminvisitor.service.VisitService - Visit registered successfully. visitId=VIS-083, visitReference=VIS-20260928150541-3D9D6936, visitorId=VTR-043, registrationType=PRE_REGISTRATION, status=REGISTERED
+2026-09-28 15:05:41.660 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=register durationMs=1214.6744
+2026-09-28 15:05:42.291 DEBUG [task-1] c.adminvisitor.service.EmailService - Timing: emailTemplateProcessing=767 ms
+2026-09-28 15:05:46.438 DEBUG [task-1] c.adminvisitor.service.EmailService - Timing: smtpSend=4011 ms
+2026-09-28 15:06:25.646 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=uploadProofDocuments durationMs=48.9225
+2026-09-28 15:08:55.780 INFO  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_COMPLETED controller=SwaggerConfigResource method=openapiJson durationMs=3.0939
+2026-09-28 15:08:55.810 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=OpenApiWebMvcResource method=openapiJson durationMs=14.683
+2026-09-28 15:09:11.731 INFO  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=uploadProofDocuments durationMs=36.0142
+2026-09-28 15:10:12.647 INFO  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=74.5419
+2026-09-28 15:11:50.583 DEBUG [http-nio-8092-exec-3] c.adminvisitor.service.VisitService - Starting visit registration. registrationType=PRE_REGISTRATION, visitorType=VENDOR, hostId=EMP002
+2026-09-28 15:11:50.601 WARN  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_FAILED controller=VisitController method=register durationMs=27.4797 exception=IllegalArgumentException
+2026-09-28 15:11:50.605 WARN  [http-nio-8092-exec-3] c.a.exception.GlobalExceptionHandler - Invalid request value: Passport is not allowed for domestic visitors
+2026-09-28 15:11:50.607 WARN  [http-nio-8092-exec-3] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [java.lang.IllegalArgumentException: Passport is not allowed for domestic visitors]
+2026-09-28 15:12:00.307 DEBUG [http-nio-8092-exec-5] c.adminvisitor.service.VisitService - Starting visit registration. registrationType=PRE_REGISTRATION, visitorType=VENDOR, hostId=EMP002
+2026-09-28 15:12:00.323 DEBUG [http-nio-8092-exec-5] c.adminvisitor.service.VisitService - Timing: validateVisitTiming=0 ms
+2026-09-28 15:12:00.337 WARN  [http-nio-8092-exec-5] c.adminvisitor.service.VisitService - Visitor registration rejected because the supplied mobile number is already associated with another visitor
+2026-09-28 15:12:00.345 WARN  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_FAILED controller=VisitController method=register durationMs=47.5818 exception=MobileNumberAlreadyExistsException
+2026-09-28 15:12:00.347 WARN  [http-nio-8092-exec-5] c.a.exception.GlobalExceptionHandler - Mobile number already exists: This mobile number is already associated with another visitor
+2026-09-28 15:12:00.349 WARN  [http-nio-8092-exec-5] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.MobileNumberAlreadyExistsException: This mobile number is already associated with another visitor]
+2026-09-28 15:12:14.015 DEBUG [http-nio-8092-exec-7] c.adminvisitor.service.VisitService - Starting visit registration. registrationType=PRE_REGISTRATION, visitorType=VENDOR, hostId=EMP002
+2026-09-28 15:12:14.030 DEBUG [http-nio-8092-exec-7] c.adminvisitor.service.VisitService - Timing: validateVisitTiming=0 ms
+2026-09-28 15:12:14.068 INFO  [http-nio-8092-exec-7] c.adminvisitor.service.VisitService - New visitor profile created. visitorId=VTR-046
+2026-09-28 15:12:14.138 DEBUG [http-nio-8092-exec-7] c.adminvisitor.service.VisitService - Timing: findOrCreateVisitor and identity validation=106 ms
+2026-09-28 15:12:14.215 INFO  [http-nio-8092-exec-7] c.adminvisitor.service.VisitService - Vendor created successfully. vendorId=VND-009, visitorId=VTR-046
+2026-09-28 15:12:14.244 DEBUG [http-nio-8092-exec-7] c.adminvisitor.service.VisitService - Timing: generateVisitId=28 ms
+2026-09-28 15:12:14.278 DEBUG [http-nio-8092-exec-7] c.adminvisitor.service.VisitService - Timing: visitRepository.save=10 ms
+2026-09-28 15:12:14.279 DEBUG [http-nio-8092-exec-7] c.adminvisitor.service.VisitService - Timing: sendVisitConfirmationEmail=1 ms
+2026-09-28 15:12:14.280 INFO  [http-nio-8092-exec-7] c.adminvisitor.service.VisitService - Visit registered successfully. visitId=VIS-084, visitReference=VIS-20260928151214-9F344B6A, visitorId=VTR-046, registrationType=PRE_REGISTRATION, status=REGISTERED
+2026-09-28 15:12:14.305 DEBUG [task-2] c.adminvisitor.service.EmailService - Timing: emailTemplateProcessing=25 ms
+2026-09-28 15:12:14.357 INFO  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=register durationMs=348.6013
+2026-09-28 15:12:18.132 DEBUG [task-2] c.adminvisitor.service.EmailService - Timing: smtpSend=3817 ms
+2026-09-28 15:12:55.075 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=uploadProofDocuments durationMs=251.496
+2026-09-28 15:13:20.208 INFO  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=uploadSignedNda durationMs=187.5934
+2026-09-28 15:13:39.821 INFO  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllNdas durationMs=51.4895
+2026-09-28 15:13:47.075 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=39.4783
+2026-09-28 15:13:55.334 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=SwaggerConfigResource method=openapiJson durationMs=0.7053
+2026-09-28 15:13:55.350 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=OpenApiWebMvcResource method=openapiJson durationMs=7.5038
+2026-09-28 15:14:13.648 INFO  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=uploadProofDocuments durationMs=39.3888
+2026-09-28 15:14:49.345 INFO  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=uploadSignedNda durationMs=112.3149
+2026-09-28 15:16:11.729 INFO  [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-09-28 15:16:11.735 INFO  [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-09-28 15:16:11.740 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 15:16:11.743 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-09-28 15:16:11.746 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-09-28 15:16:15.003 INFO  [restartedMain] com.adminvisitor.VMSApplication - Starting VMSApplication using Java 21.0.9 with PID 21852 (C:\Users\anisha.z\Documents\VMS\BACKEND\vms\target\classes started by anisha.z in C:\Users\anisha.z\Documents\VMS\BACKEND\vms)
+2026-09-28 15:16:15.005 DEBUG [restartedMain] com.adminvisitor.VMSApplication - Running with Spring Boot v4.1.1, Spring v7.0.9
+2026-09-28 15:16:15.005 INFO  [restartedMain] com.adminvisitor.VMSApplication - No active profile set, falling back to 1 default profile: "default"
+2026-09-28 15:16:15.054 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-09-28 15:16:15.054 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-09-28 15:16:15.346 INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.3.Final
+2026-09-28 15:16:15.938 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-28 15:16:16.123 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 178 ms. Found 11 JPA repository interfaces.
+2026-09-28 15:16:16.880 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8092 (http)
+2026-09-28 15:16:16.891 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8092"]
+2026-09-28 15:16:16.893 INFO  [restartedMain] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-09-28 15:16:16.893 INFO  [restartedMain] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.24]
+2026-09-28 15:16:16.983 INFO  [restartedMain] o.s.b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 1928 ms
+2026-09-28 15:16:17.176 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-09-28 15:16:17.582 INFO  [restartedMain] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2d0bb392
+2026-09-28 15:16:17.584 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-09-28 15:16:17.604 INFO  [restartedMain] org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-28 15:16:17.647 INFO  [restartedMain] org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.5.Final
+2026-09-28 15:16:18.130 INFO  [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-28 15:16:18.253 INFO  [restartedMain] o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://192.168.11.101:3306/Interns_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.40
+	Default catalog/schema: Interns_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-28 15:16:19.178 INFO  [restartedMain] org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-28 15:16:19.185 INFO  [restartedMain] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 15:16:19.282 INFO  [restartedMain] o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-28 15:16:20.215 WARN  [restartedMain] o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-28 15:16:20.777 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8092"]
+2026-09-28 15:16:20.793 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat started on port 8092 (http) with context path '/'
+2026-09-28 15:16:20.801 INFO  [restartedMain] com.adminvisitor.VMSApplication - Started VMSApplication in 6.378 seconds (process running for 7.282)
+2026-09-28 15:16:20.802 WARN  [restartedMain] o.s.c.events.SpringDocAppInitializer - SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-09-28 15:16:20.802 WARN  [restartedMain] o.s.c.events.SpringDocAppInitializer - SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-09-28 15:16:31.998 INFO  [http-nio-8092-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-28 15:16:31.999 INFO  [http-nio-8092-exec-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-09-28 15:16:32.002 INFO  [http-nio-8092-exec-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+2026-09-28 15:16:32.396 INFO  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_COMPLETED controller=SwaggerConfigResource method=openapiJson durationMs=1.2626
+2026-09-28 15:16:34.902 INFO  [http-nio-8092-exec-5] o.s.api.AbstractOpenApiResource - Init duration for springdoc-openapi is: 2355 ms
+2026-09-28 15:16:34.990 INFO  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_COMPLETED controller=OpenApiWebMvcResource method=openapiJson durationMs=2443.9901
+2026-09-28 15:16:46.934 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=uploadSignedNda durationMs=951.8127
+2026-09-28 15:19:12.878 INFO  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=161.8077
+2026-09-28 15:26:44.881 WARN  [http-nio-8092-exec-10] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=uploadSignedNda durationMs=57.1537 exception=BusinessRuleException
+2026-09-28 15:26:44.888 WARN  [http-nio-8092-exec-10] c.a.exception.GlobalExceptionHandler - Business rule violation: Valid NDA already exists for visitor: VTR-046
+2026-09-28 15:26:44.911 WARN  [http-nio-8092-exec-10] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.BusinessRuleException: Valid NDA already exists for visitor: VTR-046]
+2026-09-28 15:29:39.122 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@63f6d418 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 15:29:52.025 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@35577a9 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 15:29:52.944 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@10a6e32e (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 15:29:55.784 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@6a1e8259 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 15:30:01.207 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@5ec630a8 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 15:30:12.433 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@40c0cf96 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 15:30:15.680 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@2315db21 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 15:30:46.910 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@2de91a05 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 15:31:08.514 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@179dd044 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 15:31:11.811 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@2d0bb392 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-28 15:35:27.414 INFO  [http-nio-8092-exec-1] c.adminvisitor.service.VisitService - QR code generated successfully. visitId=VIS-084, qrLength=624
+2026-09-28 15:35:27.459 INFO  [http-nio-8092-exec-1] c.adminvisitor.service.VisitService - Visitor badge created successfully. visitId=VIS-084, badgeId=VB-027
+2026-09-28 15:35:27.465 INFO  [http-nio-8092-exec-1] c.adminvisitor.service.VisitService - Visitor checked in successfully. visitId=VIS-084, visitReference=VIS-20260928151214-9F344B6A, visitorId=VTR-046, checkedInAt=2026-09-28T15:35:26.908874100
+2026-09-28 15:35:27.577 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=checkIn durationMs=823.7564
+2026-09-28 15:35:32.916 INFO  [task-2] c.adminvisitor.service.EmailService - Host check-in notification sent successfully. visitReference=VIS-20260928151214-9F344B6A, hostEmail=priya.sharma@company.com
+2026-09-28 15:35:42.299 INFO  [task-1] c.adminvisitor.service.EmailService - Visitor badge email sent successfully. visitReference=VIS-20260928151214-9F344B6A, recipient=zoravar.vashisht@novavendor.example
+2026-09-28 15:45:57.742 INFO  [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-09-28 15:45:57.747 INFO  [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-09-28 15:45:57.751 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 15:45:57.756 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-09-28 15:45:57.761 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-09-28 15:46:04.511 INFO  [restartedMain] com.adminvisitor.VMSApplication - Starting VMSApplication using Java 21.0.9 with PID 28448 (C:\Users\anisha.z\Documents\VMS\BACKEND\vms\target\classes started by anisha.z in C:\Users\anisha.z\Documents\VMS\BACKEND\vms)
+2026-09-28 15:46:04.513 DEBUG [restartedMain] com.adminvisitor.VMSApplication - Running with Spring Boot v4.1.1, Spring v7.0.9
+2026-09-28 15:46:04.513 INFO  [restartedMain] com.adminvisitor.VMSApplication - No active profile set, falling back to 1 default profile: "default"
+2026-09-28 15:46:04.562 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-09-28 15:46:04.562 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-09-28 15:46:04.896 INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.3.Final
+2026-09-28 15:46:05.516 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-28 15:46:05.709 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 184 ms. Found 11 JPA repository interfaces.
+2026-09-28 15:46:08.836 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8092 (http)
+2026-09-28 15:46:08.881 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8092"]
+2026-09-28 15:46:08.894 INFO  [restartedMain] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-09-28 15:46:08.895 INFO  [restartedMain] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.24]
+2026-09-28 15:46:09.366 INFO  [restartedMain] o.s.b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 4803 ms
+2026-09-28 15:46:10.040 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-09-28 15:46:11.113 INFO  [restartedMain] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@73c487c0
+2026-09-28 15:46:11.120 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-09-28 15:46:11.228 INFO  [restartedMain] org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-28 15:46:11.481 INFO  [restartedMain] org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.5.Final
+2026-09-28 15:46:13.224 INFO  [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-28 15:46:13.567 INFO  [restartedMain] o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://192.168.11.101:3306/Interns_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.40
+	Default catalog/schema: Interns_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-28 15:46:17.315 INFO  [restartedMain] org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-28 15:46:17.336 INFO  [restartedMain] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 15:46:17.742 INFO  [restartedMain] o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-28 15:46:21.422 WARN  [restartedMain] o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-28 15:46:23.889 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8092"]
+2026-09-28 15:46:23.955 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat started on port 8092 (http) with context path '/'
+2026-09-28 15:46:23.990 INFO  [restartedMain] com.adminvisitor.VMSApplication - Started VMSApplication in 20.215 seconds (process running for 21.057)
+2026-09-28 15:46:23.999 WARN  [restartedMain] o.s.c.events.SpringDocAppInitializer - SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-09-28 15:46:23.999 WARN  [restartedMain] o.s.c.events.SpringDocAppInitializer - SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-09-28 15:47:14.314 INFO  [http-nio-8092-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-28 15:47:14.314 INFO  [http-nio-8092-exec-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-09-28 15:47:14.319 INFO  [http-nio-8092-exec-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 4 ms
+2026-09-28 15:47:14.652 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=SwaggerConfigResource method=openapiJson durationMs=2.0266
+2026-09-28 15:47:17.289 INFO  [http-nio-8092-exec-4] o.s.api.AbstractOpenApiResource - Init duration for springdoc-openapi is: 2464 ms
+2026-09-28 15:47:17.376 INFO  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_COMPLETED controller=OpenApiWebMvcResource method=openapiJson durationMs=2551.7664
+2026-09-28 15:48:19.898 WARN  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_FAILED controller=VisitController method=checkIn durationMs=286.0627 exception=BusinessRuleException
+2026-09-28 15:48:19.904 WARN  [http-nio-8092-exec-7] c.a.exception.GlobalExceptionHandler - Business rule violation: Visit can only be checked in on the scheduled visit date
+2026-09-28 15:48:19.950 WARN  [http-nio-8092-exec-7] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.BusinessRuleException: Visit can only be checked in on the scheduled visit date]
+2026-09-28 15:49:09.774 WARN  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_FAILED controller=VisitController method=checkIn durationMs=376.7803 exception=BusinessRuleException
+2026-09-28 15:49:09.777 WARN  [http-nio-8092-exec-8] c.a.exception.GlobalExceptionHandler - Business rule violation: Identity verification failed
+2026-09-28 15:49:09.781 WARN  [http-nio-8092-exec-8] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.BusinessRuleException: Identity verification failed]
+2026-09-28 15:52:03.492 DEBUG [http-nio-8092-exec-9] c.adminvisitor.service.VisitService - Starting visit registration. registrationType=PRE_REGISTRATION, visitorType=GUEST, hostId=HOST-78421
+2026-09-28 15:52:03.557 DEBUG [http-nio-8092-exec-9] c.adminvisitor.service.VisitService - Timing: validateVisitTiming=0 ms
+2026-09-28 15:52:03.709 INFO  [http-nio-8092-exec-9] c.adminvisitor.service.VisitService - New visitor profile created. visitorId=VTR-047
+2026-09-28 15:52:03.869 DEBUG [http-nio-8092-exec-9] c.adminvisitor.service.VisitService - Timing: findOrCreateVisitor and identity validation=311 ms
+2026-09-28 15:52:03.906 DEBUG [http-nio-8092-exec-9] c.adminvisitor.service.VisitService - Timing: generateVisitId=37 ms
+2026-09-28 15:52:03.945 WARN  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_FAILED controller=VisitController method=register durationMs=463.8552 exception=BusinessRuleException
+2026-09-28 15:52:03.946 WARN  [http-nio-8092-exec-9] c.a.exception.GlobalExceptionHandler - Business rule violation: Employee not found with id: HOST-78421
+2026-09-28 15:52:03.949 WARN  [http-nio-8092-exec-9] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.BusinessRuleException: Employee not found with id: HOST-78421]
+2026-09-28 15:52:10.473 DEBUG [http-nio-8092-exec-10] c.adminvisitor.service.VisitService - Starting visit registration. registrationType=PRE_REGISTRATION, visitorType=GUEST, hostId=EMP003
+2026-09-28 15:52:10.495 DEBUG [http-nio-8092-exec-10] c.adminvisitor.service.VisitService - Timing: validateVisitTiming=0 ms
+2026-09-28 15:52:10.530 INFO  [http-nio-8092-exec-10] c.adminvisitor.service.VisitService - New visitor profile created. visitorId=VTR-047
+2026-09-28 15:52:10.577 DEBUG [http-nio-8092-exec-10] c.adminvisitor.service.VisitService - Timing: findOrCreateVisitor and identity validation=82 ms
+2026-09-28 15:52:10.606 DEBUG [http-nio-8092-exec-10] c.adminvisitor.service.VisitService - Timing: generateVisitId=29 ms
+2026-09-28 15:52:10.665 DEBUG [http-nio-8092-exec-10] c.adminvisitor.service.VisitService - Timing: visitRepository.save=23 ms
+2026-09-28 15:52:10.668 DEBUG [http-nio-8092-exec-10] c.adminvisitor.service.VisitService - Timing: sendVisitConfirmationEmail=3 ms
+2026-09-28 15:52:10.669 INFO  [http-nio-8092-exec-10] c.adminvisitor.service.VisitService - Visit registered successfully. visitId=VIS-085, visitReference=VIS-20260928155210-E3DF494B, visitorId=VTR-047, registrationType=PRE_REGISTRATION, status=REGISTERED
+2026-09-28 15:52:10.785 INFO  [http-nio-8092-exec-10] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=register durationMs=321.1435
+2026-09-28 15:52:11.373 DEBUG [task-1] c.adminvisitor.service.EmailService - Timing: emailTemplateProcessing=664 ms
+2026-09-28 15:52:16.409 DEBUG [task-1] c.adminvisitor.service.EmailService - Timing: smtpSend=4886 ms
+2026-09-28 15:53:01.436 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=uploadProofDocuments durationMs=189.2013
+2026-09-28 15:53:19.603 WARN  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=uploadSignedNda durationMs=51.48 exception=BusinessRuleException
+2026-09-28 15:53:19.605 WARN  [http-nio-8092-exec-2] c.a.exception.GlobalExceptionHandler - Business rule violation: NDA can only be uploaded for vendor visitors
+2026-09-28 15:53:19.609 WARN  [http-nio-8092-exec-2] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.BusinessRuleException: NDA can only be uploaded for vendor visitors]
+2026-09-28 15:53:31.212 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllNdas durationMs=55.4556
+2026-09-28 15:53:40.664 INFO  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=61.9418
+2026-09-28 15:54:51.155 INFO  [http-nio-8092-exec-6] c.adminvisitor.service.VisitService - QR code generated successfully. visitId=VIS-085, qrLength=640
+2026-09-28 15:54:51.165 INFO  [http-nio-8092-exec-6] c.adminvisitor.service.VisitService - Visitor badge created successfully. visitId=VIS-085, badgeId=VB-028
+2026-09-28 15:54:51.168 INFO  [http-nio-8092-exec-6] c.adminvisitor.service.VisitService - Visitor checked in successfully. visitId=VIS-085, visitReference=VIS-20260928155210-E3DF494B, visitorId=VTR-047, checkedInAt=2026-09-28T15:54:50.808785100
+2026-09-28 15:54:51.291 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=checkIn durationMs=727.383
+2026-09-28 15:54:54.929 INFO  [task-3] c.adminvisitor.service.EmailService - Host check-in notification sent successfully. visitReference=VIS-20260928155210-E3DF494B, hostEmail=rahul.verma@company.com
+2026-09-28 15:55:03.917 INFO  [task-2] c.adminvisitor.service.EmailService - Visitor badge email sent successfully. visitReference=VIS-20260928155210-E3DF494B, recipient=aarav.vaidyathan@example.com
+2026-09-28 15:56:19.966 INFO  [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-09-28 15:56:19.972 INFO  [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-09-28 15:56:19.975 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 15:56:19.978 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-09-28 15:56:19.986 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
