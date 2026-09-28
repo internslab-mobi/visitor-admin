@@ -22,6 +22,10 @@ public class DocumentMetadata extends BaseEntity {
     @JsonIgnore
     private Document document;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "document_type", length = 30)
+    private DocumentType documentType;
+
     @Column(name = "document_path", nullable = false, length = 500)
     private String documentPath;
 }
