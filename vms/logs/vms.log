@@ -2376,3 +2376,8 @@ Caused by: java.net.ConnectException: Connection refused: getsockopt
 2026-09-28 12:54:03.912 WARN  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_FAILED controller=VisitController method=register durationMs=34.0867 exception=IllegalArgumentException
 2026-09-28 12:54:03.914 WARN  [http-nio-8092-exec-9] c.a.exception.GlobalExceptionHandler - Invalid request value: Aadhaar number is required for domestic visitors
 2026-09-28 12:54:03.918 WARN  [http-nio-8092-exec-9] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [java.lang.IllegalArgumentException: Aadhaar number is required for domestic visitors]
+2026-09-28 13:10:34.281 INFO  [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-09-28 13:10:34.297 INFO  [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-09-28 13:10:34.307 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-28 13:10:34.314 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-09-28 13:10:34.328 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
