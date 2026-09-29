@@ -397,23 +397,6 @@ public class DocumentService {
             );
         }
     }
-//    public boolean isNdaRequired(Visitor visitor) {
-//
-//        LocalDateTime validity =
-//                visitor.getValidity();
-//
-//        if (validity == null) {
-//            return true;
-//        }
-//
-//        if (validity.isBefore(LocalDateTime.now())) {
-//            return true;
-//        }
-//
-//        return documentRepository
-//                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
-//                .isEmpty();
-//    }
 
     public boolean isNdaRequired(Visitor visitor) {
 
@@ -847,6 +830,35 @@ public class DocumentService {
      * separately through vms_document_metadata.
      */
 
+//    @Transactional(readOnly = true)
+//    public List<DocumentResponse> getAllDocuments(
+//            String visitorId
+//    ) {
+//
+//        visitorRepository.findById(visitorId)
+//                .orElseThrow(() ->
+//                        new ResourceNotFoundException(
+//                                "Visitor not found: " + visitorId
+//                        )
+//                );
+//
+//        return documentRepository
+//                .findByVisitorId(visitorId)
+//                .stream()
+//                .flatMap(document ->
+//                        documentMetadataRepository
+//                                .findByDocumentId(document.getId())
+//                                .stream()
+//                )
+//                .map(metadata -> new DocumentResponse(
+//                        metadata.getId(),
+//                        metadata.getDocumentPath(),
+//                        metadata.getCreatedAt().toString()
+//                ))
+//                .toList();
+//    }
+
+
     @Transactional(readOnly = true)
     public List<DocumentResponse> getAllDocuments(
             String visitorId
@@ -867,6 +879,10 @@ public class DocumentService {
                                 .findByDocumentId(document.getId())
                                 .stream()
                 )
+                .filter(metadata ->
+                        metadata.getDocumentType() != DocumentType.NDA
+                                && metadata.getDocumentType() != DocumentType.VISITOR_PHOTO
+                )
                 .map(metadata -> new DocumentResponse(
                         metadata.getId(),
                         metadata.getDocumentPath(),
@@ -874,9 +890,6 @@ public class DocumentService {
                 ))
                 .toList();
     }
-
-
-
 
 
     @Transactional
@@ -1084,5 +1097,18 @@ public class DocumentService {
                         )
                 )
                 .toList();
+    }
+
+
+    @Transactional(readOnly = true)
+    public DocumentMetadata getDocumentMetadata(String documentId) {
+
+        return documentMetadataRepository
+                .findById(documentId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Document not found: " + documentId
+                        )
+                );
     }
 }

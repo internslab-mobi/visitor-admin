@@ -1,6 +1,7 @@
 package com.adminvisitor.controller;
 
 import com.adminvisitor.dto.requestdto.UpdateVisitorRequest;
+import com.adminvisitor.dto.responsedto.VisitorEditResponse;
 import com.adminvisitor.dto.responsedto.VisitorResponse;
 import com.adminvisitor.service.VisitorService;
 import jakarta.validation.Valid;
@@ -45,5 +46,15 @@ public class VisitorController {
                 visitorService.getAllVisitors();
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{visitorId}/edit")
+    public ResponseEntity<VisitorEditResponse> getVisitorEditDetails(
+            @PathVariable String visitorId
+    ) {
+
+        return ResponseEntity.ok(
+                visitorService.getVisitorEditDetails(visitorId)
+        );
     }
 }
