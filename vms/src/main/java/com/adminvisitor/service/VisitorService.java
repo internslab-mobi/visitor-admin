@@ -97,7 +97,27 @@ public class VisitorService {
        // visitor.setValidity(request.validity());
 
         Visitor updatedVisitor = visitorRepository.save(visitor);
+        Optional<Vendor> vendorOptional =
+                vendorRepository.findByVisitorId(visitorId);
 
+        if (vendorOptional.isPresent()) {
+
+            Vendor vendor = vendorOptional.get();
+
+            vendor.setFirstName(request.firstName());
+            vendor.setLastName(request.lastName());
+            vendor.setEmail(request.email());
+            vendor.setMobileNumber(request.mobileNumber());
+            vendor.setCompanyName(request.companyName());
+
+            vendorRepository.save(vendor);
+
+            log.info(
+                    "Vendor details synchronized. visitorId={}, vendorId={}",
+                    visitorId,
+                    vendor.getId()
+            );
+        }
         log.info(
                 "Visitor updated successfully. visitorId={}",
                 updatedVisitor.getId()

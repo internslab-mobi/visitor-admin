@@ -3379,3 +3379,326 @@ java.lang.RuntimeException: Unexpected error
 2026-09-28 15:51:18.306 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
 2026-09-28 15:51:18.314 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
 2026-09-28 15:51:18.325 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-09-30 09:14:09.955 INFO  [restartedMain] com.adminvisitor.VMSApplication - Starting VMSApplication using Java 21.0.9 with PID 8716 (C:\Users\anisha.z\Documents\VMS\BACKEND\vms\target\classes started by anisha.z in C:\Users\anisha.z\Documents\VMS\BACKEND\vms)
+2026-09-30 09:14:09.959 DEBUG [restartedMain] com.adminvisitor.VMSApplication - Running with Spring Boot v4.1.1, Spring v7.0.9
+2026-09-30 09:14:09.959 INFO  [restartedMain] com.adminvisitor.VMSApplication - No active profile set, falling back to 1 default profile: "default"
+2026-09-30 09:14:10.024 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-09-30 09:14:10.025 INFO  [restartedMain] o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-09-30 09:14:10.499 INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.1.3.Final
+2026-09-30 09:14:11.415 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-30 09:14:11.703 INFO  [restartedMain] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 278 ms. Found 11 JPA repository interfaces.
+2026-09-30 09:14:12.915 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8092 (http)
+2026-09-30 09:14:12.936 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8092"]
+2026-09-30 09:14:12.940 INFO  [restartedMain] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-09-30 09:14:12.940 INFO  [restartedMain] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.24]
+2026-09-30 09:14:13.082 INFO  [restartedMain] o.s.b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 3057 ms
+2026-09-30 09:14:13.360 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-09-30 09:14:13.940 INFO  [restartedMain] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@52b19a99
+2026-09-30 09:14:13.944 INFO  [restartedMain] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-09-30 09:14:14.010 INFO  [restartedMain] org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-30 09:14:14.176 INFO  [restartedMain] org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.4.5.Final
+2026-09-30 09:14:14.913 INFO  [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-30 09:14:15.113 INFO  [restartedMain] o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://192.168.11.101:3306/Interns_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.40
+	Default catalog/schema: Interns_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-30 09:14:16.945 INFO  [restartedMain] org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-30 09:14:16.956 INFO  [restartedMain] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-30 09:14:17.125 INFO  [restartedMain] o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-30 09:14:18.883 WARN  [restartedMain] o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-30 09:14:19.915 INFO  [restartedMain] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8092"]
+2026-09-30 09:14:19.955 INFO  [restartedMain] o.s.boot.tomcat.TomcatWebServer - Tomcat started on port 8092 (http) with context path '/'
+2026-09-30 09:14:19.972 INFO  [restartedMain] com.adminvisitor.VMSApplication - Started VMSApplication in 10.833 seconds (process running for 12.248)
+2026-09-30 09:14:19.989 WARN  [restartedMain] o.s.c.events.SpringDocAppInitializer - SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-09-30 09:14:19.989 WARN  [restartedMain] o.s.c.events.SpringDocAppInitializer - SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-09-30 09:14:58.709 INFO  [http-nio-8092-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-30 09:14:58.709 INFO  [http-nio-8092-exec-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-09-30 09:14:58.715 INFO  [http-nio-8092-exec-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 5 ms
+2026-09-30 09:14:59.081 INFO  [http-nio-8092-exec-1] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 09:15:00.322 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=1297.9032
+2026-09-30 09:15:04.928 INFO  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=164.0685
+2026-09-30 09:15:05.037 INFO  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=279.1948
+2026-09-30 09:15:05.357 WARN  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=89.0031 exception=ResourceNotFoundException
+2026-09-30 09:15:05.366 WARN  [http-nio-8092-exec-4] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo not found for visitor: VTR-043
+2026-09-30 09:15:05.396 WARN  [http-nio-8092-exec-4] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo not found for visitor: VTR-043]
+2026-09-30 09:15:12.173 INFO  [http-nio-8092-exec-5] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 09:15:12.603 INFO  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=451.1796
+2026-09-30 09:15:14.329 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=51.6176
+2026-09-30 09:15:14.390 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=113.0478
+2026-09-30 09:15:14.447 WARN  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=33.3981 exception=ResourceNotFoundException
+2026-09-30 09:15:14.449 WARN  [http-nio-8092-exec-8] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo not found for visitor: VTR-044
+2026-09-30 09:15:14.453 WARN  [http-nio-8092-exec-8] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo not found for visitor: VTR-044]
+2026-09-30 09:29:43.306 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@2de8f6a4 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 09:29:44.488 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@34e2a4dc (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 09:29:56.966 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@1138297c (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 09:30:11.677 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@112fad8b (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 09:30:41.877 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@4c8663bb (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 09:30:51.596 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@52b19a99 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 09:30:54.135 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@5a375906 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 09:30:58.675 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@43b6cdc3 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 09:31:18.554 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@9d90b7 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 09:31:24.374 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@205c3b19 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 09:38:13.874 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=66.0293
+2026-09-30 09:38:16.599 INFO  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=48.0787
+2026-09-30 09:38:16.655 INFO  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=104.985
+2026-09-30 09:38:16.733 WARN  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=32.0469 exception=ResourceNotFoundException
+2026-09-30 09:38:16.736 WARN  [http-nio-8092-exec-4] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo not found for visitor: VTR-044
+2026-09-30 09:38:16.741 WARN  [http-nio-8092-exec-4] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo not found for visitor: VTR-044]
+2026-09-30 09:38:51.761 WARN  [http-nio-8092-exec-3] c.a.exception.GlobalExceptionHandler - Validation failed for request with 1 error(s)
+2026-09-30 09:38:51.775 WARN  [http-nio-8092-exec-3] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.web.bind.MethodArgumentNotValidException: Validation failed for argument [1] in public org.springframework.http.ResponseEntity<com.adminvisitor.dto.responsedto.BlacklistResponse> com.adminvisitor.controller.BlacklistController.addExistingVisitorToBlacklist(java.lang.String,com.adminvisitor.dto.requestdto.AddVisitorToBlacklistRequest): [Field error in object 'addVisitorToBlacklistRequest' on field 'createdBy': rejected value [null]; codes [NotBlank.addVisitorToBlacklistRequest.createdBy,NotBlank.createdBy,NotBlank.java.lang.String,NotBlank]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [addVisitorToBlacklistRequest.createdBy,createdBy]; arguments []; default message [createdBy]]; default message [Added by is required]] ]
+2026-09-30 09:39:13.407 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=83.6865
+2026-09-30 09:39:13.451 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=131.0178
+2026-09-30 09:39:13.520 WARN  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=37.2471 exception=ResourceNotFoundException
+2026-09-30 09:39:13.522 WARN  [http-nio-8092-exec-9] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo not found for visitor: VTR-044
+2026-09-30 09:39:13.524 WARN  [http-nio-8092-exec-9] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo not found for visitor: VTR-044]
+2026-09-30 09:39:20.575 WARN  [http-nio-8092-exec-2] c.a.exception.GlobalExceptionHandler - Validation failed for request with 1 error(s)
+2026-09-30 09:39:20.580 WARN  [http-nio-8092-exec-2] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.web.bind.MethodArgumentNotValidException: Validation failed for argument [1] in public org.springframework.http.ResponseEntity<com.adminvisitor.dto.responsedto.BlacklistResponse> com.adminvisitor.controller.BlacklistController.addExistingVisitorToBlacklist(java.lang.String,com.adminvisitor.dto.requestdto.AddVisitorToBlacklistRequest): [Field error in object 'addVisitorToBlacklistRequest' on field 'createdBy': rejected value [null]; codes [NotBlank.addVisitorToBlacklistRequest.createdBy,NotBlank.createdBy,NotBlank.java.lang.String,NotBlank]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [addVisitorToBlacklistRequest.createdBy,createdBy]; arguments []; default message [createdBy]]; default message [Added by is required]] ]
+2026-09-30 09:42:03.595 INFO  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=56.242
+2026-09-30 09:42:03.646 INFO  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=110.0538
+2026-09-30 09:42:03.705 WARN  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=27.7198 exception=ResourceNotFoundException
+2026-09-30 09:42:03.707 WARN  [http-nio-8092-exec-3] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo not found for visitor: VTR-044
+2026-09-30 09:42:03.709 WARN  [http-nio-8092-exec-3] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo not found for visitor: VTR-044]
+2026-09-30 09:42:13.443 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=BlacklistController method=addExistingVisitorToBlacklist durationMs=665.4636
+2026-09-30 09:42:24.794 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=BlacklistController method=getAllBlacklistRecords durationMs=197.3051
+2026-09-30 09:42:28.668 INFO  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_COMPLETED controller=BlacklistController method=getBlacklistById durationMs=57.8305
+2026-09-30 09:42:39.407 INFO  [http-nio-8092-exec-10] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 09:42:39.746 INFO  [http-nio-8092-exec-10] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=351.9023
+2026-09-30 09:42:40.596 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=getDashboardVisits durationMs=404.3724
+2026-09-30 09:42:42.128 INFO  [http-nio-8092-exec-2] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 09:42:42.483 INFO  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=374.1704
+2026-09-30 09:42:47.355 INFO  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=70.2137
+2026-09-30 09:42:47.402 INFO  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=116.1522
+2026-09-30 09:42:47.452 WARN  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=31.3552 exception=ResourceNotFoundException
+2026-09-30 09:42:47.453 WARN  [http-nio-8092-exec-4] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo not found for visitor: VTR-044
+2026-09-30 09:42:47.456 WARN  [http-nio-8092-exec-4] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo not found for visitor: VTR-044]
+2026-09-30 09:42:57.860 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=BlacklistController method=removeFromBlacklist durationMs=81.0043
+2026-09-30 09:43:00.885 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=BlacklistController method=getAllBlacklistRecords durationMs=158.169
+2026-09-30 09:43:03.488 INFO  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_COMPLETED controller=BlacklistController method=getBlacklistById durationMs=58.9628
+2026-09-30 09:43:07.740 INFO  [http-nio-8092-exec-10] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=getDashboardVisits durationMs=284.8162
+2026-09-30 09:43:09.613 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=BlacklistController method=getAllBlacklistRecords durationMs=190.7047
+2026-09-30 09:43:12.013 INFO  [http-nio-8092-exec-2] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 09:43:12.470 INFO  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=478.6556
+2026-09-30 09:43:16.148 INFO  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=60.3488
+2026-09-30 09:43:16.193 INFO  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=105.6131
+2026-09-30 09:43:16.242 WARN  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=30.3935 exception=ResourceNotFoundException
+2026-09-30 09:43:16.245 WARN  [http-nio-8092-exec-4] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo not found for visitor: VTR-044
+2026-09-30 09:43:16.247 WARN  [http-nio-8092-exec-4] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo not found for visitor: VTR-044]
+2026-09-30 09:43:25.951 INFO  [http-nio-8092-exec-3] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 09:43:26.229 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=294.2331
+2026-09-30 09:43:28.611 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=79.4977
+2026-09-30 09:43:28.683 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=151.1607
+2026-09-30 09:43:28.769 WARN  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=61.4945 exception=ResourceNotFoundException
+2026-09-30 09:43:28.771 WARN  [http-nio-8092-exec-9] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo file not found
+2026-09-30 09:43:28.774 WARN  [http-nio-8092-exec-9] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo file not found]
+2026-09-30 09:43:34.637 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=BlacklistController method=removeFromBlacklist durationMs=102.7106
+2026-09-30 09:43:52.929 INFO  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_COMPLETED controller=BlacklistController method=addExistingVisitorToBlacklist durationMs=275.5264
+2026-09-30 09:46:37.487 INFO  [http-nio-8092-exec-3] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 09:46:37.783 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=317.7736
+2026-09-30 09:46:40.203 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=57.4202
+2026-09-30 09:46:40.248 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=104.3184
+2026-09-30 09:46:40.314 WARN  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=39.5946 exception=ResourceNotFoundException
+2026-09-30 09:46:40.314 WARN  [http-nio-8092-exec-9] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo not found for visitor: VTR-043
+2026-09-30 09:46:40.320 WARN  [http-nio-8092-exec-9] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo not found for visitor: VTR-043]
+2026-09-30 09:47:31.045 INFO  [http-nio-8092-exec-10] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 09:47:31.318 INFO  [http-nio-8092-exec-10] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=290.1804
+2026-09-30 09:47:33.661 INFO  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=71.4897
+2026-09-30 09:47:33.713 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=123.0635
+2026-09-30 09:47:33.759 WARN  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=28.1729 exception=ResourceNotFoundException
+2026-09-30 09:47:33.762 WARN  [http-nio-8092-exec-5] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo not found for visitor: VTR-029
+2026-09-30 09:47:33.765 WARN  [http-nio-8092-exec-5] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo not found for visitor: VTR-029]
+2026-09-30 09:50:58.580 INFO  [http-nio-8092-exec-3] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 09:50:58.859 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=296.4134
+2026-09-30 09:51:19.247 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=getDashboardVisits durationMs=276.8386
+2026-09-30 09:51:19.939 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=34.3858
+2026-09-30 09:51:21.280 INFO  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=getDashboardVisits durationMs=258.4713
+2026-09-30 10:06:31.070 INFO  [http-nio-8092-exec-2] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 10:06:31.285 INFO  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=229.3222
+2026-09-30 10:10:41.178 INFO  [http-nio-8092-exec-5] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 10:10:41.376 INFO  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=209.984301
+2026-09-30 10:10:50.728 INFO  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=34.9493
+2026-09-30 10:11:44.111 INFO  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=39.6289
+2026-09-30 10:12:01.356 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=128.977299
+2026-09-30 10:12:09.968 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=35.3169
+2026-09-30 10:12:12.740 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=82.384101
+2026-09-30 10:29:39.260 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@1509d284 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 10:29:39.511 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@24c2ab13 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 10:29:41.761 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@7fdf91e9 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 10:30:00.717 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@4048ad8f (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 10:30:17.466 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@731f3208 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 10:30:19.098 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@69224514 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 10:30:32.068 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@63f03b5a (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 10:30:49.688 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@4ee6c0a (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 10:31:21.848 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@127da190 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 10:31:21.952 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@59bd0b45 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 10:46:04.874 INFO  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=140.7478
+2026-09-30 10:46:42.659 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=100.637801
+2026-09-30 10:47:11.748 INFO  [http-nio-8092-exec-5] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 10:47:12.011 INFO  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=275.435099
+2026-09-30 10:47:40.417 INFO  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=getDashboardVisits durationMs=275.7894
+2026-09-30 10:47:42.431 INFO  [http-nio-8092-exec-4] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 10:47:42.721 INFO  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=313.590001
+2026-09-30 10:48:01.732 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=125.4485
+2026-09-30 10:49:36.299 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=47.650901
+2026-09-30 10:49:38.999 INFO  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=90.7677
+2026-09-30 11:01:09.442 INFO  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=136.8376
+2026-09-30 11:01:09.810 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=78.5644
+2026-09-30 11:18:00.266 INFO  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=94.377
+2026-09-30 11:22:55.296 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=124.246599
+2026-09-30 11:29:45.140 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@1c414ba7 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 11:30:07.006 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@2c08a2fb (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 11:30:27.459 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@f0fcf68 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 11:30:35.562 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@53fbf4c9 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 11:30:42.607 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@55fcde52 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 11:31:07.346 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@20ab6eca (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 11:31:11.138 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@77633736 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 11:31:14.901 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@2e272947 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 11:31:22.986 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@594b0a2d (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 11:31:31.203 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@21befc03 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 11:38:53.673 INFO  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=149.5602
+2026-09-30 11:38:53.737 INFO  [http-nio-8092-exec-10] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=144.699601
+2026-09-30 11:45:34.171 INFO  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=143.0569
+2026-09-30 11:46:43.135 INFO  [http-nio-8092-exec-4] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 11:46:43.514 INFO  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=406.016799
+2026-09-30 11:46:45.810 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=47.404501
+2026-09-30 11:46:48.812 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=getDashboardVisits durationMs=289.6903
+2026-09-30 11:46:54.528 INFO  [http-nio-8092-exec-6] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 11:46:54.837 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=322.9278
+2026-09-30 11:46:56.312 INFO  [http-nio-8092-exec-10] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=65.0775
+2026-09-30 11:46:56.349 INFO  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=102.853801
+2026-09-30 11:46:56.418 WARN  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=36.383299 exception=ResourceNotFoundException
+2026-09-30 11:46:56.427 WARN  [http-nio-8092-exec-2] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo file not found
+2026-09-30 11:46:56.431 WARN  [http-nio-8092-exec-2] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo file not found]
+2026-09-30 11:46:59.893 INFO  [http-nio-8092-exec-1] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 11:47:00.246 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=390.627701
+2026-09-30 11:47:09.264 INFO  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=47.587899
+2026-09-30 11:47:09.317 INFO  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=101.6625
+2026-09-30 11:47:09.385 WARN  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=48.6159 exception=ResourceNotFoundException
+2026-09-30 11:47:09.386 WARN  [http-nio-8092-exec-4] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo not found for visitor: VTR-049
+2026-09-30 11:47:09.390 WARN  [http-nio-8092-exec-4] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo not found for visitor: VTR-049]
+2026-09-30 11:47:11.860 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=getDashboardVisits durationMs=283.797401
+2026-09-30 11:47:12.782 INFO  [http-nio-8092-exec-8] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 11:47:13.059 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=295.4201
+2026-09-30 11:47:13.961 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=117.0241
+2026-09-30 11:47:16.956 INFO  [http-nio-8092-exec-10] c.a.config.ApiLoggingAspect - API_COMPLETED controller=BlacklistController method=getAllBlacklistRecords durationMs=201.8769
+2026-09-30 11:47:18.089 INFO  [http-nio-8092-exec-9] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 11:47:18.438 INFO  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=370.4352
+2026-09-30 11:47:19.636 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=48.652201
+2026-09-30 11:47:19.684 INFO  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=96.065401
+2026-09-30 11:47:19.738 WARN  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=34.481699 exception=ResourceNotFoundException
+2026-09-30 11:47:19.740 WARN  [http-nio-8092-exec-7] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo file not found
+2026-09-30 11:47:19.743 WARN  [http-nio-8092-exec-7] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo file not found]
+2026-09-30 11:47:21.643 INFO  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=getDashboardVisits durationMs=341.2287
+2026-09-30 11:47:23.660 INFO  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=48.1654
+2026-09-30 11:47:27.379 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DepartmentController method=getDepartments durationMs=49.3562
+2026-09-30 11:47:29.652 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=120.8111
+2026-09-30 11:47:31.654 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=50.8627
+2026-09-30 11:51:31.917 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=79.8954
+2026-09-30 11:51:49.017 INFO  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=60.505499
+2026-09-30 11:51:49.029 INFO  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=135.191801
+2026-09-30 11:55:01.702 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=getDashboardVisits durationMs=542.7709
+2026-09-30 11:55:10.686 INFO  [http-nio-8092-exec-8] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 11:55:11.223 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=571.0486
+2026-09-30 11:55:23.085 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=getDashboardVisits durationMs=455.6361
+2026-09-30 11:56:08.665 INFO  [http-nio-8092-exec-10] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=107.6401
+2026-09-30 11:56:24.073 INFO  [http-nio-8092-exec-9] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 11:56:24.366 INFO  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=308.0032
+2026-09-30 12:00:02.245 INFO  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=40.773599
+2026-09-30 12:00:12.014 INFO  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=34.1866
+2026-09-30 12:06:53.514 INFO  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=34.499
+2026-09-30 12:06:56.095 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DepartmentController method=getDepartments durationMs=30.3889
+2026-09-30 12:09:22.184 INFO  [http-nio-8092-exec-6] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 12:09:22.435 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=271.027801
+2026-09-30 12:09:34.938 INFO  [http-nio-8092-exec-10] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=79.7384
+2026-09-30 12:10:41.979 INFO  [http-nio-8092-exec-1] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 12:10:42.193 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=224.5153
+2026-09-30 12:15:49.884 INFO  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=getDashboardVisits durationMs=231.8948
+2026-09-30 12:15:53.366 INFO  [http-nio-8092-exec-5] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 12:15:53.584 INFO  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=229.2592
+2026-09-30 12:16:04.997 INFO  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VendorController method=getAllVendors durationMs=81.9808
+2026-09-30 12:16:34.877 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=30.4578
+2026-09-30 12:16:38.006 INFO  [http-nio-8092-exec-8] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 12:16:38.210 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=219.3784
+2026-09-30 12:16:43.196 INFO  [http-nio-8092-exec-10] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=172.536101
+2026-09-30 12:16:43.232 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=213.814901
+2026-09-30 12:16:43.398 WARN  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=148.7916 exception=ResourceNotFoundException
+2026-09-30 12:16:43.401 WARN  [http-nio-8092-exec-9] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo not found for visitor: VTR-044
+2026-09-30 12:16:43.403 WARN  [http-nio-8092-exec-9] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo not found for visitor: VTR-044]
+2026-09-30 12:16:49.436 INFO  [http-nio-8092-exec-1] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 12:16:49.648 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=226.6396
+2026-09-30 12:16:52.502 INFO  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=52.014599
+2026-09-30 12:16:52.545 INFO  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=95.5166
+2026-09-30 12:16:52.598 WARN  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=33.096799 exception=ResourceNotFoundException
+2026-09-30 12:16:52.599 WARN  [http-nio-8092-exec-5] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo not found for visitor: VTR-043
+2026-09-30 12:16:52.601 WARN  [http-nio-8092-exec-5] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo not found for visitor: VTR-043]
+2026-09-30 12:17:17.789 INFO  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=viewDocument durationMs=84.015101
+2026-09-30 12:18:02.289 INFO  [http-nio-8092-exec-6] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 12:18:02.519 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=244.217
+2026-09-30 12:26:47.326 INFO  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitController method=getDashboardVisits durationMs=361.695199
+2026-09-30 12:29:35.025 INFO  [http-nio-8092-exec-3] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 12:29:35.370 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=359.8291
+2026-09-30 12:29:49.535 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@12beca3e (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 12:30:15.355 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@4f8f87d2 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 12:30:20.330 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@1a2b3a9f (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 12:31:03.992 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@207d246e (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 12:31:10.289 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@42327540 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 12:31:10.615 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@29b5a260 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 12:31:10.788 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@58c05ed7 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 12:31:11.292 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@2457e2c5 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 12:31:12.354 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@640edc83 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 12:31:18.327 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@70be8952 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 13:27:37.114 INFO  [http-nio-8092-exec-10] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 13:27:37.484 INFO  [http-nio-8092-exec-10] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=391.9267
+2026-09-30 13:27:39.355 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=39.7595
+2026-09-30 13:29:51.931 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@5e81e55e (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 13:29:51.939 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@20aa42d9 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 13:29:56.203 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@7a9f9516 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 13:30:06.175 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@662d590f (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 13:30:08.312 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@197cf355 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 13:30:47.172 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@7d3e8c82 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 13:30:47.735 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@59b8c8a6 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 13:31:06.910 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@11cc7828 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 13:31:16.260 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@7c163c66 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 13:31:31.755 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@1c5f36c (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 13:32:38.390 INFO  [http-nio-8092-exec-1] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 13:32:38.682 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=313.6485
+2026-09-30 13:32:42.177 INFO  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=93.647101
+2026-09-30 13:32:42.217 INFO  [http-nio-8092-exec-7] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=134.7944
+2026-09-30 13:32:42.291 WARN  [http-nio-8092-exec-5] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=43.2735 exception=ResourceNotFoundException
+2026-09-30 13:32:42.294 WARN  [http-nio-8092-exec-5] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo not found for visitor: VTR-043
+2026-09-30 13:32:42.295 WARN  [http-nio-8092-exec-5] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo not found for visitor: VTR-043]
+2026-09-30 13:33:48.749 INFO  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_COMPLETED controller=EmployeeController method=getEmployees durationMs=45.059
+2026-09-30 13:41:42.741 INFO  [http-nio-8092-exec-6] c.a.service.VisitorService - Fetching all visitors
+2026-09-30 13:41:43.038 INFO  [http-nio-8092-exec-6] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getAllVisitors durationMs=320.7419
+2026-09-30 13:41:49.078 INFO  [http-nio-8092-exec-1] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=63.7988
+2026-09-30 13:41:49.118 INFO  [http-nio-8092-exec-9] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=104.6815
+2026-09-30 13:41:49.172 WARN  [http-nio-8092-exec-2] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=31.669899 exception=ResourceNotFoundException
+2026-09-30 13:41:49.174 WARN  [http-nio-8092-exec-2] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo not found for visitor: VTR-043
+2026-09-30 13:41:49.175 WARN  [http-nio-8092-exec-2] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo not found for visitor: VTR-043]
+2026-09-30 14:11:49.008 INFO  [http-nio-8092-exec-4] c.a.config.ApiLoggingAspect - API_COMPLETED controller=DocumentController method=getAllDocuments durationMs=95.1592
+2026-09-30 14:11:49.063 INFO  [http-nio-8092-exec-3] c.a.config.ApiLoggingAspect - API_COMPLETED controller=VisitorController method=getVisitorEditDetails durationMs=150.6559
+2026-09-30 14:11:49.195 WARN  [http-nio-8092-exec-8] c.a.config.ApiLoggingAspect - API_FAILED controller=DocumentController method=getVisitorPhoto durationMs=52.3659 exception=ResourceNotFoundException
+2026-09-30 14:11:49.201 WARN  [http-nio-8092-exec-8] c.a.exception.GlobalExceptionHandler - Resource not found: Visitor photo not found for visitor: VTR-043
+2026-09-30 14:11:49.203 WARN  [http-nio-8092-exec-8] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.adminvisitor.exception.ResourceNotFoundException: Visitor photo not found for visitor: VTR-043]
+2026-09-30 14:29:43.634 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@593297ad (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 14:29:52.090 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@224245a5 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 14:30:17.499 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@3e46e67b (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 14:30:21.488 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@f6377be (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 14:30:31.080 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@475c0494 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 14:30:46.052 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@1de33fd5 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 14:31:06.636 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@7c8fb546 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 14:31:08.744 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@6319f078 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 14:31:21.370 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@2be65a92 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 14:31:36.452 WARN  [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@1e1a6c35 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-09-30 14:58:18.517 INFO  [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-09-30 14:58:18.536 INFO  [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-09-30 14:58:18.559 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-30 14:58:18.583 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-09-30 14:58:18.592 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
