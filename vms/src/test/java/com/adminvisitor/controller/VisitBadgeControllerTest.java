@@ -103,7 +103,7 @@ class VisitBadgeControllerTest {
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.badgeId").value("VB-001"))
-                .andExpect(jsonPath("$.visitId").value("vt-001"))
+                .andExpect(jsonPath("$.visitId").value("VIS-001"))
                 .andExpect(jsonPath("$.qrContainingToken")
                         .value("qr-token-001"))
                 .andExpect(jsonPath("$.qrCode")
