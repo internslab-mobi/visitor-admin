@@ -47,16 +47,6 @@ public class DocumentService {
      */
     private final HmacBlindIndexService hmacBlindIndexService;
 
-    /*
-     * ============================================================
-     * OLD NDA / FILE HANDLING
-     * ============================================================
-     *
-     * NDA handling belongs to another module/owner for now.
-     * The old implementation is intentionally kept commented
-     * so it can be restored/reworked later.
-     */
-
 
     @Value("${vms.document.nda-upload-dir}")
     private String ndaUploadDir;
@@ -288,30 +278,35 @@ public class DocumentService {
     }
 
 
+    @Transactional
     public Document uploadSignedNda(
             String visitorId,
             MultipartFile file
     ) {
 
+        // 1. File validation
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException(
                     "Signed NDA file is required"
             );
         }
 
+        // 2. PDF validation
         if (!isPdf(file)) {
             throw new IllegalArgumentException(
                     "Only PDF files are allowed for NDA"
             );
         }
 
+        // 3. Find visitor
         Visitor visitor = visitorRepository.findById(visitorId)
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new ResourceNotFoundException(
                                 "Visitor not found: " + visitorId
                         )
                 );
 
+        // 4. Find latest visit
         Visit visit = visitRepository
                 .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
                 .orElseThrow(() ->
@@ -320,23 +315,21 @@ public class DocumentService {
                         )
                 );
 
+        // 5. NDA only for vendors
         if (visit.getVisitorType() != VisitorType.VENDOR) {
             throw new BusinessRuleException(
                     "NDA can only be uploaded for vendor visitors"
             );
         }
 
+        // 6. Check NDA validity
         if (!isNdaRequired(visitor)) {
-            throw new BadgeAlreadyExistsException(
+            throw new BusinessRuleException(
                     "Valid NDA already exists for visitor: " + visitorId
             );
         }
 
-        /*
-         * Find the existing Document record for this visitor.
-         *
-         * We do NOT create a new Document for every NDA.
-         */
+        // 7. Find existing Document
         Document document = documentRepository
                 .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
                 .orElseThrow(() ->
@@ -345,14 +338,7 @@ public class DocumentService {
                         )
                 );
 
-        /*
-         * Generate a unique metadata ID for this uploaded file.
-         *
-         * Example:
-         * d-001
-         * d-002
-         * d-003
-         */
+        // 8. Generate metadata ID
         String metadataId =
                 idGeneratorService.generateId(
                         "DOCUMENT_METADATA",
@@ -361,9 +347,7 @@ public class DocumentService {
 
         try {
 
-            /*
-             * Create visitor-specific directory.
-             */
+            // 9. Create visitor-specific NDA directory
             Path visitorDirectory = Paths.get(
                     ndaUploadDir,
                     visitorId
@@ -371,40 +355,37 @@ public class DocumentService {
 
             Files.createDirectories(visitorDirectory);
 
-            /*
-             * Each NDA gets its own unique physical file.
-             *
-             * Example:
-             * d-001.pdf
-             * d-002.pdf
-             */
+            // 10. Create unique NDA filename
             String fileName = metadataId + ".pdf";
 
             Path filePath = visitorDirectory.resolve(fileName);
 
+            // 11. Save physical file
             Files.write(
                     filePath,
                     file.getBytes()
             );
 
-            /*
-             * Store only the file path in DocumentMetadata.
-             */
+            // 12. Create metadata record
             DocumentMetadata metadata = new DocumentMetadata();
 
             metadata.setId(metadataId);
             metadata.setDocument(document);
+
+            // IMPORTANT
+            metadata.setDocumentType(DocumentType.NDA);
+
             metadata.setDocumentType(DocumentType.NDA);
             metadata.setDocumentPath(filePath.toString());
 
             documentMetadataRepository.save(metadata);
 
-            /*
-             * IMPORTANT:
-             * Do not update visitor.validity here.
-             *
-             * Visitor.validity is managed separately.
-             */
+            // 13. Start a new 6-month validity period
+//            visitor.setValidity(
+//                    LocalDateTime.now().plusMonths(6)
+//            );
+//
+//            visitorRepository.save(visitor);
 
             return document;
 
@@ -416,26 +397,54 @@ public class DocumentService {
             );
         }
     }
+//    public boolean isNdaRequired(Visitor visitor) {
+//
+//        LocalDateTime validity =
+//                visitor.getValidity();
+//
+//        if (validity == null) {
+//            return true;
+//        }
+//
+//        if (validity.isBefore(LocalDateTime.now())) {
+//            return true;
+//        }
+//
+//        return documentRepository
+//                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
+//                .isEmpty();
+//    }
+
     public boolean isNdaRequired(Visitor visitor) {
 
-        LocalDateTime validity =
-                visitor.getValidity();
+        LocalDateTime validity = visitor.getValidity();
 
         if (validity == null) {
             return true;
         }
 
-        if (validity.isBefore(LocalDateTime.now())) {
-            return true;
-        }
-
-        return documentRepository
-                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
-                .isEmpty();
+        return validity.isBefore(LocalDateTime.now());
     }
 
+    @Transactional(readOnly = true)
     public DocumentMetadata getLatestNda(String visitorId) {
 
+        // 1. Verify visitor exists
+        Visitor visitor = visitorRepository.findById(visitorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Visitor not found: " + visitorId
+                        )
+                );
+
+        // 2. Check whether NDA is currently valid
+        if (isNdaRequired(visitor)) {
+            throw new ResourceNotFoundException(
+                    "No valid NDA found for visitor: " + visitorId
+            );
+        }
+
+        // 3. Find latest NDA only
         Document document = documentRepository
                 .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
                 .orElseThrow(() ->
@@ -445,10 +454,13 @@ public class DocumentService {
                 );
 
         return documentMetadataRepository
-                .findTopByDocumentIdOrderByCreatedAtDesc(document.getId())
+                .findTopByDocumentIdAndDocumentTypeOrderByCreatedAtDesc(
+                        document.getId(),
+                        DocumentType.NDA
+                )
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "No NDA found for visitor: " + visitorId
+                                "No valid NDA found for visitor: " + visitorId
                         )
                 );
     }
@@ -487,13 +499,7 @@ public class DocumentService {
 
     public DocumentMetadata getValidNda(Visitor visitor) {
 
-        LocalDateTime validity = visitor.getValidity();
-
-        if (validity == null) {
-            return null;
-        }
-
-        if (validity.isBefore(LocalDateTime.now())) {
+        if (visitor == null || isNdaRequired(visitor)) {
             return null;
         }
 
@@ -506,7 +512,10 @@ public class DocumentService {
         }
 
         return documentMetadataRepository
-                .findTopByDocumentIdOrderByCreatedAtDesc(document.getId())
+                .findTopByDocumentIdAndDocumentTypeOrderByCreatedAtDesc(
+                        document.getId(),
+                        DocumentType.NDA
+                )
                 .orElse(null);
     }
 
@@ -1037,5 +1046,43 @@ public class DocumentService {
                     exception
             );
         }
+    }
+
+
+
+    @Transactional(readOnly = true)
+    public List<DocumentResponse> getAllNdas(String visitorId) {
+
+        Visitor visitor = visitorRepository.findById(visitorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Visitor not found: " + visitorId
+                        )
+                );
+
+        Document document = documentRepository
+                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "No document found for visitor: " + visitorId
+                        )
+                );
+
+        return documentMetadataRepository
+                .findByDocumentIdAndDocumentType(
+                        document.getId(),
+                        DocumentType.NDA
+                )
+                .stream()
+                .map(metadata ->
+                        new DocumentResponse(
+                                metadata.getId(),
+                                metadata.getDocumentPath(),
+                                metadata.getCreatedAt() != null
+                                        ? metadata.getCreatedAt().toString()
+                                        : null
+                        )
+                )
+                .toList();
     }
 }

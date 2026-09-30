@@ -46,15 +46,15 @@ class VisitBadgeControllerTest {
     private EmailService emailService;
 
 
-    // =========================================================
+
     // CREATE BADGE - SUCCESS
-    // =========================================================
+
 
     @Test
     void createBadge_shouldReturn200_whenBadgeCreatedSuccessfully()
             throws Exception {
 
-        String visitId = "vt-001";
+        String visitId = "VIS-001";
 
         Visit visit = mock(Visit.class);
         VisitBadge badge = mock(VisitBadge.class);
@@ -125,9 +125,9 @@ class VisitBadgeControllerTest {
     }
 
 
-    // =========================================================
+
     // CREATE BADGE - VISIT NOT FOUND
-    // =========================================================
+
 
     @Test
     void createBadge_shouldReturn404_whenVisitDoesNotExist()
@@ -160,9 +160,9 @@ class VisitBadgeControllerTest {
     }
 
 
-    // =========================================================
+
     // CREATE BADGE - BADGE ALREADY EXISTS
-    // =========================================================
+
 
     @Test
     void createBadge_shouldReturn409_whenBadgeAlreadyExists()
@@ -206,9 +206,9 @@ class VisitBadgeControllerTest {
     }
 
 
-    // =========================================================
+
     // CREATE BADGE - UNEXPECTED ERROR
-    // =========================================================
+
 
     @Test
     void createBadge_shouldReturn500_whenUnexpectedErrorOccurs()
@@ -250,9 +250,9 @@ class VisitBadgeControllerTest {
     }
 
 
-    // =========================================================
+
     // VALIDATE QR - ACTIVE
-    // =========================================================
+
 
     @Test
     void validateQr_shouldReturn200_whenQrIsActive()
@@ -280,9 +280,9 @@ class VisitBadgeControllerTest {
     }
 
 
-    // =========================================================
+
     // VALIDATE QR - INVALID
-    // =========================================================
+
 
     @Test
     void validateQr_shouldReturn200_whenQrIsInvalid()
@@ -310,9 +310,9 @@ class VisitBadgeControllerTest {
     }
 
 
-    // =========================================================
+
     // VALIDATE QR - TOKEN DOES NOT EXIST / INVALID TOKEN
-    // =========================================================
+
 
     @Test
     void validateQr_shouldReturn200_whenTokenDoesNotExist()

@@ -36,7 +36,7 @@ public class VisitBadgeService {
                 qrTokenService.generateToken();
 
         LocalDateTime issuedAt = LocalDateTime.now();
-        LocalDateTime validFrom = issuedAt;
+     //   LocalDateTime validFrom = issuedAt;
 
         LocalDateTime validUntil =
                 visit.getExpectedArrivalAt()
