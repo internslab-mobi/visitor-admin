@@ -74,8 +74,11 @@ public class VisitController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate toDate,
 
-            @RequestParam(defaultValue = "ASC")
-            String sortDirection
+            @RequestParam(defaultValue = "DESC")
+            String sortDirection,
+
+            @RequestParam(defaultValue = "visitDate")
+            String sortBy
     ) {
 
         List<VisitDashboardResponse> visits =
@@ -88,7 +91,8 @@ public class VisitController {
                         date,
                         fromDate,
                         toDate,
-                        sortDirection
+                        sortDirection,
+                        sortBy
                 );
 
         return ResponseEntity.ok(visits);

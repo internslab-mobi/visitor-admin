@@ -531,7 +531,8 @@ public class VisitService {
             LocalDate date,
             LocalDate fromDate,
             LocalDate toDate,
-            String sortDirection
+            String sortDirection,
+            String sortBy
     ) {
 
         Specification<Visit> specification =
@@ -602,7 +603,7 @@ public class VisitService {
         Sort sort =
                 Sort.by(
                         direction,
-                        "expectedArrivalAt"
+                        "id"
                 );
 
         List<Visit> visits =
@@ -1065,24 +1066,16 @@ public class VisitService {
 
         BadgeEmailData emailData =
                 new BadgeEmailData(
-                        checkedInVisit.getVisitor().getFirstName()
-                                + " "
+                        checkedInVisit.getVisitor().getFirstName() + " "
                                 + checkedInVisit.getVisitor().getLastName(),
-
                         checkedInVisit.getVisitor().getEmail(),
-
                         checkedInVisit.getVisitReference(),
-
-                        checkedInVisit.getHost().getFirstName()
-                                + " "
+                        checkedInVisit.getHost().getFirstName() + " "
                                 + checkedInVisit.getHost().getLastName(),
-
+                        checkedInVisit.getHost().getEmail(),
                         badge.getIssuedAt().format(formatter),
-
                         badge.getValidUntil().format(formatter),
-
                         qrCode,
-
                         visitorPhoto.getDocumentPath()
                 );
 

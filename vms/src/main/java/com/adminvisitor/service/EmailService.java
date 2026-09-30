@@ -32,18 +32,6 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    @Value("${vms.notification.host-email}")
-    private String hostEmail;
-
-    /*
-     * Temporary values until Employee/Department tables are available.
-     */
-    @Value("${vms.notification.host-name}")
-    private String hostName;
-
-    @Value("${vms.notification.department-name}")
-    private String departmentName;
-
     @Async
     public void sendVisitConfirmationEmail(Visit visit) {
 
@@ -54,6 +42,17 @@ public class EmailService {
                 visit.getVisitor().getFirstName()
                         + " "
                         + visit.getVisitor().getLastName();
+
+        String hostName =
+                visit.getHost().getFirstName()
+                        + " "
+                        + visit.getHost().getLastName();
+
+        String hostEmail =
+                visit.getHost().getEmail();
+
+        String departmentName =
+                visit.getHost().getDepartment().getDepartmentName();
 
         Context context = new Context();
 
@@ -71,7 +70,6 @@ public class EmailService {
         context.setVariable("hostName", hostName);
         context.setVariable("departmentName", departmentName);
 
-        // Measure Thymeleaf template processing separately.
         long templateStart = System.currentTimeMillis();
 
         String htmlBody = templateEngine.process(
@@ -101,7 +99,6 @@ public class EmailService {
 
             helper.setText(htmlBody, true);
 
-            // Measure the actual SMTP sending operation separately.
             long smtpStart = System.currentTimeMillis();
 
             mailSender.send(message);
@@ -178,7 +175,7 @@ public class EmailService {
                     data.visitorEmail()
             );
 
-            helper.setCc(hostEmail);
+            helper.setCc(data.hostEmail());
 
             helper.setSubject(
                     "Your Visitor Badge - "

@@ -5,6 +5,7 @@ public record BadgeEmailData(
         String visitorEmail,
         String visitReference,
         String hostName,
+        String hostEmail,
         String issuedAt,
         String validUntil,
         String qrCode,
