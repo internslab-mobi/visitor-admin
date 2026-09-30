@@ -14,6 +14,10 @@ public class QrTokenService {
 
         try {
             byte[] randomBytes = new byte[32];
+
+          //  Fills the 32-byte array with cryptographically secure random data.
+          //  Before this line: randomBytes = empty/uninitialized byte values
+            // After this line: randomBytes = random unpredictable bytes
             secureRandom.nextBytes(randomBytes);
 
             MessageDigest digest =

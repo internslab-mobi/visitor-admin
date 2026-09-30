@@ -39,3 +39,5 @@ public class Visitor extends BaseEntity {
     @Column(name = "validity")
     private LocalDateTime validity;
 }
+
+

@@ -4,10 +4,13 @@ import com.adminvisitor.dto.responsedto.DocumentResponse;
 import com.adminvisitor.dto.responsedto.IdentityProofResponse;
 import com.adminvisitor.entity.Document;
 import com.adminvisitor.entity.DocumentMetadata;
+import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.service.DocumentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -138,5 +141,84 @@ public class DocumentController {
         return ResponseEntity.ok(
                 documentService.getAllNdas(visitorId)
         );
+    }
+
+
+    @GetMapping(
+            "/visitor/{visitorId}/photo"
+    )
+    public ResponseEntity<Resource> getVisitorPhoto(
+            @PathVariable String visitorId
+    ) {
+
+        DocumentMetadata metadata =
+                documentService.getLatestVisitorPhoto(
+                        visitorId
+                );
+
+        Resource resource =
+                new FileSystemResource(
+                        metadata.getDocumentPath()
+                );
+
+        if (!resource.exists()) {
+            throw new ResourceNotFoundException(
+                    "Visitor photo file not found"
+            );
+        }
+
+        MediaType mediaType =
+                MediaTypeFactory
+                        .getMediaType(
+                                resource.getFilename()
+                        )
+                        .orElse(MediaType.APPLICATION_OCTET_STREAM);
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"" +
+                                resource.getFilename() +
+                                "\""
+                )
+                .body(resource);
+    }
+
+
+
+    @GetMapping("/{documentId}/view")
+    public ResponseEntity<Resource> viewDocument(
+            @PathVariable String documentId
+    ) {
+
+        DocumentMetadata metadata =
+                documentService.getDocumentMetadata(documentId);
+
+        Resource resource =
+                new FileSystemResource(
+                        metadata.getDocumentPath()
+                );
+
+        if (!resource.exists()) {
+            throw new ResourceNotFoundException(
+                    "Document file not found: " + documentId
+            );
+        }
+
+        MediaType mediaType =
+                MediaTypeFactory
+                        .getMediaType(resource.getFilename())
+                        .orElse(MediaType.APPLICATION_OCTET_STREAM);
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"" +
+                                resource.getFilename() +
+                                "\""
+                )
+                .body(resource);
     }
 }
