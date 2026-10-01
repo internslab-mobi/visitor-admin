@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/internsdb}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+jwt:
+  secret: ${JWT_SECRET:TestOnlyJwtSecretKeyForUnitTests123456789012345678901234567890}
+  expiration: 900000
+  refresh-expiration: 2700000

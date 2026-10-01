@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: auth
+
+  # HOME
+  #  datasource:
+  #    url: jdbc:mysql://localhost:3306/internsdb
+  #    username: root
+  #    password: root
+  #    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # OFFICE
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 6000
+          timeout: 6000
+          writetimeout: 6000
+
+server:
+  port: 8082
+
+jwt:
+  expiration: 900000
+  refresh-expiration: 2700000
+  secret: ${JWT_SECRET}
