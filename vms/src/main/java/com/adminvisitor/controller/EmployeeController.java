@@ -1,11 +1,15 @@
 package com.adminvisitor.controller;
 
+import com.adminvisitor.dto.requestdto.EmployeeCreateRequest;
+import com.adminvisitor.dto.responsedto.EmployeeResponse;
 import com.adminvisitor.entity.Employee;
 import com.adminvisitor.repository.EmployeeRepository;
+import com.adminvisitor.service.EmployeeService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -15,9 +19,23 @@ import java.util.List;
 public class EmployeeController {
 
     private final EmployeeRepository employeeRepository;
+    private final EmployeeService employeeService;
 
     @GetMapping
     public List<Employee> getEmployees() {
         return employeeRepository.findAll();
+    }
+
+    @PostMapping
+    public ResponseEntity<EmployeeResponse> createEmployee(
+            @Valid @RequestBody EmployeeCreateRequest request
+    ) {
+
+        EmployeeResponse response =
+                employeeService.createEmployee(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 }
