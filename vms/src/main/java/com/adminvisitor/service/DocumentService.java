@@ -42,9 +42,9 @@ public class DocumentService {
     private final VisitorRepository visitorRepository;
     private final IdGeneratorService idGeneratorService;
     private final DocumentMetadataRepository documentMetadataRepository;
-    /*
-     * Active service for generating HMAC-SHA-256 blind indexes.
-     */
+
+     //Active service for generating HMAC-SHA-256 blind indexes.
+
     private final HmacBlindIndexService hmacBlindIndexService;
 
 
@@ -58,101 +58,6 @@ public class DocumentService {
     @Value("${vms.document.photo-upload-dir}")
     private String photoUploadDir;
 
-//    public Document uploadSignedNda(
-//            String visitorId,
-//            MultipartFile file
-//    ) {
-//
-//        if (file == null || file.isEmpty()) {
-//            throw new IllegalArgumentException(
-//                    "Signed NDA file is required"
-//            );
-//        }
-//
-//        if (!isPdf(file)) {
-//            throw new IllegalArgumentException(
-//                    "Only PDF files are allowed for NDA"
-//            );
-//        }
-//
-//        Visitor visitor = visitorRepository.findById(visitorId)
-//                .orElseThrow(() ->
-//                        new IllegalArgumentException(
-//                                "Visitor not found: " + visitorId
-//                        )
-//                );
-//
-//        Visit visit = visitRepository
-//                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
-//                .orElseThrow(() ->
-//                        new ResourceNotFoundException(
-//                                "No visit found for visitor: " + visitorId
-//                        )
-//                );
-//
-//        if (visit.getVisitorType() != VisitorType.VENDOR) {
-//            throw new BusinessRuleException(
-//                    "NDA can only be uploaded for vendor visitors"
-//            );
-//        }
-//
-//        if (!isNdaRequired(visitor)) {
-//            throw new BadgeAlreadyExistsException(
-//                    "Valid NDA already exists for visitor: " + visitorId
-//            );
-//        }
-//
-//        String documentId =
-//                idGeneratorService.generateId(
-//                        "DOCUMENT",
-//                        "doc"
-//                );
-//
-//        try {
-//
-//            Path visitorDirectory = Paths.get(
-//                    ndaUploadDir,
-//                    visitorId
-//            );
-//
-//            Files.createDirectories(visitorDirectory);
-//
-//            String fileName = documentId + ".pdf";
-//
-//            Path filePath = visitorDirectory.resolve(fileName);
-//
-//            Files.write(
-//                    filePath,
-//                    file.getBytes()
-//            );
-//
-//            Document document = new Document();
-//
-//            document.setId(documentId);
-//            document.setVisitor(visitor);
-//
-//            // Old NDA path storage
-//            // document.setNdaDocument(filePath.toString());
-//
-//            Document savedDocument =
-//                    documentRepository.save(document);
-//
-//            visitor.setValidity(
-//                    LocalDateTime.now().plusMonths(6)
-//            );
-//
-//            visitorRepository.save(visitor);
-//
-//            return savedDocument;
-//
-//        } catch (IOException exception) {
-//
-//            throw new RuntimeException(
-//                    "Failed to save signed NDA file",
-//                    exception
-//            );
-//        }
-//    }
 
     @Transactional
     public DocumentMetadata uploadVisitorPhoto(
@@ -1111,4 +1016,38 @@ public class DocumentService {
                         )
                 );
     }
-}
+
+
+
+    @Transactional
+    public void deleteDocument(String metadataId) {
+
+        DocumentMetadata metadata =
+                documentMetadataRepository.findById(metadataId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Document not found: " + metadataId
+                                )
+                        );
+
+        String documentPath = metadata.getDocumentPath();
+        if (documentPath != null && !documentPath.isBlank()) {
+
+            try {
+                Path filePath = Paths.get(documentPath);
+
+                if (Files.exists(filePath)) {
+                    Files.delete(filePath);
+                }
+
+            } catch (IOException exception) {
+                throw new RuntimeException(
+                        "Failed to delete document file: " + metadataId,
+                        exception
+                );
+            }
+        }
+        documentMetadataRepository.delete(metadata);
+    }
+    }
+

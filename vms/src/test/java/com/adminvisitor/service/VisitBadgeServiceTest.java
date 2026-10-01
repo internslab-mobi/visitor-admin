@@ -121,7 +121,7 @@ class VisitBadgeServiceTest {
 
         when(visit.getId()).thenReturn("VIS-002");
         when(visit.getExpectedArrivalAt()).thenReturn(arrival);
-        when(visit.getExpectedDepartureAt()).thenReturn(departure);
+
         when(visitBadgeRepository.findByVisit_Id("VIS-002"))
                 .thenReturn(Optional.empty());
         when(idGeneratorService.generateId("VISITBADGE", "VB"))
@@ -145,49 +145,69 @@ class VisitBadgeServiceTest {
 
     @Test
     void createBadge_shouldPropagateException_whenIdGenerationFails() {
-        Visit visit = mock(Visit.class);
-        when(visit.getId()).thenReturn("VIS-003");
-        when(visit.getExpectedArrivalAt())
-                .thenReturn(LocalDateTime.of(2026, 9, 28, 10, 0));
+
+        Visit visit = new Visit();
+        visit.setId("VIS-003");
+
         when(visitBadgeRepository.findByVisit_Id("VIS-003"))
                 .thenReturn(Optional.empty());
+
         when(idGeneratorService.generateId("VISITBADGE", "VB"))
-                .thenThrow(new IllegalStateException("ID sequence not configured"));
+                .thenThrow(
+                        new IllegalStateException(
+                                "ID sequence not configured"
+                        )
+                );
 
         IllegalStateException exception = assertThrows(
                 IllegalStateException.class,
                 () -> visitBadgeService.createBadge(visit)
         );
 
-        assertEquals("ID sequence not configured", exception.getMessage());
-        verifyNoInteractions(qrTokenService);
-        verify(visitBadgeRepository, never()).save(any());
-    }
+        assertEquals(
+                "ID sequence not configured",
+                exception.getMessage()
+        );
 
+        verifyNoInteractions(qrTokenService);
+
+        verify(visitBadgeRepository, never())
+                .save(any());
+    }
     // CREATE BADGE - QR TOKEN GENERATION FAILURE
 
     @Test
     void createBadge_shouldPropagateException_whenQrTokenGenerationFails() {
-        Visit visit = mock(Visit.class);
-        when(visit.getId()).thenReturn("VIS-004");
-        when(visit.getExpectedArrivalAt())
-                .thenReturn(LocalDateTime.of(2026, 9, 28, 10, 0));
+
+        Visit visit = new Visit();
+        visit.setId("VIS-004");
+
         when(visitBadgeRepository.findByVisit_Id("VIS-004"))
                 .thenReturn(Optional.empty());
+
         when(idGeneratorService.generateId("VISITBADGE", "VB"))
                 .thenReturn("VB-004");
+
         when(qrTokenService.generateToken())
-                .thenThrow(new IllegalStateException("Failed to generate QR token"));
+                .thenThrow(
+                        new IllegalStateException(
+                                "Failed to generate QR token"
+                        )
+                );
 
         IllegalStateException exception = assertThrows(
                 IllegalStateException.class,
                 () -> visitBadgeService.createBadge(visit)
         );
 
-        assertEquals("Failed to generate QR token", exception.getMessage());
-        verify(visitBadgeRepository, never()).save(any());
-    }
+        assertEquals(
+                "Failed to generate QR token",
+                exception.getMessage()
+        );
 
+        verify(visitBadgeRepository, never())
+                .save(any());
+    }
     // CHECKOUT INVALIDATION - SUCCESS
 
     @Test

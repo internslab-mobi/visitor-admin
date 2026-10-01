@@ -221,4 +221,12 @@ public class DocumentController {
                 )
                 .body(resource);
     }
+
+
+    @DeleteMapping("/{metadataId}")
+    public ResponseEntity<Void> deleteDocument(
+            @PathVariable String metadataId
+    ) {documentService.deleteDocument(metadataId);
+        return ResponseEntity.noContent().build();
+    }
 }
