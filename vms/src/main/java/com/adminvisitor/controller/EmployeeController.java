@@ -22,8 +22,13 @@ public class EmployeeController {
     private final EmployeeService employeeService;
 
     @GetMapping
-    public List<Employee> getEmployees() {
-        return employeeRepository.findAll();
+    public ResponseEntity<List<EmployeeResponse>> getEmployees() {
+        List<EmployeeResponse> employees =
+                employeeService.getEmployees();
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(employees);
     }
 
     @PostMapping

@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class DepartmentService {
@@ -61,5 +63,18 @@ public class DepartmentService {
                 savedDepartment.getDepartmentName(),
                 savedDepartment.getStatus()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<DepartmentResponse> getDepartments() {
+        return departmentRepository.findAll()
+                .stream()
+                .map(department -> new DepartmentResponse(
+                        department.getId(),
+                        department.getDepartmentCode(),
+                        department.getDepartmentName(),
+                        department.getStatus()
+                ))
+                .toList();
     }
 }

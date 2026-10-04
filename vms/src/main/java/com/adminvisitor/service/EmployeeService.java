@@ -4,11 +4,15 @@ import com.adminvisitor.dto.requestdto.EmployeeCreateRequest;
 import com.adminvisitor.dto.responsedto.EmployeeResponse;
 import com.adminvisitor.entity.Department;
 import com.adminvisitor.entity.Employee;
+import com.adminvisitor.exception.EmailAlreadyExistsException;
+import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.DepartmentRepository;
 import com.adminvisitor.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +30,7 @@ public class EmployeeService {
         String email = request.getEmail().trim();
 
         if (employeeRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException(
+            throw new EmailAlreadyExistsException(
                     "Employee email already exists"
             );
         }
@@ -35,7 +39,7 @@ public class EmployeeService {
                 departmentRepository.findById(
                         request.getDepartmentId().trim()
                 ).orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new ResourceNotFoundException(
                                 "Department not found"
                         )
                 );
@@ -85,5 +89,23 @@ public class EmployeeService {
                 savedEmployee.getDesignation(),
                 savedEmployee.getStatus()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<EmployeeResponse> getEmployees() {
+        return employeeRepository.findAll()
+                .stream()
+                .map(employee -> new EmployeeResponse(
+                        employee.getId(),
+                        employee.getFirstName(),
+                        employee.getLastName(),
+                        employee.getEmail(),
+                        employee.getMobileNumber(),
+                        employee.getDepartment().getId(),
+                        employee.getDepartment().getDepartmentName(),
+                        employee.getDesignation(),
+                        employee.getStatus()
+                ))
+                .toList();
     }
 }

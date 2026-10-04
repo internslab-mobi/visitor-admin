@@ -2,7 +2,7 @@
 
 <configuration>
 
-    <property name="LOG_DIR" value="logs"/>
+    <property name="LOG_DIR" value="D:/VMS/logs"/>
     <property name="LOG_FILE" value="${LOG_DIR}/vms.log"/>
 
     <appender name="CONSOLE"
