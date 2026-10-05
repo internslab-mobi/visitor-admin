@@ -31,8 +31,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -186,7 +189,9 @@ public class DocumentService {
     @Transactional
     public Document uploadSignedNda(
             String visitorId,
-            MultipartFile file
+            MultipartFile file,
+            LocalDate validUntil
+
     ) {
 
         // 1. File validation
@@ -200,6 +205,18 @@ public class DocumentService {
         if (!isPdf(file)) {
             throw new IllegalArgumentException(
                     "Only PDF files are allowed for NDA"
+            );
+        }
+      //  NDA validity date validation
+        if (validUntil == null) {
+            throw new IllegalArgumentException(
+                    "NDA valid until date is required"
+            );
+        }
+
+        if (validUntil.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException(
+                    "NDA valid until date cannot be in the past"
             );
         }
 
@@ -281,6 +298,11 @@ public class DocumentService {
             metadata.setDocumentType(DocumentType.NDA);
             metadata.setDocumentPath(filePath.toString());
 
+            metadata.setValidUntil(
+                    validUntil.atTime(LocalTime.MAX)
+            );
+
+
             documentMetadataRepository.save(metadata);
 
 
@@ -300,17 +322,42 @@ public class DocumentService {
 
 
 
-       public boolean isNdaRequired(Visitor visitor) {
+//       public boolean isNdaRequired(Visitor visitor) {
+//
+//        LocalDateTime validity = visitor.getValidity();
+//
+//        if (validity == null) {
+//            return true;
+//        }
+//
+//        return validity.isBefore(LocalDateTime.now());
+//    }
 
-        LocalDateTime validity = visitor.getValidity();
+    public boolean isNdaRequired(Visitor visitor) {
 
-        if (validity == null) {
+        Optional<DocumentMetadata> latestNda =
+                documentMetadataRepository
+                        .findTopByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+                                visitor.getId(),
+                                DocumentType.NDA
+                        );
+
+        // No NDA exists
+        if (latestNda.isEmpty()) {
             return true;
         }
 
-        return validity.isBefore(LocalDateTime.now());
-    }
+        LocalDateTime validUntil =
+                latestNda.get().getValidUntil();
 
+        // NDA has no validity date
+        if (validUntil == null) {
+            return true;
+        }
+
+        // NDA is expired
+        return validUntil.isBefore(LocalDateTime.now());
+    }
     @Transactional(readOnly = true)
     public DocumentMetadata getLatestNda(String visitorId) {
 
@@ -382,27 +429,27 @@ public class DocumentService {
         return validContentType && validExtension;
     }
 
-//    public DocumentMetadata getValidNda(Visitor visitor) {
-//
-//        if (visitor == null || isNdaRequired(visitor)) {
-//            return null;
-//        }
-//
-//        Document document = documentRepository
-//                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
-//                .orElse(null);
-//
-//        if (document == null) {
-//            return null;
-//        }
-//
-//        return documentMetadataRepository
-//                .findTopByDocumentIdAndDocumentTypeOrderByCreatedAtDesc(
-//                        document.getId(),
-//                        DocumentType.NDA
-//                )
-//                .orElse(null);
-//    }
+    public DocumentMetadata getValidNda(Visitor visitor) {
+
+        if (visitor == null || isNdaRequired(visitor)) {
+            return null;
+        }
+
+        Document document = documentRepository
+                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
+                .orElse(null);
+
+        if (document == null) {
+            return null;
+        }
+
+        return documentMetadataRepository
+                .findTopByDocumentIdAndDocumentTypeOrderByCreatedAtDesc(
+                        document.getId(),
+                        DocumentType.NDA
+                )
+                .orElse(null);
+    }
 
     public Resource getNdaFile(String visitorId) {
 

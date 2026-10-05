@@ -328,7 +328,7 @@ public class VisitService {
 
     private Visitor findOrCreateVisitor(RegistrationRequest request) {
 
-//        validateVisitorValidity(request);
+
 
         String email = request.email();
         String mobileNumber = request.mobileNumber();
@@ -403,7 +403,7 @@ public class VisitService {
          * Create a new Visitor profile.
          */
 
-        validateVisitorValidity(request);
+       // validateVisitorValidity(request);
         Visitor newVisitor = new Visitor();
 
         newVisitor.setId(
@@ -415,7 +415,7 @@ public class VisitService {
         newVisitor.setEmail(email);
         newVisitor.setMobileNumber(mobileNumber);
         newVisitor.setCompanyName(request.companyName());
-        newVisitor.setValidity(request.validity());
+        //newVisitor.setValidity(request.validity());
 
         Visitor savedVisitor = visitorRepository.save(newVisitor);
 
@@ -431,25 +431,25 @@ public class VisitService {
     // ============================================================
     // VISITOR VALIDITY
     // ============================================================
-
-    private void validateVisitorValidity(RegistrationRequest request) {
-
-        if (request.visitorType() == VisitorType.VENDOR
-                && request.validity() == null) {
-
-            throw new BusinessRuleException(
-                    "Validity is required for vendor visitors"
-            );
-        }
-
-        if (request.visitorType() != VisitorType.VENDOR
-                && request.validity() != null) {
-
-            throw new BusinessRuleException(
-                    "Validity must be null for non-vendor visitors"
-            );
-        }
-    }
+//
+//    private void validateVisitorValidity(RegistrationRequest request) {
+//
+//        if (request.visitorType() == VisitorType.VENDOR
+//                && request.validity() == null) {
+//
+//            throw new BusinessRuleException(
+//                    "Validity is required for vendor visitors"
+//            );
+//        }
+//
+//        if (request.visitorType() != VisitorType.VENDOR
+//                && request.validity() != null) {
+//
+//            throw new BusinessRuleException(
+//                    "Validity must be null for non-vendor visitors"
+//            );
+//        }
+//    }
 
 
     // ============================================================
@@ -811,8 +811,8 @@ public class VisitService {
                         visitor.getCompanyName(),
                         nationality,
                         validNda != null,
-                        validNda != null ? validNda.getId() : null,
-                        validNda != null ? visitor.getValidity() : null
+                        validNda != null ? validNda.getId() : null
+                        //validNda != null ? visitor.getValidity() : null
                 ),
 
                 visit.getVisitorType(),
@@ -1273,7 +1273,7 @@ public class VisitService {
 
         vendor.setCompanyName(visitor.getCompanyName());
 
-        vendor.setValidity(visitor.getValidity());
+       // vendor.setValidity(visitor.getValidity());
 
         vendorRepository.save(vendor);
 

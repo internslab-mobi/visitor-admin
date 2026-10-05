@@ -9,6 +9,7 @@ import com.adminvisitor.service.DocumentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.MediaType;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -28,24 +30,46 @@ public class DocumentController {
 
      // Upload a signed NDA for a visitor.
 
+//    @PostMapping(
+//            value = "/{visitorId}/nda",
+//            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+//    )
+//    public ResponseEntity<Document> uploadSignedNda(
+//            @PathVariable String visitorId,
+//            @RequestParam("file") MultipartFile file,
+//            LocalDate validUntil
+//    ) {
+//
+//        Document document =
+//                documentService.uploadSignedNda(
+//                        visitorId,
+//                        file
+//                );
+//
+//        return ResponseEntity.ok(document);
+//    }
+
+
+
     @PostMapping(
             value = "/{visitorId}/nda",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<Document> uploadSignedNda(
             @PathVariable String visitorId,
-            @RequestParam("file") MultipartFile file
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("validUntil") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate validUntil
     ) {
 
-        Document document =
-                documentService.uploadSignedNda(
-                        visitorId,
-                        file
-                );
+        Document document = documentService.uploadSignedNda(
+                visitorId,
+                file,
+                validUntil
+        );
 
         return ResponseEntity.ok(document);
     }
-
     //  Retrieve the latest NDA for a visitor.
 
     @GetMapping("/{visitorId}/nda")

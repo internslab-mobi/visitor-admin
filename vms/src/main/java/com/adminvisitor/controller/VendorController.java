@@ -1,7 +1,9 @@
 package com.adminvisitor.controller;
 
+import com.adminvisitor.dto.requestdto.UpdateVendorRequest;
 import com.adminvisitor.dto.responsedto.VendorResponse;
 import com.adminvisitor.service.VendorService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,4 +39,15 @@ public class VendorController {
                 .status(HttpStatus.OK)
                 .body(vendor);
     }
+
+
+//    @PutMapping("/{id}")
+//    public ResponseEntity<VendorResponse> updateVendor(
+//            @PathVariable String id,
+//            @Valid @RequestBody UpdateVendorRequest request) {
+//
+//        return ResponseEntity.ok(
+//                vendorService.updateVendor(id, request)
+//        );
+//    }
 }

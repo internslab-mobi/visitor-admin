@@ -71,7 +71,7 @@ public record RegistrationRequest(
         String aadharNumber,
 
 
-        LocalDateTime validity,
+       // LocalDateTime validity,
 
         @Size(max = 50, message = "PAN number cannot exceed 50 characters")
         String panNumber,
