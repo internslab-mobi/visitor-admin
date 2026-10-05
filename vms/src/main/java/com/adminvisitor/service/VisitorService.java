@@ -27,13 +27,11 @@ public class VisitorService {
 
     private final VisitorRepository visitorRepository;
     private final VendorRepository vendorRepository;
-
     private final DocumentRepository documentRepository;
-
     private final DocumentMetadataRepository documentMetadataRepository;
-
     private final BlacklistRepository blacklistRepository;
     private final VisitRepository visitRepository;
+
     @Transactional(readOnly = true)
     public VisitorResponse getVisitor(String visitorId) {
 
@@ -57,6 +55,7 @@ public class VisitorService {
                 .map(this::toVisitorResponse)
                 .toList();
     }
+
     @Transactional
     public VisitorResponse updateVisitor(
             String visitorId,

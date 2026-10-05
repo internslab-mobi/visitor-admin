@@ -161,6 +161,15 @@ public class VisitController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/{visitId}/verify-identity")
+    public ResponseEntity<Void> verifyIdentity(
+            @PathVariable String visitId,
+            @RequestBody @Valid CheckInRequest request
+    ) {
+        visitService.verifyIdentity(visitId, request);
+        return ResponseEntity.noContent().build();
+    }
+
 //    @GetMapping("/{visitId}/nda-status")
 //    public ResponseEntity<NdaStatusResponse> getNdaStatus(
 //            @PathVariable String visitId) {

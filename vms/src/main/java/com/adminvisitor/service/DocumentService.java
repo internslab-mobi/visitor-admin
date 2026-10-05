@@ -285,12 +285,9 @@ public class DocumentService {
 
             documentMetadataRepository.save(metadata);
 
-            // 13. Start a new 6-month validity period
-//            visitor.setValidity(
-//                    LocalDateTime.now().plusMonths(6)
-//            );
-//
-//            visitorRepository.save(visitor);
+            // Start a new six-month NDA validity period.
+            visitor.setValidity(LocalDateTime.now().plusMonths(6));
+            visitorRepository.save(visitor);
 
             return document;
 

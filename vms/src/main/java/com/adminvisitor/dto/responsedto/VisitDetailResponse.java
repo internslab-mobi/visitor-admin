@@ -28,17 +28,12 @@ public record VisitDetailResponse(
     public record VisitorDetails(
 
             String visitorId,
-
             String firstName,
-
             String lastName,
-
             String email,
-
             String mobileNumber,
-
             String companyName,
-
+            String nationality,
             boolean ndaAvailable,
             String ndaDocumentId,
             LocalDateTime ndaValidUntil
@@ -49,11 +44,8 @@ public record VisitDetailResponse(
     public record HostDetails(
 
             String hostId,
-
             String hostName,
-
             String departmentId,
-
             String departmentName
 
     ) {
@@ -62,11 +54,8 @@ public record VisitDetailResponse(
     public record AuditDetails(
 
             LocalDateTime createdAt,
-
             LocalDateTime updatedAt,
-
             String createdBy,
-
             String updatedBy
 
     ) {

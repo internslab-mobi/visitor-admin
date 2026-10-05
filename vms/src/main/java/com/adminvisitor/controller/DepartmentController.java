@@ -2,8 +2,6 @@ package com.adminvisitor.controller;
 
 import com.adminvisitor.dto.requestdto.DepartmentCreateRequest;
 import com.adminvisitor.dto.responsedto.DepartmentResponse;
-import com.adminvisitor.entity.Department;
-import com.adminvisitor.repository.DepartmentRepository;
 import com.adminvisitor.service.DepartmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,19 +16,22 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DepartmentController {
 
-    private final DepartmentRepository departmentRepository;
     private final DepartmentService departmentService;
 
     @GetMapping
-    public List<Department> getDepartments() {
-        return departmentRepository.findAll();
+    public ResponseEntity<List<DepartmentResponse>> getDepartments() {
+        List<DepartmentResponse> departments =
+                departmentService.getDepartments();
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(departments);
     }
 
     @PostMapping
     public ResponseEntity<DepartmentResponse> createDepartment(
             @Valid @RequestBody DepartmentCreateRequest request
     ) {
-
         DepartmentResponse response =
                 departmentService.createDepartment(request);
 

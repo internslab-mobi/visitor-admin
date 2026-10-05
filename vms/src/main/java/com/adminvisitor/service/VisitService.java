@@ -39,19 +39,9 @@ public class VisitService {
     private final VisitBadgeService visitBadgeService;
     private final QrCodeService qrCodeService;
     private final VendorRepository vendorRepository;
-
     private final ProofValidationService proofValidationService;
     private final BlacklistService blacklistService;
     private final DocumentRepository documentRepository;
-
-    /*
-     * DocumentService is still required for identity-proof handling.
-     *
-     * The active saveIdentityProofs() method is used during registration
-     * to store HMAC-SHA-256 blind indexes.
-     *
-     * NDA-related methods inside DocumentService are temporarily disabled.
-     */
     private final DocumentService documentService;
 
 
@@ -600,21 +590,32 @@ public class VisitService {
                         ? Sort.Direction.DESC
                         : Sort.Direction.ASC;
 
-        Sort sort =
-                Sort.by(
-                        direction,
-                        "id"
-                );
+        Sort sort = Sort.by(direction, "id");
+
+        // Measure database retrieval time.
+        long queryStart = System.nanoTime();
 
         List<Visit> visits =
-                visitRepository.findAll(
-                        specification,
-                        sort
-                );
+                visitRepository.findAll(specification, sort);
 
-        return visits.stream()
-                .map(this::toDashboardResponse)
-                .toList();
+        long queryEnd = System.nanoTime();
+
+        // Measure response mapping time.
+        List<VisitDashboardResponse> responses =
+                visits.stream()
+                        .map(this::toDashboardResponse)
+                        .toList();
+
+        long mappingEnd = System.nanoTime();
+
+        log.info(
+                "Dashboard visits performance: visitCount={}, fetchMs={}, mappingMs={}",
+                visits.size(),
+                (queryEnd - queryStart) / 1_000_000.0,
+                (mappingEnd - queryEnd) / 1_000_000.0
+        );
+
+        return responses;
     }
 
 
@@ -780,6 +781,18 @@ public class VisitService {
         String departmentName =
                 employee.getDepartment().getDepartmentName();
 
+
+        Document identityDocument = documentRepository
+                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
+                .orElse(null);
+
+        String nationality = identityDocument != null
+                && identityDocument.getNationality() != null
+                ? identityDocument.getNationality().name()
+                : null;
+
+        DocumentMetadata validNda = documentService.getValidNda(visitor);
+
         return new VisitDetailResponse(
 
                 // Visit information
@@ -794,13 +807,10 @@ public class VisitService {
                         visitor.getEmail(),
                         visitor.getMobileNumber(),
                         visitor.getCompanyName(),
-
-                        /*
-                         * NDA temporarily disabled.
-                         */
-                        false,
-                        null,
-                        null
+                        nationality,
+                        validNda != null,
+                        validNda != null ? validNda.getId() : null,
+                        validNda != null ? visitor.getValidity() : null
                 ),
 
                 visit.getVisitorType(),
@@ -856,11 +866,6 @@ public class VisitService {
                         )
                 );
 
-        log.info(
-                "Visit loaded. visitId={}, status={}",
-                visit.getId(),
-                visit.getStatus()
-        );
 
         if (visit.getStatus() != VisitStatus.REGISTERED) {
             throw new BusinessRuleException(
@@ -1352,5 +1357,80 @@ public class VisitService {
                 }
             }
         }
+    }
+
+    @Transactional(readOnly = true)
+    public void verifyIdentity(String visitId, CheckInRequest request) {
+
+        Visit visit = visitRepository.findById(visitId)
+                .orElseThrow(() ->
+                        new BusinessRuleException(
+                                "Visit not found with id: " + visitId
+                        )
+                );
+
+        if (visit.getStatus() != VisitStatus.REGISTERED) {
+            throw new BusinessRuleException(
+                    "Only a registered visit can have its identity verified"
+            );
+        }
+
+        Document identityDocument =
+                documentService.getLatestIdentityDocument(
+                        visit.getVisitor().getId()
+                );
+
+        Nationality nationality = identityDocument.getNationality();
+
+        proofValidationService.validate(
+                nationality,
+                request.aadharNumber(),
+                request.panNumber(),
+                request.passportNumber()
+        );
+
+        if (nationality == Nationality.DOMESTIC) {
+
+            boolean aadhaarMatches =
+                    documentService.verifyIdentityProof(
+                            visit.getVisitor(),
+                            ProofType.AADHAAR,
+                            request.aadharNumber()
+                    );
+
+            boolean panMatches =
+                    documentService.verifyIdentityProof(
+                            visit.getVisitor(),
+                            ProofType.PAN,
+                            request.panNumber()
+                    );
+
+            if (!aadhaarMatches || !panMatches) {
+                throw new BusinessRuleException(
+                        "Identity verification failed"
+                );
+            }
+        }
+
+        if (nationality == Nationality.INTERNATIONAL) {
+
+            boolean passportMatches =
+                    documentService.verifyIdentityProof(
+                            visit.getVisitor(),
+                            ProofType.PASSPORT,
+                            request.passportNumber()
+                    );
+
+            if (!passportMatches) {
+                throw new BusinessRuleException(
+                        "Identity verification failed"
+                );
+            }
+        }
+
+        log.info(
+                "Visitor identity verified successfully. visitId={}",
+                visitId
+        );
     }
 }

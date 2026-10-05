@@ -183,6 +183,14 @@
             <version>1.18.6</version>
         </dependency>
 
+        <!-- ==================== Security ==================== -->
+
+        <!-- Spring Security + JWT Resource Server -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

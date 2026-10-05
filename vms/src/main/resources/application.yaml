@@ -32,8 +32,13 @@ app:
   cors:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:4200}
 
+jwt:
+  secret: ${JWT_SECRET}
+
 vms:
   security:
+    cookie:
+      secure: ${VMS_COOKIE_SECURE:false}
     hmac:
       blind-index-key: ${VMS_HMAC_BLIND_INDEX_KEY}
 
@@ -51,4 +56,5 @@ server:
 
 logging:
   level:
+    root: INFO
     com.adminvisitor: DEBUG
