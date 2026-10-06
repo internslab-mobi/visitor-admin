@@ -184,8 +184,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/departments")
                         .hasAnyRole("ADMIN", "FRONT_DESK")
 
-                        .requestMatchers("/api/blacklist/**")
-                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/api/blacklist/**").hasAnyRole("ADMIN", "FRONT_DESK")
+
+                        .requestMatchers(HttpMethod.POST,"/api/blacklist").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.PUT,"/api/blacklist/**").hasRole("ADMIN")
 
                         .anyRequest().permitAll()
                 )
