@@ -1,6 +1,5 @@
 package com.adminvisitor.service;
 
-import com.adminvisitor.dto.requestdto.UpdateVendorRequest;
 import com.adminvisitor.dto.responsedto.VendorEditResponse;
 import com.adminvisitor.dto.responsedto.VendorResponse;
 import com.adminvisitor.dto.responsedto.VisitorEditResponse;
@@ -23,9 +22,16 @@ import java.util.List;
 public class VendorService {
 
     private final VendorRepository vendorRepository;
-private final VisitorService visitorService;
 
-private final DocumentMetadataRepository documentMetadataRepository;
+    private final VisitorService visitorService;
+
+    private final DocumentMetadataRepository documentMetadataRepository;
+
+
+    // ============================================================
+    // GET ALL VENDORS
+    // ============================================================
+
     public List<VendorResponse> getAllVendors() {
 
         return vendorRepository.findAll()
@@ -34,14 +40,27 @@ private final DocumentMetadataRepository documentMetadataRepository;
                 .toList();
     }
 
+
+    // ============================================================
+    // GET VENDOR BY ID
+    // ============================================================
+
     public VendorResponse getVendorById(String id) {
 
         Vendor vendor = vendorRepository.findById(id)
                 .orElseThrow(() ->
-                        new VisitorNotFoundException("Vendor not found with id: " + id));
+                        new VisitorNotFoundException(
+                                "Vendor not found with id: " + id
+                        )
+                );
 
         return mapToResponse(vendor);
     }
+
+
+    // ============================================================
+    // MAP VENDOR TO RESPONSE
+    // ============================================================
 
     private VendorResponse mapToResponse(Vendor vendor) {
 
@@ -53,80 +72,141 @@ private final DocumentMetadataRepository documentMetadataRepository;
                 vendor.getEmail(),
                 vendor.getMobileNumber(),
                 vendor.getCompanyName()
-               // vendor.getValidity()
         );
     }
+
+
+    // ============================================================
+    // GET VENDOR EDIT DETAILS
+    // ============================================================
 
     @Transactional(readOnly = true)
     public VendorEditResponse getVendorEditDetails(String vendorId) {
 
+        // --------------------------------------------------------
+        // 1. Find vendor
+        // --------------------------------------------------------
+
         Vendor vendor = vendorRepository.findById(vendorId)
                 .orElseThrow(() ->
-                        new RuntimeException("Vendor not found")
+                        new VisitorNotFoundException(
+                                "Vendor not found with id: " + vendorId
+                        )
                 );
+
+
+        // --------------------------------------------------------
+        // 2. Get associated visitor
+        // --------------------------------------------------------
 
         Visitor visitor = vendor.getVisitor();
 
-        // Reuse the existing visitor edit details
+
+        // --------------------------------------------------------
+        // 3. Reuse visitor edit details
+        // --------------------------------------------------------
+
         VisitorEditResponse visitorEdit =
-                visitorService.getVisitorEditDetails(visitor.getId());
+                visitorService.getVisitorEditDetails(
+                        visitor.getId()
+                );
 
         VisitorEditResponse.VisitorInfo visitorInfo =
                 visitorEdit.visitor();
+
+
+        // --------------------------------------------------------
+        // 4. Vendor information
+        // --------------------------------------------------------
 
         VendorEditResponse.VendorInfo vendorInfo =
                 new VendorEditResponse.VendorInfo(
                         vendor.getId(),
                         visitor.getId()
-                        //vendor.getValidity()
                 );
+
+
+        // --------------------------------------------------------
+        // 5. Identity documents
+        // --------------------------------------------------------
 
         List<VendorEditResponse.DocumentInfo> documents =
                 visitorEdit.documents()
                         .stream()
-                        .map(document -> new VendorEditResponse.DocumentInfo(
-                                document.documentId(),
-                                document.documentType(),
-                                null,
-                                document.createdAt()
-                        ))
+                        .map(document ->
+                                new VendorEditResponse.DocumentInfo(
+                                        document.documentId(),
+                                        document.documentType(),
+                                        null,
+                                        document.createdAt()
+                                )
+                        )
                         .toList();
+
+
+        // --------------------------------------------------------
+        // 6. NDA history
+        // --------------------------------------------------------
+
+        List<VendorEditResponse.NdaInfo> ndas =
+                getVendorNdas(visitor.getId());
+
+
+        // --------------------------------------------------------
+        // 7. Visit history
+        // --------------------------------------------------------
 
         List<VendorEditResponse.VisitInfo> visits =
                 visitorEdit.visits()
                         .stream()
-                        .map(visit -> new VendorEditResponse.VisitInfo(
-                                visit.visitId(),
-                                visit.visitReference(),
-                                visit.visitorType(),
-                                visit.registrationType(),
-                                visit.purpose(),
-                                visit.hostId(),
-                                visit.hostName(),
-                                visit.departmentId(),
-                                visit.departmentName(),
-                                visit.expectedArrivalAt(),
-                                visit.expectedDepartureAt(),
-                                visit.checkedInAt(),
-                                visit.checkedOutAt(),
-                                visit.remarks(),
-                                visit.status()
-                        ))
+                        .map(visit ->
+                                new VendorEditResponse.VisitInfo(
+                                        visit.visitId(),
+                                        visit.visitReference(),
+                                        visit.visitorType(),
+                                        visit.registrationType(),
+                                        visit.purpose(),
+                                        visit.hostId(),
+                                        visit.hostName(),
+                                        visit.departmentId(),
+                                        visit.departmentName(),
+                                        visit.expectedArrivalAt(),
+                                        visit.expectedDepartureAt(),
+                                        visit.checkedInAt(),
+                                        visit.checkedOutAt(),
+                                        visit.remarks(),
+                                        visit.status()
+                                )
+                        )
                         .toList();
+
+
+        // --------------------------------------------------------
+        // 8. Blacklist information
+        // --------------------------------------------------------
 
         VendorEditResponse.BlacklistInfo blacklist = null;
 
         if (visitorEdit.blacklist() != null) {
-            blacklist = new VendorEditResponse.BlacklistInfo(
-                    visitorEdit.blacklist().id(),
-                    visitorEdit.blacklist().reason(),
-                    visitorEdit.blacklist().status(),
-                    visitorEdit.blacklist().createdAt()
-            );
+
+            blacklist =
+                    new VendorEditResponse.BlacklistInfo(
+                            visitorEdit.blacklist().id(),
+                            visitorEdit.blacklist().reason(),
+                            visitorEdit.blacklist().status(),
+                            visitorEdit.blacklist().createdAt()
+                    );
         }
 
+
+        // --------------------------------------------------------
+        // 9. Final response
+        // --------------------------------------------------------
+
         return new VendorEditResponse(
+
                 vendorInfo,
+
                 new VendorEditResponse.VisitorInfo(
                         visitorInfo.id(),
                         visitorInfo.firstName(),
@@ -137,25 +217,38 @@ private final DocumentMetadataRepository documentMetadataRepository;
                         visitorInfo.visitorType(),
                         visitorInfo.nationality()
                 ),
+
                 documents,
-                List.of(), // NDA history will be populated separately
+
+                ndas,
+
                 visits,
+
                 blacklist,
+
                 visitorEdit.blacklisted()
         );
     }
 
 
+    // ============================================================
+    // GET ALL NDA HISTORY FOR VENDOR
+    // ============================================================
+
     private List<VendorEditResponse.NdaInfo> getVendorNdas(
-            String visitorId) {
+            String visitorId
+    ) {
 
-        List<DocumentMetadata> ndaMetadata = documentMetadataRepository
-                .findByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
-                        visitorId,
-                        DocumentType.NDA
-                );
+        List<DocumentMetadata> ndaMetadata =
+                documentMetadataRepository
+                        .findByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+                                visitorId,
+                                DocumentType.NDA
+                        );
 
-        return ndaMetadata.stream()
+
+        return ndaMetadata
+                .stream()
                 .map(metadata -> {
 
                     LocalDateTime validUntil =
@@ -164,12 +257,22 @@ private final DocumentMetadataRepository documentMetadataRepository;
                     String status;
 
                     if (validUntil == null) {
+
                         status = "UNKNOWN";
-                    } else if (validUntil.isBefore(LocalDateTime.now())) {
+
+                    } else if (
+                            validUntil.isBefore(
+                                    LocalDateTime.now()
+                            )
+                    ) {
+
                         status = "EXPIRED";
+
                     } else {
+
                         status = "ACTIVE";
                     }
+
 
                     return new VendorEditResponse.NdaInfo(
                             metadata.getId(),

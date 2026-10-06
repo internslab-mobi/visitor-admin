@@ -796,11 +796,16 @@ public class DocumentService {
                         metadata.getDocumentType() != DocumentType.NDA
                                 && metadata.getDocumentType() != DocumentType.VISITOR_PHOTO
                 )
-                .map(metadata -> new DocumentResponse(
-                        metadata.getId(),
-                        metadata.getDocumentPath(),
-                        metadata.getCreatedAt().toString()
-                ))
+                .map(metadata ->
+                        new DocumentResponse(
+                                metadata.getId(),
+                                metadata.getDocumentPath(),
+                                metadata.getCreatedAt() != null
+                                        ? metadata.getCreatedAt().toString()
+                                        : null,
+                                null
+                        )
+                )
                 .toList();
     }
 
@@ -1006,6 +1011,9 @@ public class DocumentService {
                                 metadata.getDocumentPath(),
                                 metadata.getCreatedAt() != null
                                         ? metadata.getCreatedAt().toString()
+                                        : null,
+                                metadata.getValidUntil() != null
+                                        ? metadata.getValidUntil().toString()
                                         : null
                         )
                 )
@@ -1056,6 +1064,48 @@ public class DocumentService {
             }
         }
         documentMetadataRepository.delete(metadata);
+    }
+
+
+
+
+    @Transactional
+    public DocumentMetadata updateNdaValidity(
+            String metadataId,
+            LocalDate validUntil
+    ) {
+
+        if (validUntil == null) {
+            throw new IllegalArgumentException(
+                    "NDA valid until date is required"
+            );
+        }
+
+        if (validUntil.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException(
+                    "NDA valid until date cannot be in the past"
+            );
+        }
+
+        DocumentMetadata metadata =
+                documentMetadataRepository.findById(metadataId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Document not found: " + metadataId
+                                )
+                        );
+
+        if (metadata.getDocumentType() != DocumentType.NDA) {
+            throw new BusinessRuleException(
+                    "Only NDA documents can have their validity updated"
+            );
+        }
+
+        metadata.setValidUntil(
+                validUntil.atTime(LocalTime.MAX)
+        );
+
+        return documentMetadataRepository.save(metadata);
     }
     }
 

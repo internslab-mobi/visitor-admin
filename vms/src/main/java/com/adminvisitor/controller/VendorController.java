@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import com.adminvisitor.dto.responsedto.VendorEditResponse;
 import java.util.List;
 
 @RestController
@@ -41,13 +41,16 @@ public class VendorController {
     }
 
 
-//    @PutMapping("/{id}")
-//    public ResponseEntity<VendorResponse> updateVendor(
-//            @PathVariable String id,
-//            @Valid @RequestBody UpdateVendorRequest request) {
+//    @GetMapping("/{id}/edit")
+//    public ResponseEntity<VendorEditResponse> getVendorEditDetails(
+//            @PathVariable String id
+//    ) {
+//        VendorEditResponse response =
+//                vendorService.getVendorEditDetails(id);
 //
-//        return ResponseEntity.ok(
-//                vendorService.updateVendor(id, request)
-//        );
+//        return ResponseEntity.ok(response);
 //    }
+
+
+
 }

@@ -80,12 +80,14 @@ public class DocumentController {
         DocumentMetadata metadata =
                 documentService.getLatestNda(visitorId);
 
-        DocumentResponse response =
-                new DocumentResponse(
-                        metadata.getId(),
-                        metadata.getDocumentPath(),
-                        metadata.getCreatedAt().toString()
-                );
+        DocumentResponse response = new DocumentResponse(
+                metadata.getId(),
+                metadata.getDocumentPath(),
+                metadata.getCreatedAt().toString(),
+                metadata.getValidUntil() != null
+                        ? metadata.getValidUntil().toString()
+                        : null
+        );
 
         return ResponseEntity.ok(response);
     }
@@ -147,9 +149,8 @@ public class DocumentController {
                                 new DocumentResponse(
                                         metadata.getId(),
                                         metadata.getDocumentPath(),
-                                        metadata.getCreatedAt() != null
-                                                ? metadata.getCreatedAt().toString()
-                                                : null
+                                        metadata.getCreatedAt().toString(),
+                                        null
                                 )
                         )
                         .toList();
@@ -252,5 +253,36 @@ public class DocumentController {
             @PathVariable String metadataId
     ) {documentService.deleteDocument(metadataId);
         return ResponseEntity.noContent().build();
+    }
+
+
+
+
+    @PutMapping("/{metadataId}/nda-validity")
+    public ResponseEntity<DocumentResponse> updateNdaValidity(
+            @PathVariable String metadataId,
+            @RequestParam("validUntil")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate validUntil
+    ) {
+
+        DocumentMetadata metadata =
+                documentService.updateNdaValidity(
+                        metadataId,
+                        validUntil
+                );
+
+        DocumentResponse response = new DocumentResponse(
+                metadata.getId(),
+                metadata.getDocumentPath(),
+                metadata.getCreatedAt() != null
+                        ? metadata.getCreatedAt().toString()
+                        : null,
+                metadata.getValidUntil() != null
+                        ? metadata.getValidUntil().toString()
+                        : null
+        );
+
+        return ResponseEntity.ok(response);
     }
 }
