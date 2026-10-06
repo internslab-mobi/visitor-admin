@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.util.HexFormat;
+import java.util.Base64;
 
 @Service
 public class HmacBlindIndexService {
@@ -51,7 +51,15 @@ public class HmacBlindIndexService {
                                     .getBytes(StandardCharsets.UTF_8)
                     );
 
-            return HexFormat.of().formatHex(hmacBytes);
+            String blindIndex = Base64.getUrlEncoder()
+                    .withoutPadding()
+                    .encodeToString(hmacBytes);
+
+            System.out.println("HMAC bytes length: " + hmacBytes.length);
+            System.out.println("Blind index: " + blindIndex);
+            System.out.println("Blind index length: " + blindIndex.length());
+
+            return blindIndex;
 
         } catch (Exception exception) {
 
