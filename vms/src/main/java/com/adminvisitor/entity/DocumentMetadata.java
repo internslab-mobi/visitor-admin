@@ -66,4 +66,8 @@ public class DocumentMetadata extends BaseEntity {
 
     @Column(name = "valid_until")
     private LocalDateTime validUntil;
+
+    @Column(name = "overwritten_by", length = 20)
+    private String overwrittenBy;
+
 }

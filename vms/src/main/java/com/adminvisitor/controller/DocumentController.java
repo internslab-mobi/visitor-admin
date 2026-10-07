@@ -49,48 +49,48 @@ public class DocumentController {
 //        return ResponseEntity.ok(document);
 //    }
 
-
-
-    @PostMapping(
-            value = "/{visitorId}/nda",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
-    public ResponseEntity<Document> uploadSignedNda(
-            @PathVariable String visitorId,
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("validUntil") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate validUntil
-    ) {
-
-        Document document = documentService.uploadSignedNda(
-                visitorId,
-                file,
-                validUntil
-        );
-
-        return ResponseEntity.ok(document);
-    }
-    //  Retrieve the latest NDA for a visitor.
-
-    @GetMapping("/{visitorId}/nda")
-    public ResponseEntity<DocumentResponse> getLatestNda(
-            @PathVariable String visitorId
-    ) {
-
-        DocumentMetadata metadata =
-                documentService.getLatestNda(visitorId);
-
-        DocumentResponse response = new DocumentResponse(
-                metadata.getId(),
-                metadata.getDocumentPath(),
-                metadata.getCreatedAt().toString(),
-                metadata.getValidUntil() != null
-                        ? metadata.getValidUntil().toString()
-                        : null
-        );
-
-        return ResponseEntity.ok(response);
-    }
+//
+//
+//    @PostMapping(
+//            value = "/{visitorId}/nda",
+//            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+//    )
+//    public ResponseEntity<Document> uploadSignedNda(
+//            @PathVariable String visitorId,
+//            @RequestParam("file") MultipartFile file,
+//            @RequestParam("validUntil") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+//            LocalDate validUntil
+//    ) {
+//
+//        Document document = documentService.uploadSignedNda(
+//                visitorId,
+//                file,
+//                validUntil
+//        );
+//
+//        return ResponseEntity.ok(document);
+//    }
+//    //  Retrieve the latest NDA for a visitor.
+//
+//    @GetMapping("/{visitorId}/nda")
+//    public ResponseEntity<DocumentResponse> getLatestNda(
+//            @PathVariable String visitorId
+//    ) {
+//
+//        DocumentMetadata metadata =
+//                documentService.getLatestNda(visitorId);
+//
+//        DocumentResponse response = new DocumentResponse(
+//                metadata.getId(),
+//                metadata.getDocumentPath(),
+//                metadata.getCreatedAt().toString(),
+//                metadata.getValidUntil() != null
+//                        ? metadata.getValidUntil().toString()
+//                        : null
+//        );
+//
+//        return ResponseEntity.ok(response);
+//    }
 
     @GetMapping("/{visitorId}/nda/download")
     public ResponseEntity<Resource> downloadNda(
@@ -158,15 +158,15 @@ public class DocumentController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{visitorId}/nda/all")
-    public ResponseEntity<List<DocumentResponse>> getAllNdas(
-            @PathVariable String visitorId
-    ) {
-
-        return ResponseEntity.ok(
-                documentService.getAllNdas(visitorId)
-        );
-    }
+//    @GetMapping("/{visitorId}/nda/all")
+//    public ResponseEntity<List<DocumentResponse>> getAllNdas(
+//            @PathVariable String visitorId
+//    ) {
+//
+//        return ResponseEntity.ok(
+//                documentService.getAllNdas(visitorId)
+//        );
+//    }
 
 
     @GetMapping(
