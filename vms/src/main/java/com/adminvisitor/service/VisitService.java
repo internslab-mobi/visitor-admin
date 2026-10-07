@@ -1015,11 +1015,6 @@ public class VisitService {
             }
         }
 
-        DocumentMetadata visitorPhoto =
-                documentService.uploadVisitorPhoto(
-                        visit.getVisitor().getId(),
-                        photo
-                );
 
 
         /*
@@ -1048,6 +1043,27 @@ public class VisitService {
 //            }
 //        }
 
+// NDA validation during vendor check-in
+        if (visit.getVisitorType() == VisitorType.VENDOR) {
+
+            boolean ndaRequired =
+                    documentService.isNdaRequired(
+                            visit.getVisitor()
+                    );
+
+            if (ndaRequired) {
+                throw new BusinessRuleException(
+                        "A valid NDA is required for this vendor before check-in"
+                );
+            }
+        }
+
+
+        DocumentMetadata visitorPhoto =
+                documentService.uploadVisitorPhoto(
+                        visit.getVisitor().getId(),
+                        photo
+                );
 
         visit.setCheckedInAt(LocalDateTime.now());
 
@@ -1227,6 +1243,49 @@ public class VisitService {
 //                ndaAvailable ? validNda.getId() : null
 //        );
 //    }
+
+
+    @Transactional(readOnly = true)
+    public NdaStatusResponse getNdaStatus(String visitId) {
+
+        Visit visit = visitRepository.findById(visitId)
+                .orElseThrow(() ->
+                        new BusinessRuleException(
+                                "Visit not found with id: " + visitId
+                        )
+                );
+
+        Visitor visitor = visit.getVisitor();
+
+        boolean ndaRequired =
+                visit.getVisitorType() == VisitorType.VENDOR
+                        && documentService.isNdaRequired(visitor);
+
+        boolean ndaAvailable =
+                visit.getVisitorType() == VisitorType.VENDOR
+                        && !ndaRequired;
+
+        DocumentMetadata latestNda = null;
+
+        if (ndaAvailable) {
+            latestNda = documentService.getLatestNda(
+                    visitor.getId()
+            );
+        }
+
+        return new NdaStatusResponse(
+                visitor.getId(),
+                visit.getVisitorType().name(),
+                ndaRequired,
+                ndaAvailable,
+                latestNda != null
+                        ? latestNda.getValidUntil()
+                        : null,
+                latestNda != null
+                        ? latestNda.getId()
+                        : null
+        );
+    }
 
 
     // ============================================================

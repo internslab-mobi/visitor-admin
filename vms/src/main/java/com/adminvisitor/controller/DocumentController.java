@@ -258,31 +258,31 @@ public class DocumentController {
 
 
 
-    @PutMapping("/{metadataId}/nda-validity")
-    public ResponseEntity<DocumentResponse> updateNdaValidity(
-            @PathVariable String metadataId,
-            @RequestParam("validUntil")
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate validUntil
-    ) {
-
-        DocumentMetadata metadata =
-                documentService.updateNdaValidity(
-                        metadataId,
-                        validUntil
-                );
-
-        DocumentResponse response = new DocumentResponse(
-                metadata.getId(),
-                metadata.getDocumentPath(),
-                metadata.getCreatedAt() != null
-                        ? metadata.getCreatedAt().toString()
-                        : null,
-                metadata.getValidUntil() != null
-                        ? metadata.getValidUntil().toString()
-                        : null
-        );
-
-        return ResponseEntity.ok(response);
-    }
+//    @PutMapping("/{metadataId}/nda-validity")
+//    public ResponseEntity<DocumentResponse> updateNdaValidity(
+//            @PathVariable String metadataId,
+//            @RequestParam("validUntil")
+//            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+//            LocalDate validUntil
+//    ) {
+//
+//        DocumentMetadata metadata =
+//                documentService.updateNdaValidity(
+//                        metadataId,
+//                        validUntil
+//                );
+//
+//        DocumentResponse response = new DocumentResponse(
+//                metadata.getId(),
+//                metadata.getDocumentPath(),
+//                metadata.getCreatedAt() != null
+//                        ? metadata.getCreatedAt().toString()
+//                        : null,
+//                metadata.getValidUntil() != null
+//                        ? metadata.getValidUntil().toString()
+//                        : null
+//        );
+//
+//        return ResponseEntity.ok(response);
+//    }
 }

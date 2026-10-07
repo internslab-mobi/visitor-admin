@@ -157,10 +157,10 @@ public class SecurityConfig {
                                 "/api/documents/api/proof-documents/upload/*"
                         ).hasRole("FRONT_DESK")
 
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/documents/*/nda"
-                        ).hasRole("FRONT_DESK")
+//                        .requestMatchers(
+//                                HttpMethod.POST,
+//                                "/api/documents/*/nda"
+//                        ).hasRole("FRONT_DESK")
 
                         .requestMatchers(
                                 HttpMethod.GET,

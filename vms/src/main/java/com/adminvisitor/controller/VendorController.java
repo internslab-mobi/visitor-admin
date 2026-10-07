@@ -41,15 +41,15 @@ public class VendorController {
     }
 
 
-//    @GetMapping("/{id}/edit")
-//    public ResponseEntity<VendorEditResponse> getVendorEditDetails(
-//            @PathVariable String id
-//    ) {
-//        VendorEditResponse response =
-//                vendorService.getVendorEditDetails(id);
-//
-//        return ResponseEntity.ok(response);
-//    }
+    @GetMapping("/{id}/edit")
+    public ResponseEntity<VendorEditResponse> getVendorEditDetails(
+            @PathVariable String id
+    ) {
+        VendorEditResponse response =
+                vendorService.getVendorEditDetails(id);
+
+        return ResponseEntity.ok(response);
+    }
 
 
 
