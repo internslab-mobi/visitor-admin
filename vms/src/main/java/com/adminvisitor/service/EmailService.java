@@ -120,6 +120,7 @@ public class EmailService {
     @Async
     public void sendVisitBadgeEmail(BadgeEmailData data) {
 
+        //context holds the data which has to send to html
         Context context = new Context();
 
         context.setVariable(

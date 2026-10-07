@@ -101,6 +101,8 @@ public class VisitService {
                     );
 
             // Nationality must match the existing identity record
+
+            //why check the match, if the visitor already exists ?
             if (existingDocument.getNationality()
                     != request.nationality()) {
 

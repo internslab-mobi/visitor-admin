@@ -279,15 +279,11 @@ public class DocumentService {
 
             // IMPORTANT
             metadata.setDocumentType(DocumentType.NDA);
-
-            metadata.setDocumentType(DocumentType.NDA);
             metadata.setDocumentPath(filePath.toString());
 
             documentMetadataRepository.save(metadata);
 
-            // Start a new six-month NDA validity period.
-            visitor.setValidity(LocalDateTime.now().plusMonths(6));
-            visitorRepository.save(visitor);
+
 
             return document;
 
@@ -300,7 +296,11 @@ public class DocumentService {
         }
     }
 
-    public boolean isNdaRequired(Visitor visitor) {
+
+
+
+
+       public boolean isNdaRequired(Visitor visitor) {
 
         LocalDateTime validity = visitor.getValidity();
 
@@ -382,27 +382,27 @@ public class DocumentService {
         return validContentType && validExtension;
     }
 
-    public DocumentMetadata getValidNda(Visitor visitor) {
-
-        if (visitor == null || isNdaRequired(visitor)) {
-            return null;
-        }
-
-        Document document = documentRepository
-                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
-                .orElse(null);
-
-        if (document == null) {
-            return null;
-        }
-
-        return documentMetadataRepository
-                .findTopByDocumentIdAndDocumentTypeOrderByCreatedAtDesc(
-                        document.getId(),
-                        DocumentType.NDA
-                )
-                .orElse(null);
-    }
+//    public DocumentMetadata getValidNda(Visitor visitor) {
+//
+//        if (visitor == null || isNdaRequired(visitor)) {
+//            return null;
+//        }
+//
+//        Document document = documentRepository
+//                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
+//                .orElse(null);
+//
+//        if (document == null) {
+//            return null;
+//        }
+//
+//        return documentMetadataRepository
+//                .findTopByDocumentIdAndDocumentTypeOrderByCreatedAtDesc(
+//                        document.getId(),
+//                        DocumentType.NDA
+//                )
+//                .orElse(null);
+//    }
 
     public Resource getNdaFile(String visitorId) {
 
@@ -723,42 +723,6 @@ public class DocumentService {
     */
 
 
-    /*
-     * ============================================================
-     * OLD DOCUMENT/NDA LISTING
-     * ============================================================
-     *
-     * Currently disabled because document paths are now handled
-     * separately through vms_document_metadata.
-     */
-
-//    @Transactional(readOnly = true)
-//    public List<DocumentResponse> getAllDocuments(
-//            String visitorId
-//    ) {
-//
-//        visitorRepository.findById(visitorId)
-//                .orElseThrow(() ->
-//                        new ResourceNotFoundException(
-//                                "Visitor not found: " + visitorId
-//                        )
-//                );
-//
-//        return documentRepository
-//                .findByVisitorId(visitorId)
-//                .stream()
-//                .flatMap(document ->
-//                        documentMetadataRepository
-//                                .findByDocumentId(document.getId())
-//                                .stream()
-//                )
-//                .map(metadata -> new DocumentResponse(
-//                        metadata.getId(),
-//                        metadata.getDocumentPath(),
-//                        metadata.getCreatedAt().toString()
-//                ))
-//                .toList();
-//    }
 
 
     @Transactional(readOnly = true)
