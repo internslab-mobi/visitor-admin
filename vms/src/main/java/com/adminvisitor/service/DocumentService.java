@@ -800,9 +800,19 @@ public class DocumentService {
                         new DocumentResponse(
                                 metadata.getId(),
                                 metadata.getDocumentPath(),
+
+                                // Created At
                                 metadata.getCreatedAt() != null
                                         ? metadata.getCreatedAt().toString()
                                         : null,
+
+                                // Valid From - not applicable
+                                null,
+
+                                // Valid Until - not applicable
+                                null,
+
+                                // Overwritten By - not applicable
                                 null
                         )
                 )
@@ -981,44 +991,44 @@ public class DocumentService {
 
 
 
-    @Transactional(readOnly = true)
-    public List<DocumentResponse> getAllNdas(String visitorId) {
-
-        Visitor visitor = visitorRepository.findById(visitorId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Visitor not found: " + visitorId
-                        )
-                );
-
-        Document document = documentRepository
-                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "No document found for visitor: " + visitorId
-                        )
-                );
-
-        return documentMetadataRepository
-                .findByDocumentIdAndDocumentType(
-                        document.getId(),
-                        DocumentType.NDA
-                )
-                .stream()
-                .map(metadata ->
-                        new DocumentResponse(
-                                metadata.getId(),
-                                metadata.getDocumentPath(),
-                                metadata.getCreatedAt() != null
-                                        ? metadata.getCreatedAt().toString()
-                                        : null,
-                                metadata.getValidUntil() != null
-                                        ? metadata.getValidUntil().toString()
-                                        : null
-                        )
-                )
-                .toList();
-    }
+//    @Transactional(readOnly = true)
+//    public List<DocumentResponse> getAllNdas(String visitorId) {
+//
+//        Visitor visitor = visitorRepository.findById(visitorId)
+//                .orElseThrow(() ->
+//                        new ResourceNotFoundException(
+//                                "Visitor not found: " + visitorId
+//                        )
+//                );
+//
+//        Document document = documentRepository
+//                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
+//                .orElseThrow(() ->
+//                        new ResourceNotFoundException(
+//                                "No document found for visitor: " + visitorId
+//                        )
+//                );
+//
+//        return documentMetadataRepository
+//                .findByDocumentIdAndDocumentType(
+//                        document.getId(),
+//                        DocumentType.NDA
+//                )
+//                .stream()
+//                .map(metadata ->
+//                        new DocumentResponse(
+//                                metadata.getId(),
+//                                metadata.getDocumentPath(),
+//                                metadata.getCreatedAt() != null
+//                                        ? metadata.getCreatedAt().toString()
+//                                        : null,
+//                                metadata.getValidUntil() != null
+//                                        ? metadata.getValidUntil().toString()
+//                                        : null
+//                        )
+//                )
+//                .toList();
+//    }
 
 
     @Transactional(readOnly = true)

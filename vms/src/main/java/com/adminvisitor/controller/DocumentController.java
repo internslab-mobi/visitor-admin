@@ -128,10 +128,6 @@ public class DocumentController {
 
 
 
-    @PostMapping(
-            value = "/api/proof-documents/upload/{visitorId}",
-            consumes = "multipart/form-data"
-    )
     public ResponseEntity<List<DocumentResponse>> uploadProofDocuments(
             @PathVariable String visitorId,
             @RequestParam("files") List<MultipartFile> files
@@ -149,7 +145,19 @@ public class DocumentController {
                                 new DocumentResponse(
                                         metadata.getId(),
                                         metadata.getDocumentPath(),
-                                        metadata.getCreatedAt().toString(),
+
+                                        // Created At
+                                        metadata.getCreatedAt() != null
+                                                ? metadata.getCreatedAt().toString()
+                                                : null,
+
+                                        // Valid From - not applicable for proof documents
+                                        null,
+
+                                        // Valid Until - not applicable for proof documents
+                                        null,
+
+                                        // Overwritten By - not applicable for proof documents
                                         null
                                 )
                         )

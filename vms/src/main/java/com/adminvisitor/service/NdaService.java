@@ -1,6 +1,8 @@
 package com.adminvisitor.service;
 
 import com.adminvisitor.dto.responsedto.DocumentResponse;
+import com.adminvisitor.dto.responsedto.NdaExtensionResult;
+import com.adminvisitor.dto.responsedto.NdaLatestResult;
 import com.adminvisitor.entity.Document;
 import com.adminvisitor.entity.DocumentMetadata;
 import com.adminvisitor.entity.Visit;
@@ -210,7 +212,7 @@ public class NdaService {
     // ============================================================
 
     @Transactional
-    public DocumentMetadata extendNdaValidity(
+    public NdaExtensionResult extendNdaValidity(
             String visitorId,
             MultipartFile supportingDocument,
             LocalDate newValidUntil
@@ -334,9 +336,13 @@ public class NdaService {
             );
 
             documentMetadataRepository.save(existingNda);
+            DocumentMetadata savedNda =
+                    documentMetadataRepository.save(newNdaMetadata);
 
-            // Save new latest NDA
-            return documentMetadataRepository.save(newNdaMetadata);
+            return new NdaExtensionResult(
+                    savedNda,
+                    existingNda.getCreatedAt()
+            );
 
         } catch (IOException exception) {
 
@@ -351,15 +357,47 @@ public class NdaService {
     // Get Latest NDA
     // ============================================================
 
+//    @Transactional(readOnly = true)
+//    public DocumentMetadata getLatestNda(String visitorId) {
+//        return documentMetadataRepository
+//                .findTopByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+//                        visitorId,
+//                        DocumentType.NDA
+//                )
+//                .filter(nda -> nda.getOverwrittenBy() == null)
+//                .orElseThrow(() -> new ResourceNotFoundException("No valid NDA found for visitor: " + visitorId));
+//    }
+
+
+
     @Transactional(readOnly = true)
-    public DocumentMetadata getLatestNda(String visitorId) {
-        return documentMetadataRepository
-                .findTopByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
-                        visitorId,
-                        DocumentType.NDA
-                )
+    public NdaLatestResult getLatestNda(String visitorId) {
+
+        visitorRepository.findById(visitorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Visitor not found: " + visitorId));
+
+        List<DocumentMetadata> ndaHistory =
+                documentMetadataRepository
+                        .findByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+                                visitorId,
+                                DocumentType.NDA);
+
+        DocumentMetadata latestNda = ndaHistory.stream()
                 .filter(nda -> nda.getOverwrittenBy() == null)
-                .orElseThrow(() -> new ResourceNotFoundException("No valid NDA found for visitor: " + visitorId));
+                .findFirst()
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "No active NDA found for visitor: " + visitorId));
+
+        LocalDateTime validFrom =
+                ndaHistory.get(ndaHistory.size() - 1).getCreatedAt();
+
+        return new NdaLatestResult(
+                latestNda,
+                validFrom
+        );
     }
 
     // ============================================================
@@ -377,27 +415,55 @@ public class NdaService {
                         )
                 );
 
-        // Get NDA history
-        return documentMetadataRepository
-                .findByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
-                        visitorId,
-                        DocumentType.NDA
-                )
-                .stream()
+        List<DocumentMetadata> ndaHistory =
+                documentMetadataRepository
+                        .findByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+                                visitorId,
+                                DocumentType.NDA
+                        );
+
+        if (ndaHistory.isEmpty()) {
+            return List.of();
+        }
+
+        /*
+         * The oldest NDA is the original NDA.
+         *
+         * Every extension continues the validity period of
+         * that original NDA, so its createdAt becomes the
+         * Valid From date for the entire NDA chain.
+         */
+        LocalDateTime originalNdaCreatedAt =
+                ndaHistory.get(ndaHistory.size() - 1).getCreatedAt();
+
+        return ndaHistory.stream()
                 .map(metadata -> {
 
-                    LocalDateTime validUntil = metadata.getValidUntil();
+                    LocalDateTime validUntil =
+                            metadata.getValidUntil();
 
                     return new DocumentResponse(
                             metadata.getId(),
                             metadata.getDocumentPath(),
+
+                            // Actual creation/upload time of THIS document
                             metadata.getCreatedAt() != null
                                     ? metadata.getCreatedAt().toString()
                                     : null,
+
+                            // Valid From = original NDA's createdAt
+                            originalNdaCreatedAt != null
+                                    ? originalNdaCreatedAt.toString()
+                                    : null,
+
                             validUntil != null
                                     ? validUntil.toString()
-                                    : null
+                                    : null,
+
+                            metadata.getOverwrittenBy()
                     );
+
+
                 })
                 .toList();
     }
