@@ -22,9 +22,6 @@ public class NdaController {
 
     private final NdaService ndaLifecycleService;
 
-    // ============================================================
-    // CASE 1: Upload New NDA (Expired NDA or First NDA)
-    // ============================================================
 
     @PostMapping(
             value = "/{visitorId}/upload-new",
@@ -71,10 +68,7 @@ public class NdaController {
         }
 
 
-    // ============================================================
-    // CASE 2: Extend Valid NDA (Requires Supporting Document)
-    // ============================================================
-    @PostMapping(
+        @PostMapping(
             value = "/{visitorId}/extend",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
@@ -120,10 +114,6 @@ public class NdaController {
 
         return ResponseEntity.ok(response);
     }
-
-    // ============================================================
-    // Get Latest NDA
-    // ============================================================
 
     @GetMapping("/{visitorId}/latest")
     public ResponseEntity<DocumentResponse> getLatestNda(
