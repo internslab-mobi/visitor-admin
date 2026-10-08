@@ -33,6 +33,6 @@ public class BlacklistProof extends BaseEntity {
     @Column(name = "proof_type", nullable = false, length = 20)
     private ProofType proofType;
 
-    @Column(name = "proof_blind_index", nullable = false, length = 64)
+    @Column(name = "proof_blind_index", nullable = false, length = 43)
     private String proofBlindIndex;
 }

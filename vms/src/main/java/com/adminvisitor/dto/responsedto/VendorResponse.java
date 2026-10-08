@@ -10,7 +10,7 @@ public record VendorResponse(
         String lastName,
         String email,
         String mobileNumber,
-        String companyName,
-        LocalDateTime validity
+        String companyName
+        //LocalDateTime validity
 ) {
 }
