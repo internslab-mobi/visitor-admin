@@ -39,11 +39,6 @@ public interface VisitRepository extends JpaRepository<Visit, String>, JpaSpecif
                 LocalDateTime time
         );
 
-        List<Visit> findByStatusAndCheckedInAtBefore(
-                VisitStatus status,
-                LocalDateTime time
-        );
-
         List<Visit> findByVisitorIdOrderByExpectedArrivalAtDesc(
                 String visitorId
         );

@@ -1,14 +1,15 @@
 package com.adminvisitor.service;
 
+import com.adminvisitor.entity.Visit;
+import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.repository.VisitRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import com.adminvisitor.entity.Visit;
-import com.adminvisitor.enums.VisitStatus;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,16 +21,17 @@ public class VisitAutomationService {
     private final VisitRepository visitRepository;
     private final VisitBadgeService visitBadgeService;
 
-    @Scheduled(cron = "0 59 23 * * *", zone = "Asia/Kolkata")
+    @Scheduled(fixedRate = 300000)
     @Transactional
     public void markNoShowVisits() {
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfToday =
+                LocalDate.now().atStartOfDay();
 
         List<Visit> visits =
                 visitRepository.findByStatusAndExpectedArrivalAtBefore(
                         VisitStatus.REGISTERED,
-                        now
+                        startOfToday
                 );
 
         for (Visit visit : visits) {
@@ -46,16 +48,19 @@ public class VisitAutomationService {
         visitRepository.saveAll(visits);
     }
 
-    @Scheduled(cron = "0 59 23 * * *", zone = "Asia/Kolkata")
+    @Scheduled(fixedRate = 300000)
     @Transactional
     public void autoCheckOutVisits() {
+
+        LocalDateTime startOfToday =
+                LocalDate.now().atStartOfDay();
 
         LocalDateTime now = LocalDateTime.now();
 
         List<Visit> visits =
-                visitRepository.findByStatusAndCheckedInAtBefore(
+                visitRepository.findByStatusAndExpectedArrivalAtBefore(
                         VisitStatus.CHECKED_IN,
-                        now
+                        startOfToday
                 );
 
         for (Visit visit : visits) {

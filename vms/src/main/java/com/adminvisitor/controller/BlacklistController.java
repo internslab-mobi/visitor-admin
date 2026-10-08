@@ -77,4 +77,13 @@ public class BlacklistController {
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
+
+    @GetMapping("/visitor/{visitorId}/status")
+    public ResponseEntity<Boolean> isBlacklisted(
+            @PathVariable String visitorId) {
+
+        return ResponseEntity.ok(
+                blacklistService.isBlacklisted(visitorId)
+        );
+    }
 }
