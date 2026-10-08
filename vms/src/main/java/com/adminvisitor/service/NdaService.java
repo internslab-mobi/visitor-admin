@@ -1,6 +1,8 @@
 package com.adminvisitor.service;
 
 import com.adminvisitor.dto.responsedto.DocumentResponse;
+import com.adminvisitor.dto.responsedto.NdaExtensionResult;
+import com.adminvisitor.dto.responsedto.NdaLatestResult;
 import com.adminvisitor.entity.Document;
 import com.adminvisitor.entity.DocumentMetadata;
 import com.adminvisitor.entity.Visit;
@@ -45,9 +47,6 @@ public class NdaService {
     @Value("${vms.document.upload-dir}")
     private String documentUploadDir;
 
-    // ============================================================
-    // CASE 1: Upload New NDA (Expired NDA or First NDA)
-    // ============================================================
 
     @Transactional
     public DocumentMetadata uploadNewNda(
@@ -107,14 +106,6 @@ public class NdaService {
                                 DocumentType.NDA
                         );
 
-        /*
-         * Case 1:
-         * If an existing NDA is still valid, a normal new NDA upload
-         * is not allowed.
-         *
-         * The user must use the NDA extension flow and provide
-         * a supporting document.
-         */
         if (existingNda.isPresent()) {
 
             LocalDateTime existingValidUntil =
@@ -175,22 +166,10 @@ public class NdaService {
             metadata.setDocumentType(DocumentType.NDA);
             metadata.setDocumentPath(filePath.toString());
 
-            /*
-             * validFrom is intentionally NOT stored.
-             *
-             * Valid From = createdAt
-             *
-             * createdAt is automatically populated by BaseEntity.
-             */
-
             metadata.setValidUntil(
                     validUntil.atTime(LocalTime.MAX)
             );
 
-            /*
-             * This is the latest NDA,
-             * so nothing has overwritten it yet.
-             */
             metadata.setOverwrittenBy(null);
 
             // 12. Save metadata
@@ -205,12 +184,9 @@ public class NdaService {
         }
     }
 
-    // ============================================================
-    // CASE 2: Extend Valid NDA (Requires Supporting Document)
-    // ============================================================
 
     @Transactional
-    public DocumentMetadata extendNdaValidity(
+    public NdaExtensionResult extendNdaValidity(
             String visitorId,
             MultipartFile supportingDocument,
             LocalDate newValidUntil
@@ -334,9 +310,13 @@ public class NdaService {
             );
 
             documentMetadataRepository.save(existingNda);
+            DocumentMetadata savedNda =
+                    documentMetadataRepository.save(newNdaMetadata);
 
-            // Save new latest NDA
-            return documentMetadataRepository.save(newNdaMetadata);
+            return new NdaExtensionResult(
+                    savedNda,
+                    existingNda.getCreatedAt()
+            );
 
         } catch (IOException exception) {
 
@@ -347,24 +327,38 @@ public class NdaService {
         }
     }
 
-    // ============================================================
-    // Get Latest NDA
-    // ============================================================
+
 
     @Transactional(readOnly = true)
-    public DocumentMetadata getLatestNda(String visitorId) {
-        return documentMetadataRepository
-                .findTopByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
-                        visitorId,
-                        DocumentType.NDA
-                )
+    public NdaLatestResult getLatestNda(String visitorId) {
+
+        visitorRepository.findById(visitorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Visitor not found: " + visitorId));
+
+        List<DocumentMetadata> ndaHistory =
+                documentMetadataRepository
+                        .findByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+                                visitorId,
+                                DocumentType.NDA);
+
+        DocumentMetadata latestNda = ndaHistory.stream()
                 .filter(nda -> nda.getOverwrittenBy() == null)
-                .orElseThrow(() -> new ResourceNotFoundException("No valid NDA found for visitor: " + visitorId));
+                .findFirst()
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "No active NDA found for visitor: " + visitorId));
+
+        LocalDateTime validFrom =
+                ndaHistory.get(ndaHistory.size() - 1).getCreatedAt();
+
+        return new NdaLatestResult(
+                latestNda,
+                validFrom
+        );
     }
 
-    // ============================================================
-    // Get NDA History
-    // ============================================================
 
     @Transactional(readOnly = true)
     public List<DocumentResponse> getNdaHistory(String visitorId) {
@@ -377,34 +371,53 @@ public class NdaService {
                         )
                 );
 
-        // Get NDA history
-        return documentMetadataRepository
-                .findByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
-                        visitorId,
-                        DocumentType.NDA
-                )
-                .stream()
+        List<DocumentMetadata> ndaHistory =
+                documentMetadataRepository
+                        .findByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+                                visitorId,
+                                DocumentType.NDA
+                        );
+
+        if (ndaHistory.isEmpty()) {
+            return List.of();
+        }
+
+
+        LocalDateTime originalNdaCreatedAt =
+                ndaHistory.get(ndaHistory.size() - 1).getCreatedAt();
+
+        return ndaHistory.stream()
                 .map(metadata -> {
 
-                    LocalDateTime validUntil = metadata.getValidUntil();
+                    LocalDateTime validUntil =
+                            metadata.getValidUntil();
 
                     return new DocumentResponse(
                             metadata.getId(),
                             metadata.getDocumentPath(),
+
+                            // Actual creation/upload time of THIS document
                             metadata.getCreatedAt() != null
                                     ? metadata.getCreatedAt().toString()
                                     : null,
+
+                            // Valid From = original NDA's createdAt
+                            originalNdaCreatedAt != null
+                                    ? originalNdaCreatedAt.toString()
+                                    : null,
+
                             validUntil != null
                                     ? validUntil.toString()
-                                    : null
+                                    : null,
+
+                            metadata.getOverwrittenBy()
                     );
+
+
                 })
                 .toList();
     }
 
-    // ============================================================
-    // Helper Methods
-    // ============================================================
 
     private boolean isPdf(MultipartFile file) {
         String contentType = file.getContentType();

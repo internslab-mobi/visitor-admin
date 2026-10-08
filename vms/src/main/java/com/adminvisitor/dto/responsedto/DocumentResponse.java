@@ -4,6 +4,8 @@ public record DocumentResponse(
         String documentId,
         String documentPath,
         String createdAt,
-        String validUntil
+        String validFrom,
+        String validUntil,
+        String overwrittenBy
 ) {
 }
