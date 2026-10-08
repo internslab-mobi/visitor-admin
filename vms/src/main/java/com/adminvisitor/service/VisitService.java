@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -793,6 +794,15 @@ public class VisitService {
 
         DocumentMetadata validNda = documentService.getValidNda(visitor);
 
+        Long totalDurationSeconds = null;
+
+        if (visit.getCheckedInAt() != null && visit.getCheckedOutAt() != null) {
+            totalDurationSeconds = Duration.between(
+                    visit.getCheckedInAt(),
+                    visit.getCheckedOutAt()
+            ).getSeconds();
+        }
+
         return new VisitDetailResponse(
 
                 // Visit information
@@ -832,6 +842,8 @@ public class VisitService {
                 // Actual visit times
                 visit.getCheckedInAt(),
                 visit.getCheckedOutAt(),
+
+                totalDurationSeconds,
 
                 // Remarks
                 visit.getRemarks(),
