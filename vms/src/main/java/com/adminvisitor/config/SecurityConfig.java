@@ -107,20 +107,30 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/visitors")
-                        .hasAnyRole("ADMIN", "FRONT_DESK")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/visitors"
+                        ).permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/visitors/*")
-                        .hasAnyRole("ADMIN", "FRONT_DESK")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/visitors/*"
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
-                        .requestMatchers(HttpMethod.PUT, "/api/visitors/*")
-                        .hasAnyRole("ADMIN", "FRONT_DESK")
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/visitors/*"
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
-                        .requestMatchers(HttpMethod.GET, "/api/visits")
-                        .hasAnyRole("ADMIN", "FRONT_DESK")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/visits"
+                        ).permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/visits")
-                        .hasRole("FRONT_DESK")
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/visits"
+                        ).permitAll()
 
                         .requestMatchers(
                                 HttpMethod.PATCH,
@@ -155,12 +165,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/documents/api/proof-documents/upload/*"
-                        ).hasRole("FRONT_DESK")
-
-//                        .requestMatchers(
-//                                HttpMethod.POST,
-//                                "/api/documents/*/nda"
-//                        ).hasRole("FRONT_DESK")
+                        ).permitAll()
 
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -172,23 +177,47 @@ public class SecurityConfig {
                                 "/api/documents/*/nda/all"
                         ).hasRole("FRONT_DESK")
 
-                        .requestMatchers(HttpMethod.GET, "/api/vendors")
-                        .hasAnyRole("ADMIN", "FRONT_DESK")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/vendors"
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
-                        .requestMatchers(HttpMethod.GET, "/api/vendors/*")
-                        .hasAnyRole("ADMIN", "FRONT_DESK")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/vendors/*"
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
-                        .requestMatchers(HttpMethod.GET, "/api/employees")
-                        .hasAnyRole("ADMIN", "FRONT_DESK")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/employees"
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
-                        .requestMatchers(HttpMethod.GET, "/api/departments")
-                        .hasAnyRole("ADMIN", "FRONT_DESK")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/departments"
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
-                        .requestMatchers(HttpMethod.GET,"/api/blacklist/**").hasAnyRole("ADMIN", "FRONT_DESK")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/blacklist/visitor/*/status"
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
-                        .requestMatchers(HttpMethod.POST,"/api/blacklist").hasRole("ADMIN")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/blacklist",
+                                "/api/blacklist/*"
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
-                        .requestMatchers(HttpMethod.PUT,"/api/blacklist/**").hasRole("ADMIN")
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/blacklist",
+                                "/api/blacklist/visitor/*"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/blacklist/*/remove"
+                        ).hasRole("ADMIN")
 
                         .anyRequest().permitAll()
                 )
