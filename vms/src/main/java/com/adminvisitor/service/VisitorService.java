@@ -257,20 +257,31 @@ public class VisitorService {
                                         .stream()
                         )
 
+//                        .filter(metadata ->
+//                                metadata.getDocumentType() != null
+//                                        &&
+//                                        metadata.getDocumentType()
+//                                                != DocumentType.NDA
+//                                        &&
+//                                        metadata.getDocumentType()
+//                                                != DocumentType.VISITOR_PHOTO
+//                        )
+
                         .filter(metadata ->
-                                metadata.getDocumentType() != null
-                                        &&
-                                        metadata.getDocumentType()
-                                                != DocumentType.NDA
-                                        &&
-                                        metadata.getDocumentType()
-                                                != DocumentType.VISITOR_PHOTO
+                                metadata.getDocumentType() == null
+                                        ||
+                                        (
+                                                metadata.getDocumentType() != DocumentType.NDA
+                                                        &&
+                                                        metadata.getDocumentType() != DocumentType.VISITOR_PHOTO
+                                        )
                         )
 
                         .map(metadata ->
                                 new VisitorEditResponse.DocumentInfo(
 
-                                        metadata.getDocument().getId(),
+//                                        metadata.getDocument().getId(),
+                                        metadata.getId(),
 
                                         metadata.getDocumentType(),
 

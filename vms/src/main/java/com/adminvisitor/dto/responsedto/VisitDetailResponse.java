@@ -36,8 +36,7 @@ public record VisitDetailResponse(
             String companyName,
             String nationality,
             boolean ndaAvailable,
-            String ndaDocumentId,
-            LocalDateTime ndaValidUntil
+            String ndaDocumentId
 
     ) {
     }

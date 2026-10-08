@@ -36,8 +36,8 @@ public class Visitor extends BaseEntity {
     @Column(name = "company_name", length = 150)
     private String companyName;
 
-    @Column(name = "validity")
-    private LocalDateTime validity;
+//    @Column(name = "validity")
+//    private LocalDateTime validity;
 }
 
 

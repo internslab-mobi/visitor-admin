@@ -102,6 +102,8 @@ public class VisitService {
                     );
 
             // Nationality must match the existing identity record
+
+            //why check the match, if the visitor already exists ?
             if (existingDocument.getNationality()
                     != request.nationality()) {
 
@@ -327,7 +329,7 @@ public class VisitService {
 
     private Visitor findOrCreateVisitor(RegistrationRequest request) {
 
-//        validateVisitorValidity(request);
+
 
         String email = request.email();
         String mobileNumber = request.mobileNumber();
@@ -402,7 +404,7 @@ public class VisitService {
          * Create a new Visitor profile.
          */
 
-        validateVisitorValidity(request);
+       // validateVisitorValidity(request);
         Visitor newVisitor = new Visitor();
 
         newVisitor.setId(
@@ -414,7 +416,7 @@ public class VisitService {
         newVisitor.setEmail(email);
         newVisitor.setMobileNumber(mobileNumber);
         newVisitor.setCompanyName(request.companyName());
-        newVisitor.setValidity(request.validity());
+        //newVisitor.setValidity(request.validity());
 
         Visitor savedVisitor = visitorRepository.save(newVisitor);
 
@@ -430,25 +432,25 @@ public class VisitService {
     // ============================================================
     // VISITOR VALIDITY
     // ============================================================
-
-    private void validateVisitorValidity(RegistrationRequest request) {
-
-        if (request.visitorType() == VisitorType.VENDOR
-                && request.validity() == null) {
-
-            throw new BusinessRuleException(
-                    "Validity is required for vendor visitors"
-            );
-        }
-
-        if (request.visitorType() != VisitorType.VENDOR
-                && request.validity() != null) {
-
-            throw new BusinessRuleException(
-                    "Validity must be null for non-vendor visitors"
-            );
-        }
-    }
+//
+//    private void validateVisitorValidity(RegistrationRequest request) {
+//
+//        if (request.visitorType() == VisitorType.VENDOR
+//                && request.validity() == null) {
+//
+//            throw new BusinessRuleException(
+//                    "Validity is required for vendor visitors"
+//            );
+//        }
+//
+//        if (request.visitorType() != VisitorType.VENDOR
+//                && request.validity() != null) {
+//
+//            throw new BusinessRuleException(
+//                    "Validity must be null for non-vendor visitors"
+//            );
+//        }
+//    }
 
 
     // ============================================================
@@ -819,8 +821,8 @@ public class VisitService {
                         visitor.getCompanyName(),
                         nationality,
                         validNda != null,
-                        validNda != null ? validNda.getId() : null,
-                        validNda != null ? visitor.getValidity() : null
+                        validNda != null ? validNda.getId() : null
+                        //validNda != null ? visitor.getValidity() : null
                 ),
 
                 visit.getVisitorType(),
@@ -1025,11 +1027,6 @@ public class VisitService {
             }
         }
 
-        DocumentMetadata visitorPhoto =
-                documentService.uploadVisitorPhoto(
-                        visit.getVisitor().getId(),
-                        photo
-                );
 
 
         /*
@@ -1058,6 +1055,27 @@ public class VisitService {
 //            }
 //        }
 
+// NDA validation during vendor check-in
+        if (visit.getVisitorType() == VisitorType.VENDOR) {
+
+            boolean ndaRequired =
+                    documentService.isNdaRequired(
+                            visit.getVisitor()
+                    );
+
+            if (ndaRequired) {
+                throw new BusinessRuleException(
+                        "A valid NDA is required for this vendor before check-in"
+                );
+            }
+        }
+
+
+        DocumentMetadata visitorPhoto =
+                documentService.uploadVisitorPhoto(
+                        visit.getVisitor().getId(),
+                        photo
+                );
 
         visit.setCheckedInAt(LocalDateTime.now());
 
@@ -1239,6 +1257,49 @@ public class VisitService {
 //    }
 
 
+    @Transactional(readOnly = true)
+    public NdaStatusResponse getNdaStatus(String visitId) {
+
+        Visit visit = visitRepository.findById(visitId)
+                .orElseThrow(() ->
+                        new BusinessRuleException(
+                                "Visit not found with id: " + visitId
+                        )
+                );
+
+        Visitor visitor = visit.getVisitor();
+
+        boolean ndaRequired =
+                visit.getVisitorType() == VisitorType.VENDOR
+                        && documentService.isNdaRequired(visitor);
+
+        boolean ndaAvailable =
+                visit.getVisitorType() == VisitorType.VENDOR
+                        && !ndaRequired;
+
+        DocumentMetadata latestNda = null;
+
+        if (ndaAvailable) {
+            latestNda = documentService.getLatestNda(
+                    visitor.getId()
+            );
+        }
+
+        return new NdaStatusResponse(
+                visitor.getId(),
+                visit.getVisitorType().name(),
+                ndaRequired,
+                ndaAvailable,
+                latestNda != null
+                        ? latestNda.getValidUntil()
+                        : null,
+                latestNda != null
+                        ? latestNda.getId()
+                        : null
+        );
+    }
+
+
     // ============================================================
     // VENDOR CREATION
     // ============================================================
@@ -1283,7 +1344,7 @@ public class VisitService {
 
         vendor.setCompanyName(visitor.getCompanyName());
 
-        vendor.setValidity(visitor.getValidity());
+       // vendor.setValidity(visitor.getValidity());
 
         vendorRepository.save(vendor);
 

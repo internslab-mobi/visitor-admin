@@ -31,8 +31,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -186,7 +189,9 @@ public class DocumentService {
     @Transactional
     public Document uploadSignedNda(
             String visitorId,
-            MultipartFile file
+            MultipartFile file,
+            LocalDate validUntil
+
     ) {
 
         // 1. File validation
@@ -200,6 +205,18 @@ public class DocumentService {
         if (!isPdf(file)) {
             throw new IllegalArgumentException(
                     "Only PDF files are allowed for NDA"
+            );
+        }
+      //  NDA validity date validation
+        if (validUntil == null) {
+            throw new IllegalArgumentException(
+                    "NDA valid until date is required"
+            );
+        }
+
+        if (validUntil.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException(
+                    "NDA valid until date cannot be in the past"
             );
         }
 
@@ -279,15 +296,16 @@ public class DocumentService {
 
             // IMPORTANT
             metadata.setDocumentType(DocumentType.NDA);
-
-            metadata.setDocumentType(DocumentType.NDA);
             metadata.setDocumentPath(filePath.toString());
+
+            metadata.setValidUntil(
+                    validUntil.atTime(LocalTime.MAX)
+            );
+
 
             documentMetadataRepository.save(metadata);
 
-            // Start a new six-month NDA validity period.
-            visitor.setValidity(LocalDateTime.now().plusMonths(6));
-            visitorRepository.save(visitor);
+
 
             return document;
 
@@ -300,17 +318,46 @@ public class DocumentService {
         }
     }
 
+
+
+
+
+//       public boolean isNdaRequired(Visitor visitor) {
+//
+//        LocalDateTime validity = visitor.getValidity();
+//
+//        if (validity == null) {
+//            return true;
+//        }
+//
+//        return validity.isBefore(LocalDateTime.now());
+//    }
+
     public boolean isNdaRequired(Visitor visitor) {
 
-        LocalDateTime validity = visitor.getValidity();
+        Optional<DocumentMetadata> latestNda =
+                documentMetadataRepository
+                        .findTopByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+                                visitor.getId(),
+                                DocumentType.NDA
+                        );
 
-        if (validity == null) {
+        // No NDA exists
+        if (latestNda.isEmpty()) {
             return true;
         }
 
-        return validity.isBefore(LocalDateTime.now());
-    }
+        LocalDateTime validUntil =
+                latestNda.get().getValidUntil();
 
+        // NDA has no validity date
+        if (validUntil == null) {
+            return true;
+        }
+
+        // NDA is expired
+        return validUntil.isBefore(LocalDateTime.now());
+    }
     @Transactional(readOnly = true)
     public DocumentMetadata getLatestNda(String visitorId) {
 
@@ -723,42 +770,6 @@ public class DocumentService {
     */
 
 
-    /*
-     * ============================================================
-     * OLD DOCUMENT/NDA LISTING
-     * ============================================================
-     *
-     * Currently disabled because document paths are now handled
-     * separately through vms_document_metadata.
-     */
-
-//    @Transactional(readOnly = true)
-//    public List<DocumentResponse> getAllDocuments(
-//            String visitorId
-//    ) {
-//
-//        visitorRepository.findById(visitorId)
-//                .orElseThrow(() ->
-//                        new ResourceNotFoundException(
-//                                "Visitor not found: " + visitorId
-//                        )
-//                );
-//
-//        return documentRepository
-//                .findByVisitorId(visitorId)
-//                .stream()
-//                .flatMap(document ->
-//                        documentMetadataRepository
-//                                .findByDocumentId(document.getId())
-//                                .stream()
-//                )
-//                .map(metadata -> new DocumentResponse(
-//                        metadata.getId(),
-//                        metadata.getDocumentPath(),
-//                        metadata.getCreatedAt().toString()
-//                ))
-//                .toList();
-//    }
 
 
     @Transactional(readOnly = true)
@@ -785,11 +796,16 @@ public class DocumentService {
                         metadata.getDocumentType() != DocumentType.NDA
                                 && metadata.getDocumentType() != DocumentType.VISITOR_PHOTO
                 )
-                .map(metadata -> new DocumentResponse(
-                        metadata.getId(),
-                        metadata.getDocumentPath(),
-                        metadata.getCreatedAt().toString()
-                ))
+                .map(metadata ->
+                        new DocumentResponse(
+                                metadata.getId(),
+                                metadata.getDocumentPath(),
+                                metadata.getCreatedAt() != null
+                                        ? metadata.getCreatedAt().toString()
+                                        : null,
+                                null
+                        )
+                )
                 .toList();
     }
 
@@ -840,9 +856,9 @@ public class DocumentService {
                 documentMetadataRepository
                         .findByDocumentId(document.getId());
 
-        if (!existingDocuments.isEmpty()) {
-            return existingDocuments;
-        }
+//        if (!existingDocuments.isEmpty()) {
+//            return existingDocuments;
+//        }
 
 
         final long MAX_FILE_SIZE =
@@ -995,6 +1011,9 @@ public class DocumentService {
                                 metadata.getDocumentPath(),
                                 metadata.getCreatedAt() != null
                                         ? metadata.getCreatedAt().toString()
+                                        : null,
+                                metadata.getValidUntil() != null
+                                        ? metadata.getValidUntil().toString()
                                         : null
                         )
                 )
@@ -1046,5 +1065,47 @@ public class DocumentService {
         }
         documentMetadataRepository.delete(metadata);
     }
+
+
+
+
+//    @Transactional
+//    public DocumentMetadata updateNdaValidity(
+//            String metadataId,
+//            LocalDate validUntil
+//    ) {
+//
+//        if (validUntil == null) {
+//            throw new IllegalArgumentException(
+//                    "NDA valid until date is required"
+//            );
+//        }
+//
+//        if (validUntil.isBefore(LocalDate.now())) {
+//            throw new IllegalArgumentException(
+//                    "NDA valid until date cannot be in the past"
+//            );
+//        }
+//
+//        DocumentMetadata metadata =
+//                documentMetadataRepository.findById(metadataId)
+//                        .orElseThrow(() ->
+//                                new ResourceNotFoundException(
+//                                        "Document not found: " + metadataId
+//                                )
+//                        );
+//
+//        if (metadata.getDocumentType() != DocumentType.NDA) {
+//            throw new BusinessRuleException(
+//                    "Only NDA documents can have their validity updated"
+//            );
+//        }
+//
+//        metadata.setValidUntil(
+//                validUntil.atTime(LocalTime.MAX)
+//        );
+//
+//        return documentMetadataRepository.save(metadata);
+//    }
     }
 

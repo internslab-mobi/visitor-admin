@@ -39,7 +39,7 @@ public class Vendor extends BaseEntity {
 
     @Column(name = "company_name", length = 150)
     private String companyName;
-
-    @Column(name = "validity")
-    private java.time.LocalDateTime validity;
+//
+//    @Column(name = "validity")
+//    private java.time.LocalDateTime validity;
 }
