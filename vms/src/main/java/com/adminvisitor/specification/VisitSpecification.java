@@ -3,6 +3,7 @@ package com.adminvisitor.specification;
 import com.adminvisitor.entity.Visit;
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.enums.VisitView;
+import com.adminvisitor.enums.VisitorType;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
@@ -219,4 +220,118 @@ public final class VisitSpecification {
                         end
                 );
     }
+
+    public static Specification<Visit> hasSearch(String search) {
+
+        if (search == null || search.isBlank()) {
+            return null;
+        }
+
+        return (root, query, criteriaBuilder) -> {
+
+            Join<Object, Object> visitor =
+                    root.join("visitor", JoinType.INNER);
+
+            Join<Object, Object> host =
+                    root.join("host", JoinType.INNER);
+
+            String searchValue =
+                    "%" + search.trim().toLowerCase() + "%";
+
+            return criteriaBuilder.or(
+
+                    // Visit reference
+                    criteriaBuilder.like(
+                            criteriaBuilder.lower(
+                                    root.get("visitReference")
+                            ),
+                            searchValue
+                    ),
+
+                    // Visitor ID
+                    criteriaBuilder.like(
+                            criteriaBuilder.lower(
+                                    visitor.get("id")
+                            ),
+                            searchValue
+                    ),
+
+                    // Visitor first name
+                    criteriaBuilder.like(
+                            criteriaBuilder.lower(
+                                    visitor.get("firstName")
+                            ),
+                            searchValue
+                    ),
+
+                    // Visitor last name
+                    criteriaBuilder.like(
+                            criteriaBuilder.lower(
+                                    visitor.get("lastName")
+                            ),
+                            searchValue
+                    ),
+
+                    // Visitor email
+                    criteriaBuilder.like(
+                            criteriaBuilder.lower(
+                                    visitor.get("email")
+                            ),
+                            searchValue
+                    ),
+
+                    // Visitor mobile
+                    criteriaBuilder.like(
+                            visitor.get("mobileNumber"),
+                            searchValue
+                    ),
+
+                    // Host first name
+                    criteriaBuilder.like(
+                            criteriaBuilder.lower(
+                                    host.get("firstName")
+                            ),
+                            searchValue
+                    ),
+
+                    // Host last name
+                    criteriaBuilder.like(
+                            criteriaBuilder.lower(
+                                    host.get("lastName")
+                            ),
+                            searchValue
+                    )
+            );
+        };
+    }
+
+    public static Specification<Visit> hasVisitorType(VisitorType visitorType) {
+        if (visitorType == null) {
+            return null;
+        }
+
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(
+                        root.get("visitorType"),
+                        visitorType
+                );
+    }
+
+    public static Specification<Visit> hasHostId(String hostId) {
+        if (hostId == null || hostId.isBlank()) {
+            return null;
+        }
+
+        return (root, query, criteriaBuilder) -> {
+            Join<Object, Object> host =
+                    root.join("host", JoinType.INNER);
+
+            return criteriaBuilder.equal(
+                    host.get("id"),
+                    hostId.trim()
+            );
+        };
+    }
+
+
 }

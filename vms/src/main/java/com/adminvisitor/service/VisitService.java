@@ -19,12 +19,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -587,6 +592,127 @@ public class VisitService {
         return responses;
     }
 
+    // ============================================================
+// VISITOR LOG
+// ============================================================
+
+    @Transactional(readOnly = true)
+    public Page<VisitorLogResponse> getVisitorLog(
+            String search,
+            LocalDate fromDate,
+            LocalDate toDate,
+            VisitStatus status,
+            VisitorType visitorType,
+            String hostId,
+            int page,
+            int size,
+            String sortDirection
+    ) {
+
+        Specification<Visit> specification =
+                (root, query, criteriaBuilder) ->
+                        criteriaBuilder.conjunction();
+
+        // General search
+        Specification<Visit> searchSpecification =
+                VisitSpecification.hasSearch(search);
+
+        if (searchSpecification != null) {
+            specification = specification.and(searchSpecification);
+        }
+
+        // Date range
+        Specification<Visit> fromDateSpecification =
+                VisitSpecification.hasFromDate(fromDate);
+
+        if (fromDateSpecification != null) {
+            specification = specification.and(fromDateSpecification);
+        }
+
+        Specification<Visit> toDateSpecification =
+                VisitSpecification.hasToDate(toDate);
+
+        if (toDateSpecification != null) {
+            specification = specification.and(toDateSpecification);
+        }
+
+        // Status
+        Specification<Visit> statusSpecification =
+                VisitSpecification.hasStatus(status);
+
+        if (statusSpecification != null) {
+            specification = specification.and(statusSpecification);
+        }
+
+        // Visitor type
+        Specification<Visit> visitorTypeSpecification =
+                VisitSpecification.hasVisitorType(visitorType);
+
+        if (visitorTypeSpecification != null) {
+            specification = specification.and(visitorTypeSpecification);
+        }
+
+        // Host
+        Specification<Visit> hostSpecification =
+                VisitSpecification.hasHostId(hostId);
+
+        if (hostSpecification != null) {
+            specification = specification.and(hostSpecification);
+        }
+
+        Sort.Direction direction =
+                "ASC".equalsIgnoreCase(sortDirection)
+                        ? Sort.Direction.ASC
+                        : Sort.Direction.DESC;
+
+        Pageable pageable =
+                PageRequest.of(
+                        page,
+                        size,
+                        Sort.by(direction, "expectedArrivalAt")
+                );
+
+        Page<Visit> visits =
+                visitRepository.findAll(
+                        specification,
+                        pageable
+                );
+
+        return visits.map(this::toVisitorLogResponse);
+    }
+
+    private VisitorLogResponse toVisitorLogResponse(Visit visit) {
+
+        Visitor visitor = visit.getVisitor();
+
+        Employee host = visit.getHost();
+
+        String visitorName =
+                visitor.getFirstName()
+                        + " "
+                        + visitor.getLastName();
+
+        String hostName =
+                host.getFirstName()
+                        + " "
+                        + host.getLastName();
+
+        return new VisitorLogResponse(
+                visit.getId(),
+                visit.getVisitReference(),
+                visitor.getId(),
+                visitorName,
+                visit.getVisitorType(),
+                visitor.getCompanyName(),
+                hostName,
+                visit.getExpectedArrivalAt().toLocalDate(),
+                visit.getExpectedArrivalAt(),
+                visit.getExpectedDepartureAt(),
+                visit.getCheckedInAt(),
+                visit.getCheckedOutAt(),
+                visit.getStatus()
+        );
+    }
 
     private VisitDashboardResponse toDashboardResponse(Visit visit) {
 
@@ -659,6 +785,15 @@ public class VisitService {
 
         DocumentMetadata validNda = documentService.getValidNda(visitor);
 
+        Long totalDurationSeconds = null;
+
+        if (visit.getCheckedInAt() != null && visit.getCheckedOutAt() != null) {
+            totalDurationSeconds = Duration.between(
+                    visit.getCheckedInAt(),
+                    visit.getCheckedOutAt()
+            ).getSeconds();
+        }
+
         return new VisitDetailResponse(
 
                 // Visit information
@@ -698,6 +833,8 @@ public class VisitService {
                 // Actual visit times
                 visit.getCheckedInAt(),
                 visit.getCheckedOutAt(),
+
+                totalDurationSeconds,
 
                 // Remarks
                 visit.getRemarks(),
