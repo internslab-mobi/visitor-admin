@@ -37,7 +37,7 @@ public class VisitService {
     private final IdGeneratorService idGeneratorService;
     private final EmployeeRepository employeeRepository;
     private final VisitBadgeService visitBadgeService;
-    private final QrCodeService qrCodeService;
+    private final QrTokenService qrTokenService;
     private final VendorRepository vendorRepository;
     private final ProofValidationService proofValidationService;
     private final BlacklistService blacklistService;
@@ -45,12 +45,7 @@ public class VisitService {
     private final DocumentService documentService;
 
 
-    // ============================================================
-    // VISIT REGISTRATION
-    // ============================================================
-
-
-    @Transactional
+      @Transactional
     public RegistrationResponse register(RegistrationRequest request) {
 
         log.debug(
@@ -78,13 +73,7 @@ public class VisitService {
 
         Visitor visitor = findOrCreateVisitor(request);
 
-        /*
-         * FIX:
-         * Check whether this visitor already has identity proof records.
-         *
-         * A Document with a non-null nationality is treated as an
-         * identity proof record. Uploaded document metadata is separate.
-         */
+
         boolean existingVisitor =
                 documentRepository.findByVisitorId(visitor.getId())
                         .stream()
@@ -322,10 +311,6 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // FIND OR CREATE VISITOR
-    // ============================================================
-
     private Visitor findOrCreateVisitor(RegistrationRequest request) {
 
 
@@ -428,9 +413,6 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // VISITOR VALIDITY
-    // ============================================================
 //
 //    private void validateVisitorValidity(RegistrationRequest request) {
 //
@@ -452,9 +434,6 @@ public class VisitService {
 //    }
 
 
-    // ============================================================
-    // VISIT TIMING
-    // ============================================================
 
     private void validateVisitTiming(RegistrationRequest request) {
 
@@ -475,10 +454,6 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // SUCCESS MESSAGE
-    // ============================================================
-
     private String getSuccessMessage(RegistrationType registrationType) {
 
         return switch (registrationType) {
@@ -491,10 +466,6 @@ public class VisitService {
         };
     }
 
-
-    // ============================================================
-    // VISIT REFERENCE
-    // ============================================================
 
     private String generateVisitReference() {
 
@@ -509,10 +480,6 @@ public class VisitService {
         return "VIS-" + timestamp + "-" + randomPart;
     }
 
-
-    // ============================================================
-    // DASHBOARD
-    // ============================================================
 
     public List<VisitDashboardResponse> getDashboardVisits(
             VisitView view,
@@ -652,10 +619,6 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // VISIT DETAILS
-    // ============================================================
-
     public VisitDetailResponse getVisitDetails(String visitId) {
 
         Visit visit =
@@ -670,105 +633,6 @@ public class VisitService {
     }
 
 
-    /*
-     * ============================================================
-     * NDA IMPLEMENTATION TEMPORARILY DISABLED
-     * ============================================================
-     *
-     * This method is kept for future NDA implementation.
-     *
-     * Reason:
-     * DocumentService.getValidNda() is currently disabled because
-     * NDA/document metadata handling is being implemented separately.
-     *
-     * When the NDA implementation is ready, uncomment this method
-     * and restore the NDA fields in VisitDetailResponse.
-     */
-
-//    private VisitDetailResponse toVisitDetailResponse(Visit visit) {
-//
-//        Visitor visitor = visit.getVisitor();
-//
-//        Document validNda = documentService.getValidNda(visitor);
-//
-//        Employee employee = visit.getHost();
-//
-//        String hostName =
-//                employee.getFirstName()
-//                        + " "
-//                        + employee.getLastName();
-//
-//        String departmentName =
-//                employee.getDepartment().getDepartmentName();
-//
-//        return new VisitDetailResponse(
-//
-//                // Visit information
-//                visit.getId(),
-//                visit.getVisitReference(),
-//
-//                // Visitor information
-//                new VisitDetailResponse.VisitorDetails(
-//                        visitor.getId(),
-//                        visitor.getFirstName(),
-//                        visitor.getLastName(),
-//                        visitor.getEmail(),
-//                        visitor.getMobileNumber(),
-//                        visitor.getCompanyName(),
-//                        validNda != null,
-//                        validNda != null ? validNda.getId() : null,
-//                        validNda != null ? visitor.getValidity() : null
-//                ),
-//
-//                visit.getVisitorType(),
-//                visit.getRegistrationType(),
-//                visit.getPurpose(),
-//
-//                // Host information
-//                new VisitDetailResponse.HostDetails(
-//                        employee.getId(),
-//                        hostName,
-//                        employee.getDepartment().getId(),
-//                        departmentName
-//                ),
-//
-//                // Schedule
-//                visit.getExpectedArrivalAt(),
-//                visit.getExpectedDepartureAt(),
-//
-//                // Actual visit times
-//                visit.getCheckedInAt(),
-//                visit.getCheckedOutAt(),
-//
-//                // Remarks
-//                visit.getRemarks(),
-//
-//                // Status
-//                visit.getStatus(),
-//
-//                // Audit information
-//                new VisitDetailResponse.AuditDetails(
-//                        visit.getCreatedAt(),
-//                        visit.getUpdatedAt(),
-//                        visit.getCreatedBy(),
-//                        visit.getUpdatedBy()
-//                )
-//        );
-//    }
-
-
-    /*
-     * Temporary VisitDetailResponse implementation.
-     *
-     * NDA fields are currently returned as:
-     *
-     *     false
-     *     null
-     *     null
-     *
-     * Once the coworker's NDA implementation is ready,
-     * replace this method with the commented NDA implementation above.
-     */
     private VisitDetailResponse toVisitDetailResponse(Visit visit) {
 
         Visitor visitor = visit.getVisitor();
@@ -852,10 +716,6 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // CANCEL VISIT
-    // ============================================================
-
     @Transactional
     public VisitDetailResponse cancelVisit(String visitId) {
 
@@ -931,9 +791,6 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // CHECK-IN
-    // ============================================================
 
     @Transactional
     public VisitDetailResponse checkIn(
@@ -1017,31 +874,6 @@ public class VisitService {
 
 
 
-        /*
-         * ========================================================
-         * NDA SAFETY CHECK TEMPORARILY DISABLED
-         * ========================================================
-         *
-         * This code is preserved for the coworker's future NDA
-         * implementation.
-         *
-         * It must NOT be deleted.
-         */
-
-//        // NDA safety check
-//        if (visit.getVisitorType() == VisitorType.VENDOR) {
-//
-//            Document validNda =
-//                    documentService.getValidNda(
-//                            visit.getVisitor()
-//                    );
-//
-//            if (validNda == null) {
-//                throw new BusinessRuleException(
-//                        "A valid NDA is required for this vendor before check-in"
-//                );
-//            }
-//        }
 
 // NDA validation during vendor check-in
         if (visit.getVisitorType() == VisitorType.VENDOR) {
@@ -1074,7 +906,7 @@ public class VisitService {
         VisitBadge badge =
                 visitBadgeService.createBadge(checkedInVisit);
 
-        String qrCode = qrCodeService.generateQrCode(
+        String qrCode = qrTokenService.generateQrCode(
                 badge.getQrContainingToken()
         );
 
@@ -1150,10 +982,6 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // CHECK-OUT
-    // ============================================================
-
     @Transactional
     public VisitDetailResponse checkOut(String visitId) {
 
@@ -1203,47 +1031,6 @@ public class VisitService {
     }
 
 
-    /*
-     * ============================================================
-     * NDA STATUS TEMPORARILY DISABLED
-     * ============================================================
-     *
-     * This entire method is preserved for the coworker's NDA
-     * implementation.
-     *
-     * It currently cannot compile because DocumentService no longer
-     * exposes getValidNda().
-     *
-     * Do not delete it.
-     */
-
-//    @Transactional(readOnly = true)
-//    public NdaStatusResponse getNdaStatus(String visitId) {
-//
-//        Visit visit = visitRepository.findById(visitId)
-//                .orElseThrow(() -> new ResourceNotFoundException(
-//                        "Visit not found with id: " + visitId));
-//
-//        Visitor visitor = visit.getVisitor();
-//
-//        Document validNda = documentService.getValidNda(visitor);
-//
-//        boolean ndaAvailable = validNda != null;
-//
-//        boolean ndaRequired =
-//                visit.getVisitorType() == VisitorType.VENDOR
-//                        && !ndaAvailable;
-//
-//        return new NdaStatusResponse(
-//                visitor.getId(),
-//                visit.getVisitorType().name(),
-//                ndaRequired,
-//                ndaAvailable,
-//                ndaAvailable ? visitor.getValidity() : null,
-//                ndaAvailable ? validNda.getId() : null
-//        );
-//    }
-
 
     @Transactional(readOnly = true)
     public NdaStatusResponse getNdaStatus(String visitId) {
@@ -1288,9 +1075,6 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // VENDOR CREATION
-    // ============================================================
 
     private void createVendorIfRequired(
             Visitor visitor,
@@ -1344,9 +1128,6 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // ID PROOF VALIDATION + BLACKLIST CHECK
-    // ============================================================
 
     private void validateProofAndBlacklist(
             RegistrationRequest request) {

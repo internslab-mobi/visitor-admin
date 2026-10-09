@@ -61,8 +61,7 @@ public class VisitBadgeService {
             LocalDateTime checkoutTime
     ) {
 
-        VisitBadge badge =
-                visitBadgeRepository.findByVisit_Id(visitId)
+        VisitBadge badge = visitBadgeRepository.findByVisit_Id(visitId)
                         .orElse(null);
 
         if (badge == null) {

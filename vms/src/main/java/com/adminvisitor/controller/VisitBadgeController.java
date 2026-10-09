@@ -7,6 +7,7 @@ import com.adminvisitor.enums.BadgeStatus;
 import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.service.QrCodeService;
+import com.adminvisitor.service.QrTokenService;
 import com.adminvisitor.service.VisitBadgeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ public class VisitBadgeController {
     private final VisitRepository visitRepository;
     private final VisitBadgeService visitBadgeService;
     private final QrCodeService qrCodeService;
+    private final QrTokenService qrTokenService;
 
     @PostMapping("/{visitId}")
     public ResponseEntity<Map<String, Object>> createTestBadge(
@@ -40,7 +42,7 @@ public class VisitBadgeController {
                 visitBadgeService.createBadge(visit);
 
         String qrCode =
-                qrCodeService.generateQrCode(
+                qrTokenService.generateQrCode(
                         badge.getQrContainingToken()
                 );
 

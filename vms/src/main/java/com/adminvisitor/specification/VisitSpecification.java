@@ -25,11 +25,9 @@ public final class VisitSpecification {
 
             LocalDate today = LocalDate.now();
 
-            LocalDateTime startOfToday =
-                    today.atStartOfDay();
+            LocalDateTime startOfToday = today.atStartOfDay();
 
-            LocalDateTime startOfTomorrow =
-                    today.plusDays(1).atStartOfDay();
+            LocalDateTime startOfTomorrow = today.plusDays(1).atStartOfDay();
 
             switch (view) {
 
@@ -93,11 +91,9 @@ public final class VisitSpecification {
 
         return (root, query, criteriaBuilder) -> {
 
-            Join<Object, Object> visitor =
-                    root.join("visitor", JoinType.INNER);
+            Join<Object, Object> visitor = root.join("visitor", JoinType.INNER);
 
-            String searchValue =
-                    "%" + visitorName.trim().toLowerCase() + "%";
+            String searchValue = "%" + visitorName.trim().toLowerCase() + "%";
 
             return criteriaBuilder.or(
 

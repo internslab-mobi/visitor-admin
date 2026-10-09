@@ -22,15 +22,8 @@ import java.util.List;
 public class VendorService {
 
     private final VendorRepository vendorRepository;
-
     private final VisitorService visitorService;
-
     private final DocumentMetadataRepository documentMetadataRepository;
-
-
-    // ============================================================
-    // GET ALL VENDORS
-    // ============================================================
 
     public List<VendorResponse> getAllVendors() {
 
@@ -39,11 +32,6 @@ public class VendorService {
                 .map(this::mapToResponse)
                 .toList();
     }
-
-
-    // ============================================================
-    // GET VENDOR BY ID
-    // ============================================================
 
     public VendorResponse getVendorById(String id) {
 
@@ -56,11 +44,6 @@ public class VendorService {
 
         return mapToResponse(vendor);
     }
-
-
-    // ============================================================
-    // MAP VENDOR TO RESPONSE
-    // ============================================================
 
     private VendorResponse mapToResponse(Vendor vendor) {
 
@@ -75,17 +58,8 @@ public class VendorService {
         );
     }
 
-
-    // ============================================================
-    // GET VENDOR EDIT DETAILS
-    // ============================================================
-
     @Transactional(readOnly = true)
     public VendorEditResponse getVendorEditDetails(String vendorId) {
-
-        // --------------------------------------------------------
-        // 1. Find vendor
-        // --------------------------------------------------------
 
         Vendor vendor = vendorRepository.findById(vendorId)
                 .orElseThrow(() ->
@@ -95,17 +69,7 @@ public class VendorService {
                 );
 
 
-        // --------------------------------------------------------
-        // 2. Get associated visitor
-        // --------------------------------------------------------
-
         Visitor visitor = vendor.getVisitor();
-
-
-        // --------------------------------------------------------
-        // 3. Reuse visitor edit details
-        // --------------------------------------------------------
-
         VisitorEditResponse visitorEdit =
                 visitorService.getVisitorEditDetails(
                         visitor.getId()
@@ -114,21 +78,11 @@ public class VendorService {
         VisitorEditResponse.VisitorInfo visitorInfo =
                 visitorEdit.visitor();
 
-
-        // --------------------------------------------------------
-        // 4. Vendor information
-        // --------------------------------------------------------
-
         VendorEditResponse.VendorInfo vendorInfo =
                 new VendorEditResponse.VendorInfo(
                         vendor.getId(),
                         visitor.getId()
                 );
-
-
-        // --------------------------------------------------------
-        // 5. Identity documents
-        // --------------------------------------------------------
 
         List<VendorEditResponse.DocumentInfo> documents =
                 visitorEdit.documents()
@@ -143,18 +97,8 @@ public class VendorService {
                         )
                         .toList();
 
-
-        // --------------------------------------------------------
-        // 6. NDA history
-        // --------------------------------------------------------
-
         List<VendorEditResponse.NdaInfo> ndas =
                 getVendorNdas(visitor.getId());
-
-
-        // --------------------------------------------------------
-        // 7. Visit history
-        // --------------------------------------------------------
 
         List<VendorEditResponse.VisitInfo> visits =
                 visitorEdit.visits()
@@ -181,10 +125,6 @@ public class VendorService {
                         .toList();
 
 
-        // --------------------------------------------------------
-        // 8. Blacklist information
-        // --------------------------------------------------------
-
         VendorEditResponse.BlacklistInfo blacklist = null;
 
         if (visitorEdit.blacklist() != null) {
@@ -197,12 +137,6 @@ public class VendorService {
                             visitorEdit.blacklist().createdAt()
                     );
         }
-
-
-        // --------------------------------------------------------
-        // 9. Final response
-        // --------------------------------------------------------
-
         return new VendorEditResponse(
 
                 vendorInfo,
@@ -219,28 +153,18 @@ public class VendorService {
                 ),
 
                 documents,
-
                 ndas,
-
                 visits,
-
                 blacklist,
-
                 visitorEdit.blacklisted()
         );
     }
-
-
-    // ============================================================
-    // GET ALL NDA HISTORY FOR VENDOR
-    // ============================================================
 
     private List<VendorEditResponse.NdaInfo> getVendorNdas(
             String visitorId
     ) {
 
-        List<DocumentMetadata> ndaMetadata =
-                documentMetadataRepository
+        List<DocumentMetadata> ndaMetadata = documentMetadataRepository
                         .findByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
                                 visitorId,
                                 DocumentType.NDA

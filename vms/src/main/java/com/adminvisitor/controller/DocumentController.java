@@ -63,7 +63,10 @@ public class DocumentController {
 //    }
 
 
-
+    @PostMapping(
+            value = "/api/proof-documents/upload/{visitorId}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
 
     public ResponseEntity<List<DocumentResponse>> uploadProofDocuments(
             @PathVariable String visitorId,

@@ -44,9 +44,6 @@ public class NdaService {
     @Value("${vms.document.nda-upload-dir}")
     private String ndaUploadDir;
 
-    @Value("${vms.document.upload-dir}")
-    private String documentUploadDir;
-
 
     @Transactional
     public DocumentMetadata uploadNewNda(
@@ -83,7 +80,7 @@ public class NdaService {
                         )
                 );
 
-        // 4. Verify that the visitor is a vendor
+
         Visit visit = visitRepository
                 .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
                 .orElseThrow(() ->
@@ -131,11 +128,7 @@ public class NdaService {
                 );
 
         // 7. Generate unique metadata ID
-        String metadataId =
-                idGeneratorService.generateId(
-                        "DOCUMENT_METADATA",
-                        "DMD"
-                );
+        String metadataId = idGeneratorService.generateId("DOCUMENT_METADATA","DMD");
 
         try {
 
@@ -310,12 +303,10 @@ public class NdaService {
             );
 
             documentMetadataRepository.save(existingNda);
-            DocumentMetadata savedNda =
-                    documentMetadataRepository.save(newNdaMetadata);
+            DocumentMetadata savedNda = documentMetadataRepository.save(newNdaMetadata);
 
             return new NdaExtensionResult(
-                    savedNda,
-                    existingNda.getCreatedAt()
+                    savedNda,existingNda.getCreatedAt()
             );
 
         } catch (IOException exception) {
@@ -337,8 +328,7 @@ public class NdaService {
                         new ResourceNotFoundException(
                                 "Visitor not found: " + visitorId));
 
-        List<DocumentMetadata> ndaHistory =
-                documentMetadataRepository
+        List<DocumentMetadata> ndaHistory =documentMetadataRepository
                         .findByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
                                 visitorId,
                                 DocumentType.NDA);
@@ -350,13 +340,9 @@ public class NdaService {
                         new ResourceNotFoundException(
                                 "No active NDA found for visitor: " + visitorId));
 
-        LocalDateTime validFrom =
-                ndaHistory.get(ndaHistory.size() - 1).getCreatedAt();
+        LocalDateTime validFrom =ndaHistory.get(ndaHistory.size() - 1).getCreatedAt();
 
-        return new NdaLatestResult(
-                latestNda,
-                validFrom
-        );
+        return new NdaLatestResult(latestNda,validFrom);
     }
 
 
@@ -371,8 +357,7 @@ public class NdaService {
                         )
                 );
 
-        List<DocumentMetadata> ndaHistory =
-                documentMetadataRepository
+        List<DocumentMetadata> ndaHistory = documentMetadataRepository
                         .findByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
                                 visitorId,
                                 DocumentType.NDA
@@ -389,14 +374,13 @@ public class NdaService {
         return ndaHistory.stream()
                 .map(metadata -> {
 
-                    LocalDateTime validUntil =
-                            metadata.getValidUntil();
+                    LocalDateTime validUntil = metadata.getValidUntil();
 
                     return new DocumentResponse(
                             metadata.getId(),
                             metadata.getDocumentPath(),
 
-                            // Actual creation/upload time of THIS document
+                            // Actual upload time of this document
                             metadata.getCreatedAt() != null
                                     ? metadata.getCreatedAt().toString()
                                     : null,

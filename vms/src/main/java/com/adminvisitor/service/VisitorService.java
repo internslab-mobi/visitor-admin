@@ -173,10 +173,6 @@ public class VisitorService {
                         );
 
 
-        // ==========================================
-        // VISITOR TYPE + NATIONALITY
-        // ==========================================
-
         Visit latestVisit =
                 visitRepository
                         .findTopByVisitorIdOrderByCreatedAtDesc(
@@ -203,26 +199,16 @@ public class VisitorService {
                 new VisitorEditResponse.VisitorInfo(
 
                         visitor.getId(),
-
                         visitor.getFirstName(),
-
                         visitor.getLastName(),
-
                         visitor.getEmail(),
-
                         visitor.getMobileNumber(),
-
                         visitor.getCompanyName(),
-
                         visitorType,
-
                         nationality
                 );
 
 
-        // ==========================================
-        // VENDOR
-        // ==========================================
 
         VisitorEditResponse.VendorInfo vendorInfo = null;
 
@@ -236,11 +222,6 @@ public class VisitorService {
                             vendor.get().getId()
                     );
         }
-
-
-        // ==========================================
-        // DOCUMENTS
-        // ==========================================
 
         List<VisitorEditResponse.DocumentInfo> documents =
 
@@ -257,16 +238,6 @@ public class VisitorService {
                                         .stream()
                         )
 
-//                        .filter(metadata ->
-//                                metadata.getDocumentType() != null
-//                                        &&
-//                                        metadata.getDocumentType()
-//                                                != DocumentType.NDA
-//                                        &&
-//                                        metadata.getDocumentType()
-//                                                != DocumentType.VISITOR_PHOTO
-//                        )
-
                         .filter(metadata ->
                                 metadata.getDocumentType() == null
                                         ||
@@ -280,7 +251,6 @@ public class VisitorService {
                         .map(metadata ->
                                 new VisitorEditResponse.DocumentInfo(
 
-//                                        metadata.getDocument().getId(),
                                         metadata.getId(),
 
                                         metadata.getDocumentType(),
@@ -293,12 +263,7 @@ public class VisitorService {
 
                         .toList();
 
-
-        // ==========================================
-        // VISIT HISTORY
-        // ==========================================
-
-        List<VisitorEditResponse.VisitInfo> visits =
+                List<VisitorEditResponse.VisitInfo> visits =
 
                 visitRepository
                         .findByVisitorIdOrderByExpectedArrivalAtDesc(
@@ -322,35 +287,20 @@ public class VisitorService {
                                             .getDepartmentName();
 
                             return new VisitorEditResponse.VisitInfo(
-
                                     visit.getId(),
-
                                     visit.getVisitReference(),
-
                                     visit.getVisitorType(),
-
                                     visit.getRegistrationType(),
-
                                     visit.getPurpose(),
-
                                     host.getId(),
-
                                     hostName,
-
                                     host.getDepartment().getId(),
-
                                     departmentName,
-
                                     visit.getExpectedArrivalAt(),
-
                                     visit.getExpectedDepartureAt(),
-
                                     visit.getCheckedInAt(),
-
                                     visit.getCheckedOutAt(),
-
                                     visit.getRemarks(),
-
                                     visit.getStatus()
                             );
 
@@ -358,10 +308,6 @@ public class VisitorService {
 
                         .toList();
 
-
-        // ==========================================
-        // CURRENT BLACKLIST
-        // ==========================================
 
         VisitorEditResponse.BlacklistInfo blacklistInfo = null;
 
@@ -378,30 +324,20 @@ public class VisitorService {
 
             blacklistInfo =
                     new VisitorEditResponse.BlacklistInfo(
-
                             blacklist.getId(),
-
                             blacklist.getReason(),
-
                             blacklist.getStatus(),
-
                             blacklist.getCreatedAt()
                     );
         }
 
 
         return new VisitorEditResponse(
-
                 visitorInfo,
-
                 vendorInfo,
-
                 documents,
-
                 visits,
-
                 blacklistInfo,
-
                 activeBlacklist.isPresent()
         );
     }

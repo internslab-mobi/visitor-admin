@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NdaController {
 
-    private final NdaService ndaLifecycleService;
+    private final NdaService ndaService;
 
 
     @PostMapping(
@@ -33,7 +33,7 @@ public class NdaController {
             @RequestParam("validUntil") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate validUntil
     ) {
-        DocumentMetadata metadata = ndaLifecycleService.uploadNewNda(
+        DocumentMetadata metadata = ndaService.uploadNewNda(
                 visitorId,
                 ndaFile,
 
@@ -81,7 +81,7 @@ public class NdaController {
     ) {
 
         NdaExtensionResult result =
-                ndaLifecycleService.extendNdaValidity(
+                ndaService.extendNdaValidity(
                         visitorId,
                         supportingDocument,
                         newValidUntil
@@ -121,7 +121,7 @@ public class NdaController {
     ) {
 
         NdaLatestResult result =
-                ndaLifecycleService.getLatestNda(visitorId);
+                ndaService.getLatestNda(visitorId);
 
         DocumentMetadata metadata = result.metadata();
 
@@ -157,7 +157,7 @@ public class NdaController {
             @PathVariable String visitorId
     ) {
         return ResponseEntity.ok(
-                ndaLifecycleService.getNdaHistory(visitorId)
+                ndaService.getNdaHistory(visitorId)
         );
     }
 }
