@@ -1,13 +1,13 @@
-package com.adminvisitor.service;
+package com.adminvisitor.service.impl;
 
 import com.adminvisitor.dto.requestdto.CheckInRequest;
 import com.adminvisitor.dto.responsedto.*;
 import com.adminvisitor.entity.*;
 import com.adminvisitor.enums.*;
 import com.adminvisitor.exception.BusinessRuleException;
-import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.mapper.VisitMapper;
 import com.adminvisitor.repository.VisitRepository;
+import com.adminvisitor.service.*;
 import com.adminvisitor.specification.VisitSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

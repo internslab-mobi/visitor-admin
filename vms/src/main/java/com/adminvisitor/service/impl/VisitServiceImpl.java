@@ -1,4 +1,4 @@
-package com.adminvisitor.service;
+package com.adminvisitor.service.impl;
 
 import com.adminvisitor.dto.requestdto.CheckInRequest;
 import com.adminvisitor.dto.requestdto.RegistrationRequest;
@@ -9,6 +9,7 @@ import com.adminvisitor.exception.BusinessRuleException;
 import com.adminvisitor.exception.EmailAlreadyExistsException;
 import com.adminvisitor.exception.MobileNumberAlreadyExistsException;
 import com.adminvisitor.repository.*;
+import com.adminvisitor.service.*;
 import com.adminvisitor.util.VisitReferenceUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

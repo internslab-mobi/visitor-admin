@@ -1,7 +1,6 @@
-package com.adminvisitor.service;
+package com.adminvisitor.service.impl;
 
 import com.adminvisitor.dto.requestdto.AddVisitorToBlacklistRequest;
-import com.adminvisitor.dto.requestdto.BlacklistRequest;
 import com.adminvisitor.dto.responsedto.BlacklistResponse;
 import com.adminvisitor.entity.*;
 import com.adminvisitor.enums.BlacklistStatus;
@@ -13,6 +12,9 @@ import com.adminvisitor.exception.BlacklistNotFoundException;
 import com.adminvisitor.exception.VisitorNotFoundException;
 import com.adminvisitor.mapper.BlacklistMapper;
 import com.adminvisitor.repository.*;
+import com.adminvisitor.service.BlacklistService;
+import com.adminvisitor.service.IdGeneratorService;
+import com.adminvisitor.service.ProofSecurityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
