@@ -28,6 +28,13 @@ public record AuthResponse(
         );
     }
 
+    public static AuthResponse firstLoginRequired(
+            String userId,
+            UserRole role
+    ) {
+        return firstLoginRequired(null, userId, role);
+    }
+
     public static AuthResponse authenticated(
             String accessToken,
             String refreshToken,
@@ -42,5 +49,12 @@ public record AuthResponse(
                 userId,
                 "Authentication successful."
         );
+    }
+
+    public static AuthResponse authenticated(
+            String userId,
+            UserRole role
+    ) {
+        return authenticated(null, null, userId, role);
     }
 }

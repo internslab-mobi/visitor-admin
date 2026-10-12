@@ -1,18 +1,19 @@
 package com.adminvisitor.auth.config;
 
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.concurrent.TimeUnit;
 
 @Aspect
 @Component
-@Slf4j
 public class ApiLoggingAspect {
+
+    private static final Logger log = LoggerFactory.getLogger(ApiLoggingAspect.class);
 
     @Around("@within(org.springframework.web.bind.annotation.RestController)")
     public Object logApiExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {

@@ -22,6 +22,13 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             AuthenticationException authException
     ) throws IOException, ServletException {
 
+        System.out.println(
+                "AUTHENTICATION ENTRY POINT CALLED: "
+                        + request.getMethod() + " "
+                        + request.getRequestURI()
+                        + " | Reason: " + authException.getMessage()
+        );
+
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
@@ -32,4 +39,5 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
         response.getWriter().write(jsonResponse);
     }
+
 }
