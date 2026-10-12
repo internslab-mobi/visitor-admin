@@ -20,6 +20,16 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
+import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
+
+import java.util.function.Supplier;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
@@ -64,9 +74,57 @@ public class SecurityConfig {
         return registration;
     }
 
+
+    @Bean
+    public CsrfTokenRepository csrfTokenRepository() {
+        CookieCsrfTokenRepository repository =
+                CookieCsrfTokenRepository.withHttpOnlyFalse();
+
+        repository.setCookieName("VMS-XSRF-TOKEN");
+        repository.setHeaderName("X-VMS-XSRF-TOKEN");
+        repository.setCookiePath("/");
+
+        return repository;
+    }
+
+    private static final class SpaCsrfTokenRequestHandler
+            implements CsrfTokenRequestHandler {
+
+        private final CsrfTokenRequestHandler plain =
+                new CsrfTokenRequestAttributeHandler();
+
+        private final CsrfTokenRequestHandler xor =
+                new XorCsrfTokenRequestAttributeHandler();
+
+        @Override
+        public void handle(
+                HttpServletRequest request,
+                HttpServletResponse response,
+                Supplier<CsrfToken> csrfToken
+        ) {
+            this.xor.handle(request, response, csrfToken);
+
+            csrfToken.get();
+        }
+
+        @Override
+        public String resolveCsrfTokenValue(
+                HttpServletRequest request,
+                CsrfToken csrfToken
+        ) {
+            String headerValue =
+                    request.getHeader(csrfToken.getHeaderName());
+
+            return (headerValue != null)
+                    ? this.plain.resolveCsrfTokenValue(request, csrfToken)
+                    : this.xor.resolveCsrfTokenValue(request, csrfToken);
+        }
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
+            CsrfTokenRepository csrfTokenRepository,
             CookieAccessTokenFilter cookieAccessTokenFilter,
             CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
             CustomAccessDeniedHandler customAccessDeniedHandler
@@ -75,8 +133,10 @@ public class SecurityConfig {
         http
                 .cors(Customizer.withDefaults())
 
-                // CSRF disabled for this local learning configuration.
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(csrfTokenRepository)
+                        .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
+                )
 
                 .addFilterBefore(
                         cookieAccessTokenFilter,
@@ -110,7 +170,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/visitors"
-                        ).permitAll()
+                        ).hasAnyRole("ADMIN","FRONT_DESK")
 
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -130,7 +190,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/visits"
-                        ).permitAll()
+                        ).hasRole("FRONT_DESK")
 
                         .requestMatchers(
                                 HttpMethod.PATCH,
@@ -180,7 +240,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/vendors"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN")
 
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -226,6 +286,7 @@ public class SecurityConfig {
                         .bearerTokenResolver(
                                 new DefaultBearerTokenResolver()
                         )
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(
                                 jwtAuthenticationConverter()
                         ))
