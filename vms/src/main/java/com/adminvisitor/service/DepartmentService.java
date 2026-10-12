@@ -18,13 +18,9 @@ public class DepartmentService {
     private final IdGeneratorService idGeneratorService;
 
     @Transactional
-    public DepartmentResponse createDepartment(
-            DepartmentCreateRequest request
-    ) {
-
+    public DepartmentResponse createDepartment(DepartmentCreateRequest request) {
         if (departmentRepository.existsByDepartmentCode(
-                request.getDepartmentCode().trim()
-        )) {
+                request.getDepartmentCode().trim())) {
             throw new IllegalArgumentException(
                     "Department code already exists"
             );
@@ -40,23 +36,11 @@ public class DepartmentService {
 
         Department department = new Department();
 
-        department.setId(
-                idGeneratorService.generateId("DEPARTMENT","DT")
-        );
-
-        department.setDepartmentCode(
-                request.getDepartmentCode().trim()
-        );
-
-        department.setDepartmentName(
-                request.getDepartmentName().trim()
-        );
-
+        department.setId(idGeneratorService.generateId("DEPARTMENT","DT"));
+        department.setDepartmentCode(request.getDepartmentCode().trim());
+        department.setDepartmentName(request.getDepartmentName().trim());
         department.setStatus("ACTIVE");
-
-        Department savedDepartment =
-                departmentRepository.save(department);
-
+        Department savedDepartment = departmentRepository.save(department);
         return new DepartmentResponse(
                 savedDepartment.getId(),
                 savedDepartment.getDepartmentCode(),

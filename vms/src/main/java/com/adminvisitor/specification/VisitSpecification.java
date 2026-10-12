@@ -26,11 +26,9 @@ public final class VisitSpecification {
 
             LocalDate today = LocalDate.now();
 
-            LocalDateTime startOfToday =
-                    today.atStartOfDay();
+            LocalDateTime startOfToday = today.atStartOfDay();
 
-            LocalDateTime startOfTomorrow =
-                    today.plusDays(1).atStartOfDay();
+            LocalDateTime startOfTomorrow = today.plusDays(1).atStartOfDay();
 
             switch (view) {
 
@@ -300,11 +298,7 @@ public final class VisitSpecification {
 
                     // Host last name
                     criteriaBuilder.like(
-                            criteriaBuilder.lower(
-                                    host.get("lastName")
-                            ),
-                            searchValue
-                    )
+                            criteriaBuilder.lower(host.get("lastName")),searchValue)
             );
         };
     }
@@ -315,10 +309,7 @@ public final class VisitSpecification {
         }
 
         return (root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(
-                        root.get("visitorType"),
-                        visitorType
-                );
+                criteriaBuilder.equal(root.get("visitorType"),visitorType);
     }
 
     public static Specification<Visit> hasHostId(String hostId) {
@@ -336,6 +327,4 @@ public final class VisitSpecification {
             );
         };
     }
-
-
 }

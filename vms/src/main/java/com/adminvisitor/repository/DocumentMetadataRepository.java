@@ -4,6 +4,7 @@ import com.adminvisitor.entity.DocumentMetadata;
 import com.adminvisitor.enums.DocumentType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,5 +41,9 @@ public interface DocumentMetadataRepository
     findByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
             String visitorId,
             DocumentType documentType
+    );
+
+    List<DocumentMetadata> findByDocumentIdIn(
+            Collection<String> documentIds
     );
 }

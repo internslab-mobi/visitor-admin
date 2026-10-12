@@ -46,9 +46,7 @@ public class DocumentService {
     private final IdGeneratorService idGeneratorService;
     private final DocumentMetadataRepository documentMetadataRepository;
 
-     //Active service for generating HMAC-SHA-256 blind indexes.
-
-    private final HmacBlindIndexService hmacBlindIndexService;
+    private final ProofSecurityService proofSecurityService;
 
 
     @Value("${vms.document.nda-upload-dir}")
@@ -89,9 +87,6 @@ public class DocumentService {
                         )
                 );
 
-        /*
-         * Maximum visitor photo size: 5 MB.
-         */
         final long MAX_FILE_SIZE = 5 * 1024 * 1024;
 
         if (file.getSize() > MAX_FILE_SIZE) {
@@ -100,9 +95,6 @@ public class DocumentService {
             );
         }
 
-        /*
-         * Only image files are allowed.
-         */
         String contentType = file.getContentType();
 
         if (contentType == null
@@ -120,13 +112,6 @@ public class DocumentService {
                 );
 
         try {
-
-            /*
-             * Store photos in a visitor-specific directory.
-             *
-             * Example:
-             * visitor-photo/VTR-022/DMD001.jpg
-             */
             Path visitorDirectory =
                     Paths.get(
                             photoUploadDir,
@@ -184,15 +169,6 @@ public class DocumentService {
             );
         }
     }
-
-
-
-
-
-
-
-
-
 
     public boolean isNdaRequired(Visitor visitor) {
 
@@ -338,39 +314,33 @@ public class DocumentService {
         document.setVisitor(visitor);
         document.setNationality(nationality);
 
-        /*
-         * Aadhaar
-         */
+        //Aadhaar
         if (aadharNumber != null && !aadharNumber.isBlank()) {
 
             document.setAadharNumber(
-                    hmacBlindIndexService.generateBlindIndex(
+                    proofSecurityService.generateBlindIndex(
                             ProofType.AADHAAR,
                             aadharNumber
                     )
             );
         }
 
-        /*
-         * PAN
-         */
+        //pan
         if (panNumber != null && !panNumber.isBlank()) {
 
             document.setPanNumber(
-                    hmacBlindIndexService.generateBlindIndex(
+                    proofSecurityService.generateBlindIndex(
                             ProofType.PAN,
                             panNumber
                     )
             );
         }
 
-        /*
-         * Passport
-         */
+        //passport
         if (passportNumber != null && !passportNumber.isBlank()) {
 
             document.setPassportNumber(
-                    hmacBlindIndexService.generateBlindIndex(
+                    proofSecurityService.generateBlindIndex(
                             ProofType.PASSPORT,
                             passportNumber
                     )
@@ -416,7 +386,7 @@ public class DocumentService {
         }
 
         String blindIndex =
-                hmacBlindIndexService.generateBlindIndex(
+                proofSecurityService.generateBlindIndex(
                         proofType,
                         proofNumber
                 );
@@ -451,17 +421,7 @@ public class DocumentService {
      * ============================================================
      * OLD AES ENCRYPTION FLOW
      * ============================================================
-     *
-     * Kept for future reference.
-     *
-     * IMPORTANT:
-     * Do NOT use this flow for the current vms_document
-     * identity-proof columns.
-     *
-     * Current columns contain HMAC blind indexes.
-     */
 
-    /*
     private final AesEncryptionService aesEncryptionService;
 
     @Transactional
@@ -693,10 +653,6 @@ public class DocumentService {
                 documentMetadataRepository
                         .findByDocumentId(document.getId());
 
-//        if (!existingDocuments.isEmpty()) {
-//            return existingDocuments;
-//        }
-
 
         final long MAX_FILE_SIZE =
                 5 * 1024 * 1024; // 5 MB
@@ -862,8 +818,6 @@ public class DocumentService {
         }
         documentMetadataRepository.delete(metadata);
     }
-
-
 
     }
 

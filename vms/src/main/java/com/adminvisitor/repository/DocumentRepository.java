@@ -29,4 +29,6 @@ public interface DocumentRepository
     );
 
     List<Document> findByVisitorId(String visitorId);
+
+    boolean existsByVisitor_IdAndNationalityIsNotNull(String visitorId);
 }

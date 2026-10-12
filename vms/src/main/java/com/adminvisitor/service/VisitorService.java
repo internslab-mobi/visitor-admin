@@ -17,8 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,12 +50,46 @@ public class VisitorService {
 
     @Transactional(readOnly = true)
     public List<VisitorResponse> getAllVisitors() {
-
         log.info("Fetching all visitors");
 
-        return visitorRepository.findAll()
+        List<Visitor> visitors = visitorRepository.findAll();
+
+        if (visitors.isEmpty()) {
+            return List.of();
+        }
+
+        List<String> visitorIds = visitors.stream()
+                .map(Visitor::getId)
+                .toList();
+
+        Map<String, Object[]> latestVisits = visitRepository
+                .findLatestVisitsByVisitorIds(visitorIds)
                 .stream()
-                .map(this::toVisitorResponse)
+                .collect(Collectors.toMap(
+                        row -> (String) row[0],
+                        row -> row,
+                        (first, second) -> first
+                ));
+
+        return visitors.stream()
+                .map(visitor -> {
+                    Object[] latest = latestVisits.get(visitor.getId());
+
+                    return new VisitorResponse(
+                            visitor.getId(),
+                            visitor.getFirstName(),
+                            visitor.getLastName(),
+                            visitor.getEmail(),
+                            visitor.getMobileNumber(),
+                            visitor.getCompanyName(),
+                            latest != null && latest[1] != null
+                                    ? latest[1].toString()
+                                    : null,
+                            latest != null
+                                    ? (LocalDateTime) latest[2]
+                                    : null
+                    );
+                })
                 .toList();
     }
 
@@ -238,60 +275,32 @@ public class VisitorService {
         }
 
 
-        // ==========================================
-        // DOCUMENTS
-        // ==========================================
+        List<Document> visitorDocuments =
+                documentRepository.findByVisitorId(visitorId);
+
+        List<String> documentIds = visitorDocuments.stream()
+                .map(Document::getId)
+                .toList();
 
         List<VisitorEditResponse.DocumentInfo> documents =
-
-                documentRepository
-                        .findByVisitorId(visitorId)
-                        .stream()
-
-                        .flatMap(document ->
-
-                                documentMetadataRepository
-                                        .findByDocumentId(
-                                                document.getId()
-                                        )
-                                        .stream()
-                        )
-
-//                        .filter(metadata ->
-//                                metadata.getDocumentType() != null
-//                                        &&
-//                                        metadata.getDocumentType()
-//                                                != DocumentType.NDA
-//                                        &&
-//                                        metadata.getDocumentType()
-//                                                != DocumentType.VISITOR_PHOTO
-//                        )
-
-                        .filter(metadata ->
-                                metadata.getDocumentType() == null
-                                        ||
-                                        (
-                                                metadata.getDocumentType() != DocumentType.NDA
-                                                        &&
-                                                        metadata.getDocumentType() != DocumentType.VISITOR_PHOTO
-                                        )
-                        )
-
-                        .map(metadata ->
-                                new VisitorEditResponse.DocumentInfo(
-
-//                                        metadata.getDocument().getId(),
-                                        metadata.getId(),
-
-                                        metadata.getDocumentType(),
-
-                                        metadata.getCreatedAt() != null
-                                                ? metadata.getCreatedAt().toString()
-                                                : null
-                                )
-                        )
-
-                        .toList();
+                documentIds.isEmpty()
+                        ? List.of()
+                        : documentMetadataRepository
+                          .findByDocumentIdIn(documentIds)
+                          .stream()
+                          .filter(metadata ->
+                                  metadata.getDocumentType() == null
+                                  || (metadata.getDocumentType() != DocumentType.NDA
+                                      && metadata.getDocumentType() != DocumentType.VISITOR_PHOTO))
+                          .map(metadata ->
+                               new VisitorEditResponse.DocumentInfo(
+                                       metadata.getId(),
+                                       metadata.getDocumentType(),
+                                       metadata.getCreatedAt() != null
+                                       ? metadata.getCreatedAt().toString()
+                                       : null
+                               ))
+                          .toList();
 
 
         // ==========================================

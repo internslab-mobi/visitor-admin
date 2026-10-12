@@ -23,60 +23,31 @@ public class EmployeeService {
     private final IdGeneratorService idGeneratorService;
 
     @Transactional
-    public EmployeeResponse createEmployee(
-            EmployeeCreateRequest request
-    ) {
+    public EmployeeResponse createEmployee(EmployeeCreateRequest request ) {
 
         String email = request.getEmail().trim();
-
         if (employeeRepository.existsByEmail(email)) {
-            throw new EmailAlreadyExistsException(
-                    "Employee email already exists"
-            );
+            throw new EmailAlreadyExistsException("Employee email already exists");
         }
 
-        Department department =
-                departmentRepository.findById(
-                        request.getDepartmentId().trim()
-                ).orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Department not found"
-                        )
-                );
+        Department department = departmentRepository.findById(
+                        request.getDepartmentId().trim())
+                        .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
 
         Employee employee = new Employee();
-
         employee.setId(
                 idGeneratorService.generateId(
                         "EMPLOYEE",
-                        "EMP"
-                )
-        );
+                        "EMP"));
 
-        employee.setFirstName(
-                request.getFirstName().trim()
-        );
-
-        employee.setLastName(
-                request.getLastName().trim()
-        );
-
+        employee.setFirstName(request.getFirstName().trim() );
+        employee.setLastName(request.getLastName().trim());
         employee.setEmail(email);
-
-        employee.setMobileNumber(
-                request.getMobileNumber().trim()
-        );
-
+        employee.setMobileNumber(request.getMobileNumber().trim());
         employee.setDepartment(department);
-
-        employee.setDesignation(
-                request.getDesignation().trim()
-        );
-
+        employee.setDesignation(request.getDesignation().trim());
         employee.setStatus("ACTIVE");
-
-        Employee savedEmployee =
-                employeeRepository.save(employee);
+        Employee savedEmployee = employeeRepository.save(employee);
 
         return new EmployeeResponse(
                 savedEmployee.getId(),
