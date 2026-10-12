@@ -2,9 +2,11 @@ package com.adminvisitor.dto.responsedto;
 
 import com.adminvisitor.enums.BlacklistStatus;
 import com.adminvisitor.enums.Nationality;
+import com.adminvisitor.enums.ProofType;
 import com.adminvisitor.enums.VisitorType;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record BlacklistResponse(
         String id,
@@ -20,6 +22,7 @@ public record BlacklistResponse(
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         String updatedBy,
-        VisitorType visitorType
+        VisitorType visitorType,
+        List<ProofType> matchingProofTypes
 ) {
 }

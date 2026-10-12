@@ -74,8 +74,11 @@ public class VisitController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate toDate,
 
-            @RequestParam(defaultValue = "ASC")
-            String sortDirection
+            @RequestParam(defaultValue = "DESC")
+            String sortDirection,
+
+            @RequestParam(defaultValue = "visitDate")
+            String sortBy
     ) {
 
         List<VisitDashboardResponse> visits =
@@ -88,7 +91,8 @@ public class VisitController {
                         date,
                         fromDate,
                         toDate,
-                        sortDirection
+                        sortDirection,
+                        sortBy
                 );
 
         return ResponseEntity.ok(visits);
@@ -157,14 +161,23 @@ public class VisitController {
         return ResponseEntity.ok(response);
     }
 
-//    @GetMapping("/{visitId}/nda-status")
-//    public ResponseEntity<NdaStatusResponse> getNdaStatus(
-//            @PathVariable String visitId) {
-//
-//        return ResponseEntity.ok(
-//                visitService.getNdaStatus(visitId)
-//        );
-//    }
+    @PostMapping("/{visitId}/verify-identity")
+    public ResponseEntity<Void> verifyIdentity(
+            @PathVariable String visitId,
+            @RequestBody @Valid CheckInRequest request
+    ) {
+        visitService.verifyIdentity(visitId, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{visitId}/nda-status")
+    public ResponseEntity<NdaStatusResponse> getNdaStatus(
+            @PathVariable String visitId) {
+
+        return ResponseEntity.ok(
+                visitService.getNdaStatus(visitId)
+        );
+    }
 
 
 }

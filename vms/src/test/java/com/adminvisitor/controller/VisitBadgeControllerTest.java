@@ -9,6 +9,7 @@ import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.service.EmailService;
 import com.adminvisitor.service.QrCodeService;
+import com.adminvisitor.service.QrTokenService;
 import com.adminvisitor.service.VisitBadgeService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +46,8 @@ class VisitBadgeControllerTest {
     @MockitoBean
     private EmailService emailService;
 
-
+@MockitoBean
+private QrTokenService qrTokenService;
 
     // CREATE BADGE - SUCCESS
 
@@ -79,7 +81,7 @@ class VisitBadgeControllerTest {
         when(badge.getQrContainingToken())
                 .thenReturn("qr-token-001");
 
-        when(qrCodeService.generateQrCode("qr-token-001"))
+        when(qrTokenService.generateQrCode("qr-token-001"))
                 .thenReturn("base64-qr-code");
 
         LocalDateTime issuedAt =
@@ -103,7 +105,7 @@ class VisitBadgeControllerTest {
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.badgeId").value("VB-001"))
-                .andExpect(jsonPath("$.visitId").value("vt-001"))
+                .andExpect(jsonPath("$.visitId").value("VIS-001"))
                 .andExpect(jsonPath("$.qrContainingToken")
                         .value("qr-token-001"))
                 .andExpect(jsonPath("$.qrCode")
@@ -118,7 +120,7 @@ class VisitBadgeControllerTest {
         verify(visitBadgeService)
                 .createBadge(visit);
 
-        verify(qrCodeService)
+        verify(qrTokenService)
                 .generateQrCode("qr-token-001");
 
 

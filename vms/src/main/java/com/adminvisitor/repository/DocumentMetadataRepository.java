@@ -34,4 +34,11 @@ public interface DocumentMetadataRepository
             String documentId,
             DocumentType documentType
     );
+
+
+    List<DocumentMetadata>
+    findByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+            String visitorId,
+            DocumentType documentType
+    );
 }

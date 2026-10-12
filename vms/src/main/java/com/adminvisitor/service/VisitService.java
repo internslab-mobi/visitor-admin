@@ -19,12 +19,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -37,30 +42,15 @@ public class VisitService {
     private final IdGeneratorService idGeneratorService;
     private final EmployeeRepository employeeRepository;
     private final VisitBadgeService visitBadgeService;
-    private final QrCodeService qrCodeService;
+    private final QrTokenService qrTokenService;
     private final VendorRepository vendorRepository;
-
     private final ProofValidationService proofValidationService;
     private final BlacklistService blacklistService;
     private final DocumentRepository documentRepository;
-
-    /*
-     * DocumentService is still required for identity-proof handling.
-     *
-     * The active saveIdentityProofs() method is used during registration
-     * to store HMAC-SHA-256 blind indexes.
-     *
-     * NDA-related methods inside DocumentService are temporarily disabled.
-     */
     private final DocumentService documentService;
 
 
-    // ============================================================
-    // VISIT REGISTRATION
-    // ============================================================
-
-
-    @Transactional
+      @Transactional
     public RegistrationResponse register(RegistrationRequest request) {
 
         log.debug(
@@ -88,13 +78,7 @@ public class VisitService {
 
         Visitor visitor = findOrCreateVisitor(request);
 
-        /*
-         * FIX:
-         * Check whether this visitor already has identity proof records.
-         *
-         * A Document with a non-null nationality is treated as an
-         * identity proof record. Uploaded document metadata is separate.
-         */
+
         boolean existingVisitor =
                 documentRepository.findByVisitorId(visitor.getId())
                         .stream()
@@ -111,6 +95,8 @@ public class VisitService {
                     );
 
             // Nationality must match the existing identity record
+
+            //why check the match, if the visitor already exists ?
             if (existingDocument.getNationality()
                     != request.nationality()) {
 
@@ -330,13 +316,9 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // FIND OR CREATE VISITOR
-    // ============================================================
-
     private Visitor findOrCreateVisitor(RegistrationRequest request) {
 
-//        validateVisitorValidity(request);
+
 
         String email = request.email();
         String mobileNumber = request.mobileNumber();
@@ -411,7 +393,7 @@ public class VisitService {
          * Create a new Visitor profile.
          */
 
-        validateVisitorValidity(request);
+       // validateVisitorValidity(request);
         Visitor newVisitor = new Visitor();
 
         newVisitor.setId(
@@ -423,7 +405,7 @@ public class VisitService {
         newVisitor.setEmail(email);
         newVisitor.setMobileNumber(mobileNumber);
         newVisitor.setCompanyName(request.companyName());
-        newVisitor.setValidity(request.validity());
+        //newVisitor.setValidity(request.validity());
 
         Visitor savedVisitor = visitorRepository.save(newVisitor);
 
@@ -436,33 +418,27 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // VISITOR VALIDITY
-    // ============================================================
-
-    private void validateVisitorValidity(RegistrationRequest request) {
-
-        if (request.visitorType() == VisitorType.VENDOR
-                && request.validity() == null) {
-
-            throw new BusinessRuleException(
-                    "Validity is required for vendor visitors"
-            );
-        }
-
-        if (request.visitorType() != VisitorType.VENDOR
-                && request.validity() != null) {
-
-            throw new BusinessRuleException(
-                    "Validity must be null for non-vendor visitors"
-            );
-        }
-    }
+//
+//    private void validateVisitorValidity(RegistrationRequest request) {
+//
+//        if (request.visitorType() == VisitorType.VENDOR
+//                && request.validity() == null) {
+//
+//            throw new BusinessRuleException(
+//                    "Validity is required for vendor visitors"
+//            );
+//        }
+//
+//        if (request.visitorType() != VisitorType.VENDOR
+//                && request.validity() != null) {
+//
+//            throw new BusinessRuleException(
+//                    "Validity must be null for non-vendor visitors"
+//            );
+//        }
+//    }
 
 
-    // ============================================================
-    // VISIT TIMING
-    // ============================================================
 
     private void validateVisitTiming(RegistrationRequest request) {
 
@@ -483,10 +459,6 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // SUCCESS MESSAGE
-    // ============================================================
-
     private String getSuccessMessage(RegistrationType registrationType) {
 
         return switch (registrationType) {
@@ -499,10 +471,6 @@ public class VisitService {
         };
     }
 
-
-    // ============================================================
-    // VISIT REFERENCE
-    // ============================================================
 
     private String generateVisitReference() {
 
@@ -518,10 +486,6 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // DASHBOARD
-    // ============================================================
-
     public List<VisitDashboardResponse> getDashboardVisits(
             VisitView view,
             String visitorId,
@@ -531,7 +495,8 @@ public class VisitService {
             LocalDate date,
             LocalDate fromDate,
             LocalDate toDate,
-            String sortDirection
+            String sortDirection,
+            String sortBy
     ) {
 
         Specification<Visit> specification =
@@ -599,23 +564,155 @@ public class VisitService {
                         ? Sort.Direction.DESC
                         : Sort.Direction.ASC;
 
-        Sort sort =
-                Sort.by(
-                        direction,
-                        "expectedArrivalAt"
-                );
+        Sort sort = Sort.by(direction, "id");
+
+        // Measure database retrieval time.
+        long queryStart = System.nanoTime();
 
         List<Visit> visits =
-                visitRepository.findAll(
-                        specification,
-                        sort
-                );
+                visitRepository.findAll(specification, sort);
 
-        return visits.stream()
-                .map(this::toDashboardResponse)
-                .toList();
+        long queryEnd = System.nanoTime();
+
+        // Measure response mapping time.
+        List<VisitDashboardResponse> responses =
+                visits.stream()
+                        .map(this::toDashboardResponse)
+                        .toList();
+
+        long mappingEnd = System.nanoTime();
+
+        log.info(
+                "Dashboard visits performance: visitCount={}, fetchMs={}, mappingMs={}",
+                visits.size(),
+                (queryEnd - queryStart) / 1_000_000.0,
+                (mappingEnd - queryEnd) / 1_000_000.0
+        );
+
+        return responses;
     }
 
+    // ============================================================
+// VISITOR LOG
+// ============================================================
+
+    @Transactional(readOnly = true)
+    public Page<VisitorLogResponse> getVisitorLog(
+            String search,
+            LocalDate fromDate,
+            LocalDate toDate,
+            VisitStatus status,
+            VisitorType visitorType,
+            String hostId,
+            int page,
+            int size,
+            String sortDirection
+    ) {
+
+        Specification<Visit> specification =
+                (root, query, criteriaBuilder) ->
+                        criteriaBuilder.conjunction();
+
+        // General search
+        Specification<Visit> searchSpecification =
+                VisitSpecification.hasSearch(search);
+
+        if (searchSpecification != null) {
+            specification = specification.and(searchSpecification);
+        }
+
+        // Date range
+        Specification<Visit> fromDateSpecification =
+                VisitSpecification.hasFromDate(fromDate);
+
+        if (fromDateSpecification != null) {
+            specification = specification.and(fromDateSpecification);
+        }
+
+        Specification<Visit> toDateSpecification =
+                VisitSpecification.hasToDate(toDate);
+
+        if (toDateSpecification != null) {
+            specification = specification.and(toDateSpecification);
+        }
+
+        // Status
+        Specification<Visit> statusSpecification =
+                VisitSpecification.hasStatus(status);
+
+        if (statusSpecification != null) {
+            specification = specification.and(statusSpecification);
+        }
+
+        // Visitor type
+        Specification<Visit> visitorTypeSpecification =
+                VisitSpecification.hasVisitorType(visitorType);
+
+        if (visitorTypeSpecification != null) {
+            specification = specification.and(visitorTypeSpecification);
+        }
+
+        // Host
+        Specification<Visit> hostSpecification =
+                VisitSpecification.hasHostId(hostId);
+
+        if (hostSpecification != null) {
+            specification = specification.and(hostSpecification);
+        }
+
+        Sort.Direction direction =
+                "ASC".equalsIgnoreCase(sortDirection)
+                        ? Sort.Direction.ASC
+                        : Sort.Direction.DESC;
+
+        Pageable pageable =
+                PageRequest.of(
+                        page,
+                        size,
+                        Sort.by(direction, "expectedArrivalAt")
+                );
+
+        Page<Visit> visits =
+                visitRepository.findAll(
+                        specification,
+                        pageable
+                );
+
+        return visits.map(this::toVisitorLogResponse);
+    }
+
+    private VisitorLogResponse toVisitorLogResponse(Visit visit) {
+
+        Visitor visitor = visit.getVisitor();
+
+        Employee host = visit.getHost();
+
+        String visitorName =
+                visitor.getFirstName()
+                        + " "
+                        + visitor.getLastName();
+
+        String hostName =
+                host.getFirstName()
+                        + " "
+                        + host.getLastName();
+
+        return new VisitorLogResponse(
+                visit.getId(),
+                visit.getVisitReference(),
+                visitor.getId(),
+                visitorName,
+                visit.getVisitorType(),
+                visitor.getCompanyName(),
+                hostName,
+                visit.getExpectedArrivalAt().toLocalDate(),
+                visit.getExpectedArrivalAt(),
+                visit.getExpectedDepartureAt(),
+                visit.getCheckedInAt(),
+                visit.getCheckedOutAt(),
+                visit.getStatus()
+        );
+    }
 
     private VisitDashboardResponse toDashboardResponse(Visit visit) {
 
@@ -648,10 +745,6 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // VISIT DETAILS
-    // ============================================================
-
     public VisitDetailResponse getVisitDetails(String visitId) {
 
         Visit visit =
@@ -666,105 +759,6 @@ public class VisitService {
     }
 
 
-    /*
-     * ============================================================
-     * NDA IMPLEMENTATION TEMPORARILY DISABLED
-     * ============================================================
-     *
-     * This method is kept for future NDA implementation.
-     *
-     * Reason:
-     * DocumentService.getValidNda() is currently disabled because
-     * NDA/document metadata handling is being implemented separately.
-     *
-     * When the NDA implementation is ready, uncomment this method
-     * and restore the NDA fields in VisitDetailResponse.
-     */
-
-//    private VisitDetailResponse toVisitDetailResponse(Visit visit) {
-//
-//        Visitor visitor = visit.getVisitor();
-//
-//        Document validNda = documentService.getValidNda(visitor);
-//
-//        Employee employee = visit.getHost();
-//
-//        String hostName =
-//                employee.getFirstName()
-//                        + " "
-//                        + employee.getLastName();
-//
-//        String departmentName =
-//                employee.getDepartment().getDepartmentName();
-//
-//        return new VisitDetailResponse(
-//
-//                // Visit information
-//                visit.getId(),
-//                visit.getVisitReference(),
-//
-//                // Visitor information
-//                new VisitDetailResponse.VisitorDetails(
-//                        visitor.getId(),
-//                        visitor.getFirstName(),
-//                        visitor.getLastName(),
-//                        visitor.getEmail(),
-//                        visitor.getMobileNumber(),
-//                        visitor.getCompanyName(),
-//                        validNda != null,
-//                        validNda != null ? validNda.getId() : null,
-//                        validNda != null ? visitor.getValidity() : null
-//                ),
-//
-//                visit.getVisitorType(),
-//                visit.getRegistrationType(),
-//                visit.getPurpose(),
-//
-//                // Host information
-//                new VisitDetailResponse.HostDetails(
-//                        employee.getId(),
-//                        hostName,
-//                        employee.getDepartment().getId(),
-//                        departmentName
-//                ),
-//
-//                // Schedule
-//                visit.getExpectedArrivalAt(),
-//                visit.getExpectedDepartureAt(),
-//
-//                // Actual visit times
-//                visit.getCheckedInAt(),
-//                visit.getCheckedOutAt(),
-//
-//                // Remarks
-//                visit.getRemarks(),
-//
-//                // Status
-//                visit.getStatus(),
-//
-//                // Audit information
-//                new VisitDetailResponse.AuditDetails(
-//                        visit.getCreatedAt(),
-//                        visit.getUpdatedAt(),
-//                        visit.getCreatedBy(),
-//                        visit.getUpdatedBy()
-//                )
-//        );
-//    }
-
-
-    /*
-     * Temporary VisitDetailResponse implementation.
-     *
-     * NDA fields are currently returned as:
-     *
-     *     false
-     *     null
-     *     null
-     *
-     * Once the coworker's NDA implementation is ready,
-     * replace this method with the commented NDA implementation above.
-     */
     private VisitDetailResponse toVisitDetailResponse(Visit visit) {
 
         Visitor visitor = visit.getVisitor();
@@ -778,6 +772,27 @@ public class VisitService {
 
         String departmentName =
                 employee.getDepartment().getDepartmentName();
+
+
+        Document identityDocument = documentRepository
+                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
+                .orElse(null);
+
+        String nationality = identityDocument != null
+                && identityDocument.getNationality() != null
+                ? identityDocument.getNationality().name()
+                : null;
+
+        DocumentMetadata validNda = documentService.getValidNda(visitor);
+
+        Long totalDurationSeconds = null;
+
+        if (visit.getCheckedInAt() != null && visit.getCheckedOutAt() != null) {
+            totalDurationSeconds = Duration.between(
+                    visit.getCheckedInAt(),
+                    visit.getCheckedOutAt()
+            ).getSeconds();
+        }
 
         return new VisitDetailResponse(
 
@@ -793,13 +808,10 @@ public class VisitService {
                         visitor.getEmail(),
                         visitor.getMobileNumber(),
                         visitor.getCompanyName(),
-
-                        /*
-                         * NDA temporarily disabled.
-                         */
-                        false,
-                        null,
-                        null
+                        nationality,
+                        validNda != null,
+                        validNda != null ? validNda.getId() : null
+                        //validNda != null ? visitor.getValidity() : null
                 ),
 
                 visit.getVisitorType(),
@@ -822,6 +834,8 @@ public class VisitService {
                 visit.getCheckedInAt(),
                 visit.getCheckedOutAt(),
 
+                totalDurationSeconds,
+
                 // Remarks
                 visit.getRemarks(),
 
@@ -839,10 +853,6 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // CANCEL VISIT
-    // ============================================================
-
     @Transactional
     public VisitDetailResponse cancelVisit(String visitId) {
 
@@ -855,11 +865,6 @@ public class VisitService {
                         )
                 );
 
-        log.info(
-                "Visit loaded. visitId={}, status={}",
-                visit.getId(),
-                visit.getStatus()
-        );
 
         if (visit.getStatus() != VisitStatus.REGISTERED) {
             throw new BusinessRuleException(
@@ -923,9 +928,6 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // CHECK-IN
-    // ============================================================
 
     @Transactional
     public VisitDetailResponse checkIn(
@@ -1007,39 +1009,30 @@ public class VisitService {
             }
         }
 
+
+
+
+// NDA validation during vendor check-in
+        if (visit.getVisitorType() == VisitorType.VENDOR) {
+
+            boolean ndaRequired =
+                    documentService.isNdaRequired(
+                            visit.getVisitor()
+                    );
+
+            if (ndaRequired) {
+                throw new BusinessRuleException(
+                        "A valid NDA is required for this vendor before check-in"
+                );
+            }
+        }
+
+
         DocumentMetadata visitorPhoto =
                 documentService.uploadVisitorPhoto(
                         visit.getVisitor().getId(),
                         photo
                 );
-
-
-        /*
-         * ========================================================
-         * NDA SAFETY CHECK TEMPORARILY DISABLED
-         * ========================================================
-         *
-         * This code is preserved for the coworker's future NDA
-         * implementation.
-         *
-         * It must NOT be deleted.
-         */
-
-//        // NDA safety check
-//        if (visit.getVisitorType() == VisitorType.VENDOR) {
-//
-//            Document validNda =
-//                    documentService.getValidNda(
-//                            visit.getVisitor()
-//                    );
-//
-//            if (validNda == null) {
-//                throw new BusinessRuleException(
-//                        "A valid NDA is required for this vendor before check-in"
-//                );
-//            }
-//        }
-
 
         visit.setCheckedInAt(LocalDateTime.now());
 
@@ -1050,7 +1043,7 @@ public class VisitService {
         VisitBadge badge =
                 visitBadgeService.createBadge(checkedInVisit);
 
-        String qrCode = qrCodeService.generateQrCode(
+        String qrCode = qrTokenService.generateQrCode(
                 badge.getQrContainingToken()
         );
 
@@ -1065,24 +1058,16 @@ public class VisitService {
 
         BadgeEmailData emailData =
                 new BadgeEmailData(
-                        checkedInVisit.getVisitor().getFirstName()
-                                + " "
+                        checkedInVisit.getVisitor().getFirstName() + " "
                                 + checkedInVisit.getVisitor().getLastName(),
-
                         checkedInVisit.getVisitor().getEmail(),
-
                         checkedInVisit.getVisitReference(),
-
-                        checkedInVisit.getHost().getFirstName()
-                                + " "
+                        checkedInVisit.getHost().getFirstName() + " "
                                 + checkedInVisit.getHost().getLastName(),
-
+                        checkedInVisit.getHost().getEmail(),
                         badge.getIssuedAt().format(formatter),
-
                         badge.getValidUntil().format(formatter),
-
                         qrCode,
-
                         visitorPhoto.getDocumentPath()
                 );
 
@@ -1134,10 +1119,6 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // CHECK-OUT
-    // ============================================================
-
     @Transactional
     public VisitDetailResponse checkOut(String visitId) {
 
@@ -1187,51 +1168,50 @@ public class VisitService {
     }
 
 
-    /*
-     * ============================================================
-     * NDA STATUS TEMPORARILY DISABLED
-     * ============================================================
-     *
-     * This entire method is preserved for the coworker's NDA
-     * implementation.
-     *
-     * It currently cannot compile because DocumentService no longer
-     * exposes getValidNda().
-     *
-     * Do not delete it.
-     */
 
-//    @Transactional(readOnly = true)
-//    public NdaStatusResponse getNdaStatus(String visitId) {
-//
-//        Visit visit = visitRepository.findById(visitId)
-//                .orElseThrow(() -> new ResourceNotFoundException(
-//                        "Visit not found with id: " + visitId));
-//
-//        Visitor visitor = visit.getVisitor();
-//
-//        Document validNda = documentService.getValidNda(visitor);
-//
-//        boolean ndaAvailable = validNda != null;
-//
-//        boolean ndaRequired =
-//                visit.getVisitorType() == VisitorType.VENDOR
-//                        && !ndaAvailable;
-//
-//        return new NdaStatusResponse(
-//                visitor.getId(),
-//                visit.getVisitorType().name(),
-//                ndaRequired,
-//                ndaAvailable,
-//                ndaAvailable ? visitor.getValidity() : null,
-//                ndaAvailable ? validNda.getId() : null
-//        );
-//    }
+    @Transactional(readOnly = true)
+    public NdaStatusResponse getNdaStatus(String visitId) {
+
+        Visit visit = visitRepository.findById(visitId)
+                .orElseThrow(() ->
+                        new BusinessRuleException(
+                                "Visit not found with id: " + visitId
+                        )
+                );
+
+        Visitor visitor = visit.getVisitor();
+
+        boolean ndaRequired =
+                visit.getVisitorType() == VisitorType.VENDOR
+                        && documentService.isNdaRequired(visitor);
+
+        boolean ndaAvailable =
+                visit.getVisitorType() == VisitorType.VENDOR
+                        && !ndaRequired;
+
+        DocumentMetadata latestNda = null;
+
+        if (ndaAvailable) {
+            latestNda = documentService.getLatestNda(
+                    visitor.getId()
+            );
+        }
+
+        return new NdaStatusResponse(
+                visitor.getId(),
+                visit.getVisitorType().name(),
+                ndaRequired,
+                ndaAvailable,
+                latestNda != null
+                        ? latestNda.getValidUntil()
+                        : null,
+                latestNda != null
+                        ? latestNda.getId()
+                        : null
+        );
+    }
 
 
-    // ============================================================
-    // VENDOR CREATION
-    // ============================================================
 
     private void createVendorIfRequired(
             Visitor visitor,
@@ -1273,7 +1253,7 @@ public class VisitService {
 
         vendor.setCompanyName(visitor.getCompanyName());
 
-        vendor.setValidity(visitor.getValidity());
+       // vendor.setValidity(visitor.getValidity());
 
         vendorRepository.save(vendor);
 
@@ -1285,9 +1265,6 @@ public class VisitService {
     }
 
 
-    // ============================================================
-    // ID PROOF VALIDATION + BLACKLIST CHECK
-    // ============================================================
 
     private void validateProofAndBlacklist(
             RegistrationRequest request) {
@@ -1359,5 +1336,80 @@ public class VisitService {
                 }
             }
         }
+    }
+
+    @Transactional(readOnly = true)
+    public void verifyIdentity(String visitId, CheckInRequest request) {
+
+        Visit visit = visitRepository.findById(visitId)
+                .orElseThrow(() ->
+                        new BusinessRuleException(
+                                "Visit not found with id: " + visitId
+                        )
+                );
+
+        if (visit.getStatus() != VisitStatus.REGISTERED) {
+            throw new BusinessRuleException(
+                    "Only a registered visit can have its identity verified"
+            );
+        }
+
+        Document identityDocument =
+                documentService.getLatestIdentityDocument(
+                        visit.getVisitor().getId()
+                );
+
+        Nationality nationality = identityDocument.getNationality();
+
+        proofValidationService.validate(
+                nationality,
+                request.aadharNumber(),
+                request.panNumber(),
+                request.passportNumber()
+        );
+
+        if (nationality == Nationality.DOMESTIC) {
+
+            boolean aadhaarMatches =
+                    documentService.verifyIdentityProof(
+                            visit.getVisitor(),
+                            ProofType.AADHAAR,
+                            request.aadharNumber()
+                    );
+
+            boolean panMatches =
+                    documentService.verifyIdentityProof(
+                            visit.getVisitor(),
+                            ProofType.PAN,
+                            request.panNumber()
+                    );
+
+            if (!aadhaarMatches || !panMatches) {
+                throw new BusinessRuleException(
+                        "Identity verification failed"
+                );
+            }
+        }
+
+        if (nationality == Nationality.INTERNATIONAL) {
+
+            boolean passportMatches =
+                    documentService.verifyIdentityProof(
+                            visit.getVisitor(),
+                            ProofType.PASSPORT,
+                            request.passportNumber()
+                    );
+
+            if (!passportMatches) {
+                throw new BusinessRuleException(
+                        "Identity verification failed"
+                );
+            }
+        }
+
+        log.info(
+                "Visitor identity verified successfully. visitId={}",
+                visitId
+        );
     }
 }

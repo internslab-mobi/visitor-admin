@@ -31,8 +31,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -42,9 +45,9 @@ public class DocumentService {
     private final VisitorRepository visitorRepository;
     private final IdGeneratorService idGeneratorService;
     private final DocumentMetadataRepository documentMetadataRepository;
-    /*
-     * Active service for generating HMAC-SHA-256 blind indexes.
-     */
+
+     //Active service for generating HMAC-SHA-256 blind indexes.
+
     private final HmacBlindIndexService hmacBlindIndexService;
 
 
@@ -58,101 +61,6 @@ public class DocumentService {
     @Value("${vms.document.photo-upload-dir}")
     private String photoUploadDir;
 
-//    public Document uploadSignedNda(
-//            String visitorId,
-//            MultipartFile file
-//    ) {
-//
-//        if (file == null || file.isEmpty()) {
-//            throw new IllegalArgumentException(
-//                    "Signed NDA file is required"
-//            );
-//        }
-//
-//        if (!isPdf(file)) {
-//            throw new IllegalArgumentException(
-//                    "Only PDF files are allowed for NDA"
-//            );
-//        }
-//
-//        Visitor visitor = visitorRepository.findById(visitorId)
-//                .orElseThrow(() ->
-//                        new IllegalArgumentException(
-//                                "Visitor not found: " + visitorId
-//                        )
-//                );
-//
-//        Visit visit = visitRepository
-//                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
-//                .orElseThrow(() ->
-//                        new ResourceNotFoundException(
-//                                "No visit found for visitor: " + visitorId
-//                        )
-//                );
-//
-//        if (visit.getVisitorType() != VisitorType.VENDOR) {
-//            throw new BusinessRuleException(
-//                    "NDA can only be uploaded for vendor visitors"
-//            );
-//        }
-//
-//        if (!isNdaRequired(visitor)) {
-//            throw new BadgeAlreadyExistsException(
-//                    "Valid NDA already exists for visitor: " + visitorId
-//            );
-//        }
-//
-//        String documentId =
-//                idGeneratorService.generateId(
-//                        "DOCUMENT",
-//                        "doc"
-//                );
-//
-//        try {
-//
-//            Path visitorDirectory = Paths.get(
-//                    ndaUploadDir,
-//                    visitorId
-//            );
-//
-//            Files.createDirectories(visitorDirectory);
-//
-//            String fileName = documentId + ".pdf";
-//
-//            Path filePath = visitorDirectory.resolve(fileName);
-//
-//            Files.write(
-//                    filePath,
-//                    file.getBytes()
-//            );
-//
-//            Document document = new Document();
-//
-//            document.setId(documentId);
-//            document.setVisitor(visitor);
-//
-//            // Old NDA path storage
-//            // document.setNdaDocument(filePath.toString());
-//
-//            Document savedDocument =
-//                    documentRepository.save(document);
-//
-//            visitor.setValidity(
-//                    LocalDateTime.now().plusMonths(6)
-//            );
-//
-//            visitorRepository.save(visitor);
-//
-//            return savedDocument;
-//
-//        } catch (IOException exception) {
-//
-//            throw new RuntimeException(
-//                    "Failed to save signed NDA file",
-//                    exception
-//            );
-//        }
-//    }
 
     @Transactional
     public DocumentMetadata uploadVisitorPhoto(
@@ -278,154 +186,39 @@ public class DocumentService {
     }
 
 
-    @Transactional
-    public Document uploadSignedNda(
-            String visitorId,
-            MultipartFile file
-    ) {
 
-        // 1. File validation
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Signed NDA file is required"
-            );
-        }
 
-        // 2. PDF validation
-        if (!isPdf(file)) {
-            throw new IllegalArgumentException(
-                    "Only PDF files are allowed for NDA"
-            );
-        }
 
-        // 3. Find visitor
-        Visitor visitor = visitorRepository.findById(visitorId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Visitor not found: " + visitorId
-                        )
-                );
 
-        // 4. Find latest visit
-        Visit visit = visitRepository
-                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "No visit found for visitor: " + visitorId
-                        )
-                );
 
-        // 5. NDA only for vendors
-        if (visit.getVisitorType() != VisitorType.VENDOR) {
-            throw new BusinessRuleException(
-                    "NDA can only be uploaded for vendor visitors"
-            );
-        }
 
-        // 6. Check NDA validity
-        if (!isNdaRequired(visitor)) {
-            throw new BusinessRuleException(
-                    "Valid NDA already exists for visitor: " + visitorId
-            );
-        }
 
-        // 7. Find existing Document
-        Document document = documentRepository
-                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Document not found for visitor: " + visitorId
-                        )
-                );
-
-        // 8. Generate metadata ID
-        String metadataId =
-                idGeneratorService.generateId(
-                        "DOCUMENT_METADATA",
-                        "DMD"
-                );
-
-        try {
-
-            // 9. Create visitor-specific NDA directory
-            Path visitorDirectory = Paths.get(
-                    ndaUploadDir,
-                    visitorId
-            );
-
-            Files.createDirectories(visitorDirectory);
-
-            // 10. Create unique NDA filename
-            String fileName = metadataId + ".pdf";
-
-            Path filePath = visitorDirectory.resolve(fileName);
-
-            // 11. Save physical file
-            Files.write(
-                    filePath,
-                    file.getBytes()
-            );
-
-            // 12. Create metadata record
-            DocumentMetadata metadata = new DocumentMetadata();
-
-            metadata.setId(metadataId);
-            metadata.setDocument(document);
-
-            // IMPORTANT
-            metadata.setDocumentType(DocumentType.NDA);
-
-            metadata.setDocumentType(DocumentType.NDA);
-            metadata.setDocumentPath(filePath.toString());
-
-            documentMetadataRepository.save(metadata);
-
-            // 13. Start a new 6-month validity period
-//            visitor.setValidity(
-//                    LocalDateTime.now().plusMonths(6)
-//            );
-//
-//            visitorRepository.save(visitor);
-
-            return document;
-
-        } catch (IOException exception) {
-
-            throw new RuntimeException(
-                    "Failed to save signed NDA file",
-                    exception
-            );
-        }
-    }
-//    public boolean isNdaRequired(Visitor visitor) {
-//
-//        LocalDateTime validity =
-//                visitor.getValidity();
-//
-//        if (validity == null) {
-//            return true;
-//        }
-//
-//        if (validity.isBefore(LocalDateTime.now())) {
-//            return true;
-//        }
-//
-//        return documentRepository
-//                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
-//                .isEmpty();
-//    }
 
     public boolean isNdaRequired(Visitor visitor) {
 
-        LocalDateTime validity = visitor.getValidity();
+        Optional<DocumentMetadata> latestNda =
+                documentMetadataRepository
+                        .findTopByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+                                visitor.getId(),
+                                DocumentType.NDA
+                        );
 
-        if (validity == null) {
+        // No NDA exists
+        if (latestNda.isEmpty()) {
             return true;
         }
 
-        return validity.isBefore(LocalDateTime.now());
-    }
+        LocalDateTime validUntil =
+                latestNda.get().getValidUntil();
 
+        // NDA has no validity date
+        if (validUntil == null) {
+            return true;
+        }
+
+        // NDA is expired
+        return validUntil.isBefore(LocalDateTime.now());
+    }
     @Transactional(readOnly = true)
     public DocumentMetadata getLatestNda(String visitorId) {
 
@@ -480,22 +273,7 @@ public class DocumentService {
                 );
     }
 
-    private boolean isPdf(MultipartFile file) {
 
-        String contentType = file.getContentType();
-
-        String fileName = file.getOriginalFilename();
-
-        boolean validContentType =
-                "application/pdf".equalsIgnoreCase(contentType);
-
-        boolean validExtension =
-                fileName != null
-                        && fileName.toLowerCase()
-                        .endsWith(".pdf");
-
-        return validContentType && validExtension;
-    }
 
     public DocumentMetadata getValidNda(Visitor visitor) {
 
@@ -538,25 +316,6 @@ public class DocumentService {
 
 
 
-    /*
-     * ============================================================
-     * IDENTITY PROOF
-     * ============================================================
-     *
-     * Current flow:
-     *
-     * Raw Aadhaar/PAN/Passport
-     *          ↓
-     * ProofValidationService
-     *          ↓
-     * HmacBlindIndexService
-     *          ↓
-     * HMAC-SHA-256 blind index
-     *          ↓
-     * vms_document
-     *
-     * The raw proof number is NOT stored in the database.
-     */
 
     @Transactional
     public Document saveIdentityProofs(
@@ -838,14 +597,7 @@ public class DocumentService {
     */
 
 
-    /*
-     * ============================================================
-     * OLD DOCUMENT/NDA LISTING
-     * ============================================================
-     *
-     * Currently disabled because document paths are now handled
-     * separately through vms_document_metadata.
-     */
+
 
     @Transactional(readOnly = true)
     public List<DocumentResponse> getAllDocuments(
@@ -867,16 +619,32 @@ public class DocumentService {
                                 .findByDocumentId(document.getId())
                                 .stream()
                 )
-                .map(metadata -> new DocumentResponse(
-                        metadata.getId(),
-                        metadata.getDocumentPath(),
-                        metadata.getCreatedAt().toString()
-                ))
+                .filter(metadata ->
+                        metadata.getDocumentType() != DocumentType.NDA
+                                && metadata.getDocumentType() != DocumentType.VISITOR_PHOTO
+                )
+                .map(metadata ->
+                        new DocumentResponse(
+                                metadata.getId(),
+                                metadata.getDocumentPath(),
+
+                                // Created At
+                                metadata.getCreatedAt() != null
+                                        ? metadata.getCreatedAt().toString()
+                                        : null,
+
+                                // Valid From - not applicable
+                                null,
+
+                                // Valid Until - not applicable
+                                null,
+
+                                // Overwritten By - not applicable
+                                null
+                        )
+                )
                 .toList();
     }
-
-
-
 
 
     @Transactional
@@ -925,9 +693,9 @@ public class DocumentService {
                 documentMetadataRepository
                         .findByDocumentId(document.getId());
 
-        if (!existingDocuments.isEmpty()) {
-            return existingDocuments;
-        }
+//        if (!existingDocuments.isEmpty()) {
+//            return existingDocuments;
+//        }
 
 
         final long MAX_FILE_SIZE =
@@ -1051,38 +819,51 @@ public class DocumentService {
 
 
     @Transactional(readOnly = true)
-    public List<DocumentResponse> getAllNdas(String visitorId) {
-
-        Visitor visitor = visitorRepository.findById(visitorId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Visitor not found: " + visitorId
-                        )
-                );
-
-        Document document = documentRepository
-                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "No document found for visitor: " + visitorId
-                        )
-                );
+    public DocumentMetadata getDocumentMetadata(String documentId) {
 
         return documentMetadataRepository
-                .findByDocumentIdAndDocumentType(
-                        document.getId(),
-                        DocumentType.NDA
-                )
-                .stream()
-                .map(metadata ->
-                        new DocumentResponse(
-                                metadata.getId(),
-                                metadata.getDocumentPath(),
-                                metadata.getCreatedAt() != null
-                                        ? metadata.getCreatedAt().toString()
-                                        : null
+                .findById(documentId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Document not found: " + documentId
                         )
-                )
-                .toList();
+                );
     }
-}
+
+
+
+    @Transactional
+    public void deleteDocument(String metadataId) {
+
+        DocumentMetadata metadata =
+                documentMetadataRepository.findById(metadataId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Document not found: " + metadataId
+                                )
+                        );
+
+        String documentPath = metadata.getDocumentPath();
+        if (documentPath != null && !documentPath.isBlank()) {
+
+            try {
+                Path filePath = Paths.get(documentPath);
+
+                if (Files.exists(filePath)) {
+                    Files.delete(filePath);
+                }
+
+            } catch (IOException exception) {
+                throw new RuntimeException(
+                        "Failed to delete document file: " + metadataId,
+                        exception
+                );
+            }
+        }
+        documentMetadataRepository.delete(metadata);
+    }
+
+
+
+    }
+
