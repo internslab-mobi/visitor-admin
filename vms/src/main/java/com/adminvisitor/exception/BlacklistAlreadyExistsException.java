@@ -1,8 +1,10 @@
 package com.adminvisitor.exception;
 
-public class BlacklistAlreadyExistsException extends RuntimeException {
+import com.adminvisitor.enums.ErrorCode;
+
+public class BlacklistAlreadyExistsException extends VmsException {
 
     public BlacklistAlreadyExistsException(String message) {
-        super(message);
+        super(ErrorCode.BLACKLIST_ALREADY_EXISTS, message);
     }
 }

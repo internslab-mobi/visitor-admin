@@ -1,7 +1,10 @@
 package com.adminvisitor.exception;
 
-public class ResourceNotFoundException extends RuntimeException {
+import com.adminvisitor.enums.ErrorCode;
+
+public class ResourceNotFoundException extends VmsException {
+
     public ResourceNotFoundException(String message) {
-        super(message);
+        super(ErrorCode.RESOURCE_NOT_FOUND, message);
     }
 }

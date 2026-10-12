@@ -42,4 +42,10 @@ public interface VisitRepository extends JpaRepository<Visit, String>, JpaSpecif
         List<Visit> findByVisitorIdOrderByExpectedArrivalAtDesc(
                 String visitorId
         );
+
+        List<Visit> findByStatusAndExpectedArrivalAtGreaterThanEqualAndExpectedArrivalAtLessThan(
+                VisitStatus status,
+                LocalDateTime start,
+                LocalDateTime end
+        );
 }

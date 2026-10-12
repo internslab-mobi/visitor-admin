@@ -58,5 +58,4 @@ logging:
   level:
     root: INFO
     com.adminvisitor: DEBUG
-    org.springframework.security: DEBUG
 

@@ -1,7 +1,10 @@
 package com.adminvisitor.exception;
 
-public class EmailAlreadyExistsException extends RuntimeException {
+import com.adminvisitor.enums.ErrorCode;
+
+public class EmailAlreadyExistsException extends VmsException {
+
     public EmailAlreadyExistsException(String message) {
-        super(message);
+        super(ErrorCode.EMAIL_ALREADY_EXISTS, message);
     }
 }

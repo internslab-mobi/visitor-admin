@@ -1,8 +1,10 @@
 package com.adminvisitor.exception;
 
-public class BlacklistNotFoundException extends RuntimeException {
+import com.adminvisitor.enums.ErrorCode;
+
+public class BlacklistNotFoundException extends VmsException {
 
     public BlacklistNotFoundException(String message) {
-        super(message);
+        super(ErrorCode.BLACKLIST_NOT_FOUND, message);
     }
 }

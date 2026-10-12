@@ -1,8 +1,10 @@
 package com.adminvisitor.exception;
 
-public class BadgeAlreadyExistsException extends RuntimeException {
+import com.adminvisitor.enums.ErrorCode;
+
+public class BadgeAlreadyExistsException extends VmsException {
 
     public BadgeAlreadyExistsException(String message) {
-        super(message);
+        super(ErrorCode.BADGE_ALREADY_EXISTS, message);
     }
 }
