@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NdaController {
 
-    private final NdaService ndaLifecycleService;
+    private final NdaService ndaService;
 
 
     @PostMapping(
@@ -33,7 +33,7 @@ public class NdaController {
             @RequestParam("validUntil") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate validUntil
     ) {
-        DocumentMetadata metadata = ndaLifecycleService.uploadNewNda(
+        DocumentMetadata metadata = ndaService.uploadNewNda(
                 visitorId,
                 ndaFile,
 
@@ -41,34 +41,34 @@ public class NdaController {
         );
 
 
-            DocumentResponse response = new DocumentResponse(
-                    metadata.getId(),
-                    metadata.getDocumentPath(),
+        DocumentResponse response = new DocumentResponse(
+                metadata.getId(),
+                metadata.getDocumentPath(),
 
-                    // Actual upload/creation time
-                    metadata.getCreatedAt() != null
-                            ? metadata.getCreatedAt().toString()
-                            : null,
+                // Actual upload/creation time
+                metadata.getCreatedAt() != null
+                        ? metadata.getCreatedAt().toString()
+                        : null,
 
-                    // New NDA: Valid From = Created At
-                    metadata.getCreatedAt() != null
-                            ? metadata.getCreatedAt().toString()
-                            : null,
+                // New NDA: Valid From = Created At
+                metadata.getCreatedAt() != null
+                        ? metadata.getCreatedAt().toString()
+                        : null,
 
-                    // Valid Until
-                    metadata.getValidUntil() != null
-                            ? metadata.getValidUntil().toString()
-                            : null,
+                // Valid Until
+                metadata.getValidUntil() != null
+                        ? metadata.getValidUntil().toString()
+                        : null,
 
-                    // New NDA is not overriding another NDA
-                    null
-            );
+                // New NDA is not overriding another NDA
+                null
+        );
 
-            return ResponseEntity.ok(response);
-        }
+        return ResponseEntity.ok(response);
+    }
 
 
-        @PostMapping(
+    @PostMapping(
             value = "/{visitorId}/extend",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
@@ -81,7 +81,7 @@ public class NdaController {
     ) {
 
         NdaExtensionResult result =
-                ndaLifecycleService.extendNdaValidity(
+                ndaService.extendNdaValidity(
                         visitorId,
                         supportingDocument,
                         newValidUntil
@@ -121,7 +121,7 @@ public class NdaController {
     ) {
 
         NdaLatestResult result =
-                ndaLifecycleService.getLatestNda(visitorId);
+                ndaService.getLatestNda(visitorId);
 
         DocumentMetadata metadata = result.metadata();
 
@@ -157,7 +157,7 @@ public class NdaController {
             @PathVariable String visitorId
     ) {
         return ResponseEntity.ok(
-                ndaLifecycleService.getNdaHistory(visitorId)
+                ndaService.getNdaHistory(visitorId)
         );
     }
 }

@@ -1,6 +1,9 @@
 package com.adminvisitor.exception;
 
+import com.adminvisitor.enums.ErrorCode;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -18,285 +21,141 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
-            MethodArgumentNotValidException exception) {
+            MethodArgumentNotValidException exception,
+            HttpServletRequest request) {
 
-        Map<String, String> errors = new LinkedHashMap<>();
+        Map<String, String> fieldErrors = new LinkedHashMap<>();
 
         exception.getBindingResult()
                 .getFieldErrors()
                 .forEach(error ->
-                        errors.put(
+                        fieldErrors.put(
                                 error.getField(),
                                 error.getDefaultMessage()
                         )
                 );
 
         log.warn(
-                "Validation failed for request with {} error(s)",
-                errors.size()
+                "Request validation failed. requestId={}, path={}, errorCount={}",
+                MDC.get("requestId"),
+                request.getRequestURI(),
+                fieldErrors.size()
         );
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                "Validation failed",
-                errors
+        ErrorCode errorCode = ErrorCode.VALIDATION_FAILED;
+
+        return buildErrorResponse(
+                errorCode.getHttpStatus(),
+                errorCode,
+                errorCode.getPublicMessage(),
+                request,
+                fieldErrors
         );
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFound(
-            ResourceNotFoundException exception) {
-
-        log.warn("Resource not found: {}", exception.getMessage());
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.NOT_FOUND.value(),
-                HttpStatus.NOT_FOUND.getReasonPhrase(),
-                exception.getMessage(),
-                null
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(EmailAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleEmailAlreadyExists(
-            EmailAlreadyExistsException exception) {
-
-        log.warn("Email already exists: {}", exception.getMessage());
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.CONFLICT.value(),
-                HttpStatus.CONFLICT.getReasonPhrase(),
-                exception.getMessage(),
-                null
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(MobileNumberAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleMobileNumberAlreadyExists(
-            MobileNumberAlreadyExistsException exception) {
-
-        log.warn(
-                "Mobile number already exists: {}",
-                exception.getMessage()
-        );
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.CONFLICT.value(),
-                HttpStatus.CONFLICT.getReasonPhrase(),
-                exception.getMessage(),
-                null
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(BlacklistAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleBlacklistAlreadyExists(
-            BlacklistAlreadyExistsException exception) {
-
-        log.warn(
-                "Blacklist entry already exists: {}",
-                exception.getMessage()
-        );
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.CONFLICT.value(),
-                HttpStatus.CONFLICT.getReasonPhrase(),
-                exception.getMessage(),
-                null
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(BlacklistAlreadyRemovedException.class)
-    public ResponseEntity<ErrorResponse> handleBlacklistAlreadyRemoved(
-            BlacklistAlreadyRemovedException exception) {
-
-        log.warn(
-                "Blacklist entry already removed: {}",
-                exception.getMessage()
-        );
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.CONFLICT.value(),
-                HttpStatus.CONFLICT.getReasonPhrase(),
-                exception.getMessage(),
-                null
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(BlacklistNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleBlacklistNotFound(
-            BlacklistNotFoundException exception) {
-
-        log.warn(
-                "Blacklist record not found: {}",
-                exception.getMessage()
-        );
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.NOT_FOUND.value(),
-                HttpStatus.NOT_FOUND.getReasonPhrase(),
-                exception.getMessage(),
-                null
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(VisitorNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleVisitorNotFound(
-            VisitorNotFoundException exception) {
-
-        log.warn(
-                "Visitor not found: {}",
-                exception.getMessage()
-        );
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.NOT_FOUND.value(),
-                HttpStatus.NOT_FOUND.getReasonPhrase(),
-                exception.getMessage(),
-                null
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(errorResponse);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleMessageNotReadable(
-            HttpMessageNotReadableException exception) {
+            HttpMessageNotReadableException exception,
+            HttpServletRequest request) {
 
         log.warn(
-                "Request body could not be parsed: {}",
-                exception.getMostSpecificCause().getMessage()
+                "Invalid request body. requestId={}, path={}",
+                MDC.get("requestId"),
+                request.getRequestURI()
         );
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                "Invalid request body",
+        ErrorCode errorCode = ErrorCode.INVALID_REQUEST_BODY;
+
+        return buildErrorResponse(
+                errorCode.getHttpStatus(),
+                errorCode,
+                errorCode.getPublicMessage(),
+                request,
                 null
         );
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
-            IllegalArgumentException exception) {
+    @ExceptionHandler(VmsException.class)
+    public ResponseEntity<ErrorResponse> handleVmsException(
+            VmsException exception,
+            HttpServletRequest request) {
 
-        log.warn("Invalid request value: {}", exception.getMessage());
+        ErrorCode errorCode = exception.getErrorCode();
+        HttpStatus status = errorCode.getHttpStatus();
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                exception.getMessage(),
+        if (status.is5xxServerError()) {
+            log.error(
+                    "VMS application exception. code={}, requestId={}, path={}",
+                    errorCode,
+                    MDC.get("requestId"),
+                    request.getRequestURI(),
+                    exception
+            );
+        } else {
+            log.warn(
+                    "VMS application exception. code={}, status={}, requestId={}, path={}",
+                    errorCode,
+                    status.value(),
+                    MDC.get("requestId"),
+                    request.getRequestURI()
+            );
+        }
+
+        return buildErrorResponse(
+                status,
+                errorCode,
+                errorCode.getPublicMessage(),
+                request,
                 null
         );
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
     }
 
-    @ExceptionHandler(BusinessRuleException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessRuleException(
-            BusinessRuleException exception) {
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnexpectedException(
+            Exception exception,
+            HttpServletRequest request) {
 
-        log.warn("Business rule violation: {}", exception.getMessage());
+        String requestId = MDC.get("requestId");
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                exception.getMessage(),
-                null
+        log.error(
+                "Unhandled exception. requestId={}, path={}",
+                requestId,
+                request.getRequestURI(),
+                exception
         );
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
+        ErrorCode errorCode = ErrorCode.INTERNAL_ERROR;
+
+        return buildErrorResponse(
+                errorCode.getHttpStatus(),
+                errorCode,
+                errorCode.getPublicMessage(),
+                request,
+                null
+        );
     }
 
-
-    @ExceptionHandler(BadgeAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleBadgeAlreadyExists(
-            BadgeAlreadyExistsException exception) {
-
-        log.warn(
-                "Visitor badge already exists: {}",
-                exception.getMessage()
-        );
+    private ResponseEntity<ErrorResponse> buildErrorResponse(
+            HttpStatus status,
+            ErrorCode errorCode,
+            String message,
+            HttpServletRequest request,
+            Map<String, String> fieldErrors) {
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
-                HttpStatus.CONFLICT.value(),
-                HttpStatus.CONFLICT.getReasonPhrase(),
-                exception.getMessage(),
-                null
+                status.value(),
+                status.getReasonPhrase(),
+                errorCode.name(),
+                message,
+                request.getRequestURI(),
+                MDC.get("requestId"),
+                fieldErrors
         );
 
         return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(errorResponse);
-    }
-
-
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponse> handleRuntimeException(
-            RuntimeException exception) {
-
-        log.error("Unexpected internal server error", exception);
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                "An unexpected error occurred",
-                null
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .status(status)
                 .body(errorResponse);
     }
 }
+

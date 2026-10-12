@@ -1,5 +1,7 @@
 package com.adminvisitor.service.impl;
 
+import com.adminvisitor.mapper.DocumentMapper;
+import com.adminvisitor.service.DocumentService;
 import com.adminvisitor.dto.responsedto.DocumentResponse;
 // import com.adminvisitor.dto.responsedto.DocumentResponse;
 import com.adminvisitor.entity.Document;
@@ -11,12 +13,13 @@ import com.adminvisitor.enums.ProofType;
 import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.DocumentMetadataRepository;
 import com.adminvisitor.repository.DocumentRepository;
-import com.adminvisitor.repository.VisitRepository;
+//import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.repository.VisitorRepository;
 import com.adminvisitor.service.DocumentService;
 import com.adminvisitor.service.IdGeneratorService;
 import com.adminvisitor.service.ProofSecurityService;
 import lombok.RequiredArgsConstructor;
+import com.adminvisitor.service.DocumentStorageService;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
@@ -35,12 +38,17 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+
 public class DocumentServiceImpl implements DocumentService {
 
     private final DocumentRepository documentRepository;
     private final VisitorRepository visitorRepository;
-    private final IdGeneratorService idGeneratorService;
+    private final com.adminvisitor.service.IdGeneratorService idGeneratorService;
+   // private final IdGeneratorService idGeneratorService;
     private final DocumentMetadataRepository documentMetadataRepository;
+    private final DocumentMapper documentMapper;
+    private final DocumentStorageService documentStorageService;
+     //Active service for generating HMAC-SHA-256 blind indexes.
 
     private final ProofSecurityService proofSecurityService;
 
@@ -50,7 +58,8 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Value("${vms.document.upload-dir}")
     private String documentUploadDir;
-    private final VisitRepository visitRepository;
+  //  private final VisitRepository visitRepository;
+
 
     @Value("${vms.document.photo-upload-dir}")
     private String photoUploadDir;
@@ -68,12 +77,11 @@ public class DocumentServiceImpl implements DocumentService {
             );
         }
 
-        Visitor visitor = visitorRepository.findById(visitorId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Visitor not found: " + visitorId
-                        )
-                );
+        if (!visitorRepository.existsById(visitorId)) {
+            throw new ResourceNotFoundException(
+                    "Visitor not found: " + visitorId
+            );
+        }
 
         Document document = documentRepository
                 .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
@@ -108,52 +116,20 @@ public class DocumentServiceImpl implements DocumentService {
                 );
 
         try {
-            Path visitorDirectory =
-                    Paths.get(
-                            photoUploadDir,
-                            visitorId
-                    );
 
-            Files.createDirectories(visitorDirectory);
-
-            String originalFileName =
-                    file.getOriginalFilename();
-
-            String extension = "";
-
-            if (originalFileName != null
-                    && originalFileName.contains(".")) {
-
-                extension =
-                        originalFileName.substring(
-                                originalFileName.lastIndexOf(".")
-                        );
-            }
-
-            String storedFileName =
-                    metadataId + extension;
-
-            Path filePath =
-                    visitorDirectory.resolve(
-                            storedFileName
-                    );
-
-            Files.write(
-                    filePath,
-                    file.getBytes()
+            Path filePath = documentStorageService.store(
+                    file,
+                    photoUploadDir,
+                    visitorId,
+                    metadataId
             );
 
-            DocumentMetadata metadata =
-                    new DocumentMetadata();
+            DocumentMetadata metadata = new DocumentMetadata();
 
             metadata.setId(metadataId);
             metadata.setDocument(document);
-            metadata.setDocumentType(
-                    DocumentType.VISITOR_PHOTO
-            );
-            metadata.setDocumentPath(
-                    filePath.toString()
-            );
+            metadata.setDocumentType(DocumentType.VISITOR_PHOTO);
+            metadata.setDocumentPath(filePath.toString());
 
             return documentMetadataRepository.save(metadata);
 
@@ -165,6 +141,15 @@ public class DocumentServiceImpl implements DocumentService {
             );
         }
     }
+
+
+
+
+
+
+
+
+
 
     public boolean isNdaRequired(Visitor visitor) {
 
@@ -310,6 +295,7 @@ public class DocumentServiceImpl implements DocumentService {
         document.setVisitor(visitor);
         document.setNationality(nationality);
 
+
         //Aadhaar
         if (aadharNumber != null && !aadharNumber.isBlank()) {
 
@@ -322,7 +308,7 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         //pan
-        if (panNumber != null && !panNumber.isBlank()) {
+        if (panNumber != null && !panNumber.isBlank()){
 
             document.setPanNumber(
                     proofSecurityService.generateBlindIndex(
@@ -567,38 +553,16 @@ public class DocumentServiceImpl implements DocumentService {
                         )
                 );
 
-        return documentRepository
-                .findByVisitorId(visitorId)
-                .stream()
-                .flatMap(document ->
-                        documentMetadataRepository
-                                .findByDocumentId(document.getId())
-                                .stream()
-                )
-                .filter(metadata ->
-                        metadata.getDocumentType() != DocumentType.NDA
-                                && metadata.getDocumentType() != DocumentType.VISITOR_PHOTO
-                )
-                .map(metadata ->
-                        new DocumentResponse(
-                                metadata.getId(),
-                                metadata.getDocumentPath(),
-
-                                // Created At
-                                metadata.getCreatedAt() != null
-                                        ? metadata.getCreatedAt().toString()
-                                        : null,
-
-                                // Valid From - not applicable
-                                null,
-
-                                // Valid Until - not applicable
-                                null,
-
-                                // Overwritten By - not applicable
-                                null
+        return documentMetadataRepository
+                .findByDocument_Visitor_IdAndDocumentTypeNotIn(
+                        visitorId,
+                        List.of(
+                                DocumentType.NDA,
+                                DocumentType.VISITOR_PHOTO
                         )
                 )
+                .stream()
+                .map(documentMapper::toResponse)
                 .toList();
     }
 
@@ -625,12 +589,11 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
 
-        Visitor visitor = visitorRepository.findById(visitorId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Visitor not found: " + visitorId
-                        )
-                );
+        if (!visitorRepository.existsById(visitorId)) {
+            throw new ResourceNotFoundException(
+                    "Visitor not found: " + visitorId
+            );
+        }
 
 
 
@@ -648,6 +611,10 @@ public class DocumentServiceImpl implements DocumentService {
         List<DocumentMetadata> existingDocuments =
                 documentMetadataRepository
                         .findByDocumentId(document.getId());
+
+//        if (!existingDocuments.isEmpty()) {
+//            return existingDocuments;
+//        }
 
 
         final long MAX_FILE_SIZE =
@@ -682,79 +649,34 @@ public class DocumentServiceImpl implements DocumentService {
 
         try {
 
-            Files.createDirectories(visitorDirectory);
-
-
             List<DocumentMetadata> uploadedDocuments =
                     new java.util.ArrayList<>();
 
-
             for (MultipartFile file : files) {
 
-                String metadataId =
-                        idGeneratorService.generateId(
-                                "DOCUMENT_METADATA",
-                                "DMD"
-                        );
-
-
-
-                String originalFileName =
-                        file.getOriginalFilename();
-
-                String extension = "";
-
-                if (originalFileName != null
-                        && originalFileName.contains(".")) {
-
-                    extension =
-                            originalFileName.substring(
-                                    originalFileName.lastIndexOf(".")
-                            );
-                }
-
-
-                String storedFileName =
-                        metadataId + extension;
-
-
-                Path filePath =
-                        visitorDirectory.resolve(
-                                storedFileName
-                        );
-
-
-                Files.write(
-                        filePath,
-                        file.getBytes()
+                String metadataId = idGeneratorService.generateId(
+                        "DOCUMENT_METADATA",
+                        "DMD"
                 );
 
+                Path filePath = documentStorageService.store(
+                        file,
+                        documentUploadDir,
+                        visitorId,
+                        metadataId
+                );
 
-                DocumentMetadata metadata =
-                        new DocumentMetadata();
+                DocumentMetadata metadata = new DocumentMetadata();
 
                 metadata.setId(metadataId);
-
-                metadata.setDocument(
-                        document
-                );
-
-                metadata.setDocumentPath(
-                        filePath.toString()
-                );
-
+                metadata.setDocument(document);
+                metadata.setDocumentPath(filePath.toString());
 
                 DocumentMetadata savedMetadata =
-                        documentMetadataRepository.save(
-                                metadata
-                        );
+                        documentMetadataRepository.save(metadata);
 
-
-                uploadedDocuments.add(
-                        savedMetadata
-                );
+                uploadedDocuments.add(savedMetadata);
             }
-
 
             return uploadedDocuments;
 
@@ -814,6 +736,4 @@ public class DocumentServiceImpl implements DocumentService {
         }
         documentMetadataRepository.delete(metadata);
     }
-
 }
-

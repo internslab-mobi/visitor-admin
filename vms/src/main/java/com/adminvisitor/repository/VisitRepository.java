@@ -64,6 +64,12 @@ public interface VisitRepository extends JpaRepository<Visit, String>, JpaSpecif
         @EntityGraph(attributePaths = {"visitor", "host", "host.department"})
         Optional<Visit> findDetailsById(@Param("visitId") String visitId);
 
+        List<Visit> findByStatusAndExpectedArrivalAtGreaterThanEqualAndExpectedArrivalAtLessThan(
+                VisitStatus status,
+                LocalDateTime start,
+                LocalDateTime end
+        );
+
 
         @Query("""
     SELECT v.visitor.id, v.visitorType, v.expectedArrivalAt

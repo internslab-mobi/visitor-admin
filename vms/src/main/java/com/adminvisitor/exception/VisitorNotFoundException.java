@@ -1,8 +1,11 @@
 package com.adminvisitor.exception;
 
-public class VisitorNotFoundException extends RuntimeException {
+import com.adminvisitor.enums.ErrorCode;
+
+public class VisitorNotFoundException extends VmsException {
 
     public VisitorNotFoundException(String message) {
-        super(message);
+        super(ErrorCode.VISITOR_NOT_FOUND, message);
     }
 }
+

@@ -1,7 +1,10 @@
 package com.adminvisitor.exception;
 
-public class MobileNumberAlreadyExistsException extends RuntimeException {
+import com.adminvisitor.enums.ErrorCode;
+
+public class MobileNumberAlreadyExistsException extends VmsException {
+
     public MobileNumberAlreadyExistsException(String message) {
-        super(message);
+        super(ErrorCode.MOBILE_NUMBER_ALREADY_EXISTS, message);
     }
 }

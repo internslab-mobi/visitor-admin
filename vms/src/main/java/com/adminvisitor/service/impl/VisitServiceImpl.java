@@ -11,8 +11,10 @@ import com.adminvisitor.exception.MobileNumberAlreadyExistsException;
 import com.adminvisitor.repository.*;
 import com.adminvisitor.service.*;
 import com.adminvisitor.util.VisitReferenceUtil;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
 
 @Service
 @RequiredArgsConstructor
@@ -255,7 +258,7 @@ public class VisitServiceImpl implements VisitService {
             // 8. Persist the visit.
             stageStart = System.nanoTime();
 
-            Visit savedVisit = visitRepository.save(visit);
+        Visit savedVisit = visitRepository.save(visit);
 
             log.debug(
                     "Timing: visitRepository.save={} ms",
@@ -272,14 +275,14 @@ public class VisitServiceImpl implements VisitService {
                     elapsedMillis(stageStart)
             );
 
-            log.info(
-                    "Visit registered successfully. visitId={}, visitReference={}, visitorId={}, registrationType={}, status={}",
-                    savedVisit.getId(),
-                    savedVisit.getVisitReference(),
-                    visitor.getId(),
-                    savedVisit.getRegistrationType(),
-                    savedVisit.getStatus()
-            );
+        log.info(
+                "Visit registered successfully. visitId={}, visitReference={}, visitorId={}, registrationType={}, status={}",
+                savedVisit.getId(),
+                savedVisit.getVisitReference(),
+                visitor.getId(),
+                savedVisit.getRegistrationType(),
+                savedVisit.getStatus()
+        );
 
             // 10. Return the existing registration response structure.
             return RegistrationResponse.builder()
@@ -317,6 +320,7 @@ public class VisitServiceImpl implements VisitService {
         }
     }
 
+    // FIND OR CREATE VISITOR
     // FIND OR CREATE VISITOR
     private Visitor findOrCreateVisitor(RegistrationRequest request) {
 
@@ -419,6 +423,7 @@ public class VisitServiceImpl implements VisitService {
     }
 
     // VENDOR
+    // VENDOR
     private void createVendorIfRequired(
             Visitor visitor,
             RegistrationRequest request
@@ -473,7 +478,9 @@ public class VisitServiceImpl implements VisitService {
         );
 
         switch (request.nationality()) {
+
             case DOMESTIC -> {
+
                 boolean aadhaarBlacklisted =
                         blacklistService.isBlacklistedByProof(
                                 ProofType.AADHAAR,
@@ -481,6 +488,7 @@ public class VisitServiceImpl implements VisitService {
                         );
 
                 if (aadhaarBlacklisted) {
+
                     throw new BusinessRuleException(
                             "Person is in blacklist. Visit registration is not allowed"
                     );
@@ -493,6 +501,7 @@ public class VisitServiceImpl implements VisitService {
                         );
 
                 if (panBlacklisted) {
+
                     throw new BusinessRuleException(
                             "Person is in blacklist. Visit registration is not allowed"
                     );
@@ -508,6 +517,7 @@ public class VisitServiceImpl implements VisitService {
                         );
 
                 if (passportBlacklisted) {
+
                     throw new BusinessRuleException(
                             "Person is in blacklist. Visit registration is not allowed"
                     );

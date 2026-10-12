@@ -92,11 +92,9 @@ public final class VisitSpecification {
 
         return (root, query, criteriaBuilder) -> {
 
-            Join<Object, Object> visitor =
-                    root.join("visitor", JoinType.INNER);
+            Join<Object, Object> visitor = root.join("visitor", JoinType.INNER);
 
-            String searchValue =
-                    "%" + visitorName.trim().toLowerCase() + "%";
+            String searchValue = "%" + visitorName.trim().toLowerCase() + "%";
 
             return criteriaBuilder.or(
 

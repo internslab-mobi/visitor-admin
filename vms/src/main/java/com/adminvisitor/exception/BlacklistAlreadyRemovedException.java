@@ -1,8 +1,10 @@
 package com.adminvisitor.exception;
 
-public class BlacklistAlreadyRemovedException extends RuntimeException {
+import com.adminvisitor.enums.ErrorCode;
+
+public class BlacklistAlreadyRemovedException extends VmsException {
 
     public BlacklistAlreadyRemovedException(String message) {
-        super(message);
+        super(ErrorCode.BLACKLIST_ALREADY_REMOVED, message);
     }
 }
