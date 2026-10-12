@@ -2,7 +2,6 @@ package com.adminvisitor.controller;
 
 import com.adminvisitor.dto.requestdto.EmployeeCreateRequest;
 import com.adminvisitor.dto.responsedto.EmployeeResponse;
-import com.adminvisitor.entity.Employee;
 import com.adminvisitor.repository.EmployeeRepository;
 import com.adminvisitor.service.EmployeeService;
 import jakarta.validation.Valid;

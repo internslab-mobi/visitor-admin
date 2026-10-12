@@ -1,4 +1,4 @@
-package com.adminvisitor.service;
+package com.adminvisitor.service.impl;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

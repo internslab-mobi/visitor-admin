@@ -6,7 +6,7 @@ import com.adminvisitor.dto.responsedto.NdaStatusResponse;
 import com.adminvisitor.dto.responsedto.RegistrationResponse;
 import com.adminvisitor.dto.responsedto.VisitDashboardResponse;
 import com.adminvisitor.dto.responsedto.VisitDetailResponse;
-import com.adminvisitor.service.VisitService;
+import com.adminvisitor.service.impl.VisitServiceImpl;
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.enums.VisitView;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,7 +29,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class VisitController {
 
-    private final VisitService visitService;
+    private final VisitServiceImpl visitService;
 
     @PostMapping
     public ResponseEntity<RegistrationResponse> register(

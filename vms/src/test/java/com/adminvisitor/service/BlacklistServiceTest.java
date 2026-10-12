@@ -42,7 +42,7 @@ class BlacklistServiceTest {
     private BlacklistMapper blacklistMapper;
 
     @Mock
-    private IdGeneratorService idGeneratorService;
+    private com.adminvisitor.service.IdGeneratorServiceImpl idGeneratorService;
 
     @Mock
     private DocumentRepository documentRepository;
@@ -51,10 +51,10 @@ class BlacklistServiceTest {
     private HmacBlindIndexService hmacBlindIndexService;
 
     @Mock
-    private ProofValidationService proofValidationService;
+    private com.adminvisitor.service.ProofValidationServiceImpl proofValidationService;
 
     @InjectMocks
-    private BlacklistService blacklistService;
+    private com.adminvisitor.service.BlacklistServiceImpl blacklistService;
 
     @Test
     void isBlacklisted_WhenActiveRecordExists_ShouldReturnTrue() {

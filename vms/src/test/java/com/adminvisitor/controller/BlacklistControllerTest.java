@@ -6,7 +6,7 @@ import com.adminvisitor.dto.responsedto.BlacklistResponse;
 import com.adminvisitor.enums.BlacklistStatus;
 import com.adminvisitor.enums.Nationality;
 import com.adminvisitor.enums.VisitorType;
-import com.adminvisitor.service.BlacklistService;
+import com.adminvisitor.service.BlacklistServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -31,7 +31,7 @@ class BlacklistControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private BlacklistService blacklistService;
+    private BlacklistServiceImpl blacklistService;
 
     // Test methods will be added step by step
     @Test

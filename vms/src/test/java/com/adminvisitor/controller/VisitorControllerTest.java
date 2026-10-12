@@ -8,7 +8,7 @@ import com.adminvisitor.enums.Nationality;
 import com.adminvisitor.enums.RegistrationType;
 import com.adminvisitor.enums.VisitorType;
 import com.adminvisitor.enums.VisitStatus;
-import com.adminvisitor.service.VisitorService;
+import com.adminvisitor.service.impl.VisitorServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +34,7 @@ class VisitorControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private VisitorService visitorService;
+    private VisitorServiceImpl visitorService;
 
     private final ObjectMapper objectMapper =
             new ObjectMapper().findAndRegisterModules();

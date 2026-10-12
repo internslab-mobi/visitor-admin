@@ -3,7 +3,7 @@ package com.adminvisitor.controller;
 import com.adminvisitor.dto.requestdto.UpdateVisitorRequest;
 import com.adminvisitor.dto.responsedto.VisitorEditResponse;
 import com.adminvisitor.dto.responsedto.VisitorResponse;
-import com.adminvisitor.service.VisitorService;
+import com.adminvisitor.service.impl.VisitorServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class VisitorController {
 
-    private final VisitorService visitorService;
+    private final VisitorServiceImpl visitorService;
 
     @GetMapping("/{visitorId}")
     public ResponseEntity<VisitorResponse> getVisitor(
