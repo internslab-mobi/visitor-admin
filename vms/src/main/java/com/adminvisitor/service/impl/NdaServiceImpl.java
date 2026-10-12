@@ -23,15 +23,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
+//import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+//import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
-
+import com.adminvisitor.service.DocumentStorageService;
 @Service
 @RequiredArgsConstructor
 public class NdaServiceImpl implements NdaService {
@@ -41,7 +41,7 @@ public class NdaServiceImpl implements NdaService {
     private final DocumentMetadataRepository documentMetadataRepository;
     private final VisitRepository visitRepository;
     private final com.adminvisitor.service.IdGeneratorService idGeneratorService;
-
+    private final DocumentStorageService documentStorageService;
     @Value("${vms.document.nda-upload-dir}")
     private String ndaUploadDir;
 
@@ -133,27 +133,16 @@ public class NdaServiceImpl implements NdaService {
 
         try {
 
-            // 8. Create visitor-specific NDA directory
-            Path visitorDirectory =
-                    Paths.get(ndaUploadDir, visitorId);
-
-            Files.createDirectories(visitorDirectory);
-
-            // 9. Create unique NDA filename
-            String fileName = metadataId + ".pdf";
-
-            Path filePath =
-                    visitorDirectory.resolve(fileName);
-
-            // 10. Save NDA file
-            Files.write(
-                    filePath,
-                    ndaFile.getBytes()
+            // 8. Store NDA using the shared storage service
+            Path filePath = documentStorageService.store(
+                    ndaFile,
+                    ndaUploadDir,
+                    visitorId,
+                    metadataId
             );
 
-            // 11. Create NDA metadata
-            DocumentMetadata metadata =
-                    new DocumentMetadata();
+            // 9. Create NDA metadata
+            DocumentMetadata metadata = new DocumentMetadata();
 
             metadata.setId(metadataId);
             metadata.setDocument(document);
@@ -166,7 +155,7 @@ public class NdaServiceImpl implements NdaService {
 
             metadata.setOverwrittenBy(null);
 
-            // 12. Save metadata
+            // 10. Save metadata
             return documentMetadataRepository.save(metadata);
 
         } catch (IOException exception) {
@@ -268,21 +257,12 @@ public class NdaServiceImpl implements NdaService {
 
         try {
 
-            // Create visitor-specific NDA directory
-            Path visitorDirectory =
-                    Paths.get(ndaUploadDir, visitorId);
-
-            Files.createDirectories(visitorDirectory);
-
-            // Save supporting document as the new NDA
-            String fileName = newNdaMetadataId + ".pdf";
-
-            Path filePath =
-                    visitorDirectory.resolve(fileName);
-
-            Files.write(
-                    filePath,
-                    supportingDocument.getBytes()
+            // Store supporting document using the shared storage service
+            Path filePath = documentStorageService.store(
+                    supportingDocument,
+                    ndaUploadDir,
+                    visitorId,
+                    newNdaMetadataId
             );
 
             // Create new NDA metadata
@@ -293,9 +273,11 @@ public class NdaServiceImpl implements NdaService {
             newNdaMetadata.setDocument(document);
             newNdaMetadata.setDocumentType(DocumentType.NDA);
             newNdaMetadata.setDocumentPath(filePath.toString());
+
             newNdaMetadata.setValidUntil(
                     newValidUntil.atTime(LocalTime.MAX)
             );
+
             newNdaMetadata.setOverwrittenBy(null);
 
             // Mark old NDA as overwritten by the new NDA
@@ -304,11 +286,15 @@ public class NdaServiceImpl implements NdaService {
             );
 
             documentMetadataRepository.save(existingNda);
-            DocumentMetadata savedNda = documentMetadataRepository.save(newNdaMetadata);
+
+            DocumentMetadata savedNda =
+                    documentMetadataRepository.save(newNdaMetadata);
 
             return new NdaExtensionResult(
-                    savedNda,existingNda.getCreatedAt()
+                    savedNda,
+                    existingNda.getCreatedAt()
             );
+
 
         } catch (IOException exception) {
 

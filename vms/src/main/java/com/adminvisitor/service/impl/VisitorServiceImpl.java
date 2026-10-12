@@ -11,6 +11,7 @@ import com.adminvisitor.enums.VisitorType;
 import com.adminvisitor.exception.EmailAlreadyExistsException;
 import com.adminvisitor.exception.MobileNumberAlreadyExistsException;
 import com.adminvisitor.exception.VisitorNotFoundException;
+import com.adminvisitor.mapper.VisitorMapper;
 import com.adminvisitor.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.adminvisitor.service.VisitorService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +36,7 @@ public class VisitorServiceImpl implements VisitorService {
     private final DocumentMetadataRepository documentMetadataRepository;
     private final BlacklistRepository blacklistRepository;
     private final VisitRepository visitRepository;
+    private final VisitorMapper visitorMapper;
 
     @Transactional(readOnly = true)
     public VisitorResponse getVisitor(String visitorId) {
@@ -46,16 +51,38 @@ public class VisitorServiceImpl implements VisitorService {
         return toVisitorResponse(visitor);
     }
 
+
     @Transactional(readOnly = true)
     public List<VisitorResponse> getAllVisitors() {
 
         log.info("Fetching all visitors");
 
-        return visitorRepository.findAll()
+        List<Visitor> visitors = visitorRepository.findAll();
+
+        if (visitors.isEmpty()) {
+            return List.of();
+        }
+
+        List<String> visitorIds = visitors.stream()
+                .map(Visitor::getId)
+                .toList();
+
+        Map<String, Visit> latestVisits = visitRepository
+                .findLatestVisitsForVisitors(visitorIds)
                 .stream()
-                .map(this::toVisitorResponse)
+                .collect(Collectors.toMap(
+                        visit -> visit.getVisitor().getId(),
+                        Function.identity()
+                ));
+
+        return visitors.stream()
+                .map(visitor -> visitorMapper.toResponse(
+                        visitor,
+                        latestVisits.get(visitor.getId())
+                ))
                 .toList();
     }
+
 
     @Transactional
     public VisitorResponse updateVisitor(
@@ -126,39 +153,48 @@ public class VisitorServiceImpl implements VisitorService {
         return toVisitorResponse(updatedVisitor);
     }
 
+//    private VisitorResponse toVisitorResponse(Visitor visitor) {
+//
+//        Visit latestVisit =
+//                visitRepository
+//                        .findTopByVisitorIdOrderByCreatedAtDesc(
+//                                visitor.getId()
+//                        )
+//                        .orElse(null);
+//
+//        return new VisitorResponse(
+//
+//                visitor.getId(),
+//
+//                visitor.getFirstName(),
+//
+//                visitor.getLastName(),
+//
+//                visitor.getEmail(),
+//
+//                visitor.getMobileNumber(),
+//
+//                visitor.getCompanyName(),
+//
+//                latestVisit != null
+//                        ? latestVisit.getVisitorType().name()
+//                        : null,
+//
+//                latestVisit != null
+//                        ? latestVisit.getExpectedArrivalAt()
+//                        : null
+//        );
+//    }
+
+
     private VisitorResponse toVisitorResponse(Visitor visitor) {
 
-        Visit latestVisit =
-                visitRepository
-                        .findTopByVisitorIdOrderByCreatedAtDesc(
-                                visitor.getId()
-                        )
-                        .orElse(null);
+        Visit latestVisit = visitRepository
+                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
+                .orElse(null);
 
-        return new VisitorResponse(
-
-                visitor.getId(),
-
-                visitor.getFirstName(),
-
-                visitor.getLastName(),
-
-                visitor.getEmail(),
-
-                visitor.getMobileNumber(),
-
-                visitor.getCompanyName(),
-
-                latestVisit != null
-                        ? latestVisit.getVisitorType().name()
-                        : null,
-
-                latestVisit != null
-                        ? latestVisit.getExpectedArrivalAt()
-                        : null
-        );
+        return visitorMapper.toResponse(visitor, latestVisit);
     }
-
     @Transactional(readOnly = true)
     public VisitorEditResponse getVisitorEditDetails(
             String visitorId

@@ -2,6 +2,7 @@ package com.adminvisitor.repository;
 
 import com.adminvisitor.entity.Visit;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
@@ -41,5 +42,27 @@ public interface VisitRepository extends JpaRepository<Visit, String>, JpaSpecif
 
         List<Visit> findByVisitorIdOrderByExpectedArrivalAtDesc(
                 String visitorId
+        );
+
+
+        @Query("""
+    SELECT v
+    FROM Visit v
+    WHERE v.visitor.id IN :visitorIds
+      AND NOT EXISTS (
+          SELECT newer.id
+          FROM Visit newer
+          WHERE newer.visitor.id = v.visitor.id
+            AND (
+                newer.createdAt > v.createdAt
+                OR (
+                    newer.createdAt = v.createdAt
+                    AND newer.id > v.id
+                )
+            )
+      )
+    """)
+        List<Visit> findLatestVisitsForVisitors(
+                @Param("visitorIds") Collection<String> visitorIds
         );
 }

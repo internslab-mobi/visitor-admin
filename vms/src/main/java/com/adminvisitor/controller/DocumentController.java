@@ -3,6 +3,7 @@ package com.adminvisitor.controller;
 import com.adminvisitor.dto.responsedto.DocumentResponse;
 import com.adminvisitor.entity.DocumentMetadata;
 import com.adminvisitor.exception.ResourceNotFoundException;
+import com.adminvisitor.mapper.DocumentMapper;
 import com.adminvisitor.service.DocumentService;
 import com.adminvisitor.service.DocumentService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ import java.util.List;
 public class DocumentController {
 
     private final DocumentService documentService;
-
+    private final DocumentMapper documentMapper;
 
 
     @GetMapping("/{visitorId}/nda/download")
@@ -76,29 +77,11 @@ public class DocumentController {
                         files
                 );
 
-        List<DocumentResponse> response =
-                uploadedDocuments.stream()
-                        .map(metadata ->
-                                new DocumentResponse(
-                                        metadata.getId(),
-                                        metadata.getDocumentPath(),
 
-                                        // Created At
-                                        metadata.getCreatedAt() != null
-                                                ? metadata.getCreatedAt().toString()
-                                                : null,
+        List<DocumentResponse> response = uploadedDocuments.stream()
+                .map(documentMapper::toResponse)
+                .toList();
 
-                                        // Valid From - not applicable for proof documents
-                                        null,
-
-                                        // Valid Until - not applicable for proof documents
-                                        null,
-
-                                        // Overwritten By - not applicable for proof documents
-                                        null
-                                )
-                        )
-                        .toList();
 
         return ResponseEntity.ok(response);
     }

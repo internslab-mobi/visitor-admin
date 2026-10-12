@@ -1,11 +1,12 @@
+
 package com.adminvisitor.service.impl;
 
-import com.adminvisitor.service.EmailService;
-
-import com.adminvisitor.dto.responsedto.CancellationEmailData;
-import com.adminvisitor.entity.Visit;
 import com.adminvisitor.dto.responsedto.BadgeEmailData;
+import com.adminvisitor.dto.responsedto.CancellationEmailData;
 import com.adminvisitor.dto.responsedto.HostCheckInEmailData;
+import com.adminvisitor.entity.Visit;
+import com.adminvisitor.service.EmailService;
+import com.adminvisitor.util.DateTimeFormats;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -15,12 +16,11 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
-import org.springframework.scheduling.annotation.Async;
 
-import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 
 @Service
@@ -37,9 +37,6 @@ public class EmailServiceImpl implements EmailService {
     @Async
     public void sendVisitConfirmationEmail(Visit visit) {
 
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
-
         String visitorName =
                 visit.getVisitor().getFirstName()
                         + " "
@@ -50,8 +47,7 @@ public class EmailServiceImpl implements EmailService {
                         + " "
                         + visit.getHost().getLastName();
 
-        String hostEmail =
-                visit.getHost().getEmail();
+        String hostEmail = visit.getHost().getEmail();
 
         String departmentName =
                 visit.getHost().getDepartment().getDepartmentName();
@@ -61,14 +57,19 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("visitorName", visitorName);
         context.setVariable("visitReference", visit.getVisitReference());
         context.setVariable("purpose", visit.getPurpose());
+
         context.setVariable(
                 "expectedArrival",
-                visit.getExpectedArrivalAt().format(formatter)
+                visit.getExpectedArrivalAt()
+                        .format(DateTimeFormats.DISPLAY_DATE_TIME)
         );
+
         context.setVariable(
                 "expectedDeparture",
-                visit.getExpectedDepartureAt().format(formatter)
+                visit.getExpectedDepartureAt()
+                        .format(DateTimeFormats.DISPLAY_DATE_TIME)
         );
+
         context.setVariable("hostName", hostName);
         context.setVariable("departmentName", departmentName);
 
@@ -111,7 +112,6 @@ public class EmailServiceImpl implements EmailService {
             );
 
         } catch (MessagingException exception) {
-
             throw new IllegalStateException(
                     "Failed to prepare visit confirmation email",
                     exception
@@ -122,62 +122,28 @@ public class EmailServiceImpl implements EmailService {
     @Async
     public void sendVisitBadgeEmail(BadgeEmailData data) {
 
-        //context holds the data which has to send to html
         Context context = new Context();
 
-        context.setVariable(
-                "visitorName",
-                data.visitorName()
-        );
+        context.setVariable("visitorName", data.visitorName());
+        context.setVariable("visitReference", data.visitReference());
+        context.setVariable("hostName", data.hostName());
+        context.setVariable("issuedAt", data.issuedAt());
+        context.setVariable("validUntil", data.validUntil());
+        context.setVariable("visitorPhoto", data.visitorPhoto());
 
-        context.setVariable(
-                "visitReference",
-                data.visitReference()
+        String htmlBody = templateEngine.process(
+                "emails/visit-badge",
+                context
         );
-
-        context.setVariable(
-                "hostName",
-                data.hostName()
-        );
-
-        context.setVariable(
-                "issuedAt",
-                data.issuedAt()
-        );
-
-        context.setVariable(
-                "validUntil",
-                data.validUntil()
-        );
-        context.setVariable(
-                "visitorPhoto",
-                data.visitorPhoto()
-        );
-
-        String htmlBody =
-                templateEngine.process(
-                        "emails/visit-badge",
-                        context
-                );
 
         try {
-
-            MimeMessage message =
-                    mailSender.createMimeMessage();
+            MimeMessage message = mailSender.createMimeMessage();
 
             MimeMessageHelper helper =
-                    new MimeMessageHelper(
-                            message,
-                            true,
-                            "UTF-8"
-                    );
+                    new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setFrom(fromEmail);
-
-            helper.setTo(
-                    data.visitorEmail()
-            );
-
+            helper.setTo(data.visitorEmail());
             helper.setCc(data.hostEmail());
 
             helper.setSubject(
@@ -186,13 +152,9 @@ public class EmailServiceImpl implements EmailService {
             );
 
             byte[] qrImageBytes =
-                    Base64.getDecoder()
-                            .decode(data.qrCode());
+                    Base64.getDecoder().decode(data.qrCode());
 
-            helper.setText(
-                    htmlBody,
-                    true
-            );
+            helper.setText(htmlBody, true);
 
             helper.addInline(
                     "qrCode",
@@ -225,7 +187,6 @@ public class EmailServiceImpl implements EmailService {
             );
 
         } catch (MessagingException exception) {
-
             log.error(
                     "Failed to send visitor badge email. visitReference={}, recipient={}",
                     data.visitReference(),
@@ -247,74 +208,34 @@ public class EmailServiceImpl implements EmailService {
 
         Context context = new Context();
 
-        context.setVariable(
-                "hostName",
-                data.hostName()
-        );
+        context.setVariable("hostName", data.hostName());
+        context.setVariable("visitorName", data.visitorName());
+        context.setVariable("visitorType", data.visitorType());
+        context.setVariable("companyName", data.companyName());
+        context.setVariable("visitReference", data.visitReference());
+        context.setVariable("purpose", data.purpose());
+        context.setVariable("checkedInAt", data.checkedInAt());
 
-        context.setVariable(
-                "visitorName",
-                data.visitorName()
+        String htmlBody = templateEngine.process(
+                "emails/host-check-in",
+                context
         );
-
-        context.setVariable(
-                "visitorType",
-                data.visitorType()
-        );
-
-        context.setVariable(
-                "companyName",
-                data.companyName()
-        );
-
-        context.setVariable(
-                "visitReference",
-                data.visitReference()
-        );
-
-        context.setVariable(
-                "purpose",
-                data.purpose()
-        );
-
-        context.setVariable(
-                "checkedInAt",
-                data.checkedInAt()
-        );
-
-        String htmlBody =
-                templateEngine.process(
-                        "emails/host-check-in",
-                        context
-                );
 
         try {
-
-            MimeMessage message =
-                    mailSender.createMimeMessage();
+            MimeMessage message = mailSender.createMimeMessage();
 
             MimeMessageHelper helper =
-                    new MimeMessageHelper(
-                            message,
-                            true,
-                            "UTF-8"
-                    );
+                    new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setFrom(fromEmail);
-
-            helper.setTo(
-                    data.hostEmail()
-            );
+            helper.setTo(data.hostEmail());
 
             helper.setSubject(
                     "Visitor Checked In - "
                             + data.visitReference()
             );
 
-            helper.setText(
-                    htmlBody,
-                    true
-            );
+            helper.setText(htmlBody, true);
 
             mailSender.send(message);
 
@@ -325,7 +246,6 @@ public class EmailServiceImpl implements EmailService {
             );
 
         } catch (MessagingException exception) {
-
             log.error(
                     "Failed to send host check-in notification. visitReference={}, hostEmail={}",
                     data.visitReference(),
@@ -361,11 +281,7 @@ public class EmailServiceImpl implements EmailService {
             MimeMessage message = mailSender.createMimeMessage();
 
             MimeMessageHelper helper =
-                    new MimeMessageHelper(
-                            message,
-                            true,
-                            "UTF-8"
-                    );
+                    new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setFrom(fromEmail);
             helper.setTo(data.visitorEmail());
@@ -380,12 +296,10 @@ public class EmailServiceImpl implements EmailService {
             mailSender.send(message);
 
         } catch (MessagingException exception) {
-
             throw new IllegalStateException(
                     "Failed to prepare visit cancellation email",
                     exception
             );
         }
     }
-
 }
