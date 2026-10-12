@@ -7,7 +7,7 @@ import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import org.springframework.stereotype.Service;
-
+import org.springframework.beans.factory.annotation.Value;
 import java.io.ByteArrayOutputStream;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -18,6 +18,9 @@ import java.util.Map;
 public class QrTokenServiceImpl implements QrTokenService {
 
     private final SecureRandom secureRandom = new SecureRandom();
+    @Value("${app.frontend.base-url:http://localhost:4200}")
+    private String frontendBaseUrl;
+
     @Override
     public String generateToken() {
 
@@ -57,9 +60,10 @@ public class QrTokenServiceImpl implements QrTokenService {
 
             hints.put(EncodeHintType.MARGIN, 1);
 
+            String validationUrl = frontendBaseUrl + "/qr/validate?token=" + qrToken;
             BitMatrix bitMatrix =
                     new MultiFormatWriter().encode(
-                            qrToken,
+                            validationUrl,
                             BarcodeFormat.QR_CODE,
                             300,
                             300,
