@@ -1,46 +1,43 @@
 package com.adminvisitor.service.impl;
 
 import com.adminvisitor.dto.requestdto.AddVisitorToBlacklistRequest;
-import com.adminvisitor.dto.requestdto.BlacklistRequest;
 import com.adminvisitor.dto.responsedto.BlacklistResponse;
-import com.adminvisitor.entity.Blacklist;
-import com.adminvisitor.entity.BlacklistProof;
-import com.adminvisitor.entity.Document;
-import com.adminvisitor.entity.Visitor;
+import com.adminvisitor.entity.*;
 import com.adminvisitor.enums.BlacklistStatus;
 import com.adminvisitor.enums.ProofType;
+import com.adminvisitor.enums.VisitorType;
 import com.adminvisitor.exception.BlacklistAlreadyExistsException;
 import com.adminvisitor.exception.BlacklistAlreadyRemovedException;
 import com.adminvisitor.exception.BlacklistNotFoundException;
 import com.adminvisitor.exception.VisitorNotFoundException;
 import com.adminvisitor.mapper.BlacklistMapper;
-import com.adminvisitor.repository.BlacklistProofRepository;
-import com.adminvisitor.repository.BlacklistRepository;
-import com.adminvisitor.repository.DocumentRepository;
-import com.adminvisitor.repository.VisitorRepository;
+import com.adminvisitor.repository.*;
 import com.adminvisitor.service.BlacklistService;
-import com.adminvisitor.service.ProofValidationService;
+import com.adminvisitor.service.IdGeneratorService;
+import com.adminvisitor.service.ProofSecurityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class BlacklistServiceImpl implements BlacklistService
-{
+public class BlacklistServiceImpl implements BlacklistService {
 
     private final BlacklistRepository blacklistRepository;
     private final BlacklistProofRepository blacklistProofRepository;
     private final VisitorRepository visitorRepository;
     private final BlacklistMapper blacklistMapper;
-    private final IdGeneratorServiceImpl idGeneratorService;
+    private final IdGeneratorService idGeneratorService;
     private final DocumentRepository documentRepository;
 
-    private final com.adminvisitor.service.HmacBlindIndexService hmacBlindIndexService;
-    private final ProofValidationServiceImpl proofValidationService;
+    private final ProofSecurityService proofSecurityService;
+    private final VisitRepository visitRepository;
 
     @Transactional(readOnly = true)
     public boolean isBlacklisted(String visitorId) {
@@ -59,7 +56,7 @@ public class BlacklistServiceImpl implements BlacklistService
             String proofNumber) {
 
         String proofBlindIndex =
-                hmacBlindIndexService.generateBlindIndex(
+                proofSecurityService.generateBlindIndex(
                         proofType,
                         proofNumber
                 );
@@ -69,157 +66,40 @@ public class BlacklistServiceImpl implements BlacklistService
                         proofType,
                         proofBlindIndex,
                         BlacklistStatus.ACTIVE
-                )
-                .isPresent();
+                ).isPresent();
     }
 
-    public BlacklistResponse addToBlacklist(
-            BlacklistRequest request) {
-
-        // 1. Validate nationality + proof type
-        proofValidationService.validate(
-                request.getNationality(),
-                request.getProofType()
-        );
-
-        // 2. Generate blind index from normalized proof number
-        String proofBlindIndex =
-                hmacBlindIndexService.generateBlindIndex(
-                        request.getProofType(),
-                        request.getProofNumber()
-                );
-
-        // 3. Check whether this proof is already actively blacklisted
-        boolean alreadyBlacklisted =
-                blacklistProofRepository
-                        .findByProofTypeAndProofBlindIndexAndBlacklistStatus(
-                                request.getProofType(),
-                                proofBlindIndex,
-                                BlacklistStatus.ACTIVE
-                        )
-                        .isPresent();
-
-        if (alreadyBlacklisted) {
-            throw new BlacklistAlreadyExistsException(
-                    "Person is already in blacklist"
-            );
-        }
-
-        // 4. Find visitor
-        Visitor visitor =
-                visitorRepository.findById(request.getVisitorId())
-                        .orElseThrow(() ->
-                                new VisitorNotFoundException(
-                                        "Visitor not found"
-                                )
-                        );
-
-        // 5. Map request → Blacklist
-        Blacklist blacklist =
-                blacklistMapper.toEntity(
-                        request,
-                        visitor
-                );
-
-        // 6. Generate blacklist ID
-        blacklist.setId(
-                idGeneratorService.generateId(
-                        "BLACKLIST",
-                        "BL"
-                )
-        );
-
-        // 7. Set active status
-        blacklist.setStatus(
-                BlacklistStatus.ACTIVE
-        );
-
-        // 8. Create child proof record
-        BlacklistProof blacklistProof =
-                new BlacklistProof();
-
-        blacklistProof.setId(
-                idGeneratorService.generateId(
-                        "BLACKLIST_PROOF",
-                        "BLP"
-                )
-        );
-
-        blacklistProof.setBlacklist(blacklist);
-        blacklistProof.setProofType(request.getProofType());
-        blacklistProof.setProofBlindIndex(proofBlindIndex);
-
-        // 9. Attach proof to blacklist
-        blacklist.getProofs().add(blacklistProof);
-
-        // 10. Save blacklist + proof
-        Blacklist savedBlacklist =
-                blacklistRepository.save(blacklist);
-
-        return blacklistMapper.toResponse(
-                savedBlacklist
-        );
-    }
-
-    public BlacklistResponse addExistingVisitorToBlacklist(
-            String visitorId,
-            AddVisitorToBlacklistRequest request) {
+    public BlacklistResponse addExistingVisitorToBlacklist(String visitorId, AddVisitorToBlacklistRequest request) {
 
         // 1. Find the existing visitor
-        Visitor visitor =
-                visitorRepository.findById(visitorId)
-                        .orElseThrow(() ->
-                                new VisitorNotFoundException(
-                                        "Visitor not found"
-                                )
-                        );
+        Visitor visitor = visitorRepository.findById(visitorId)
+                .orElseThrow(() ->new VisitorNotFoundException("Visitor not found"));
 
         // 2. Find the latest document of the visitor
-        Document document =
-                documentRepository
-                        .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
-                        .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "No document found for visitor"
-                                )
-                        );
+        Document document = documentRepository
+                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
+                .orElseThrow(() ->new IllegalArgumentException("No document found for visitor"));
 
         // 3. Prevent duplicate active blacklist for this visitor
-        boolean alreadyBlacklisted =
-                blacklistRepository
-                        .findByVisitorIdAndStatus(
-                                visitorId,
-                                BlacklistStatus.ACTIVE
-                        )
-                        .isPresent();
+        boolean alreadyBlacklisted = blacklistRepository.findByVisitorIdAndStatus(visitorId, BlacklistStatus.ACTIVE).isPresent();
 
         if (alreadyBlacklisted) {
-            throw new BlacklistAlreadyExistsException(
-                    "Visitor is already in blacklist"
-            );
+            throw new BlacklistAlreadyExistsException("Visitor is already in blacklist");
         }
 
         // 4. Create the parent blacklist record
-        Blacklist blacklist = new Blacklist();
-
-        blacklist.setId(
-                idGeneratorService.generateId(
-                        "BLACKLIST",
-                        "BL"
-                )
-        );
-
-        blacklist.setVisitor(visitor);
-        blacklist.setNationality(document.getNationality());
-        blacklist.setReason(request.getReason());
-        blacklist.setCreatedBy(request.getCreatedBy());
-        blacklist.setStatus(BlacklistStatus.ACTIVE);
+        Blacklist blacklist = Blacklist.builder()
+                .id(idGeneratorService.generateId("BLACKLIST", "BL"))
+                .visitor(visitor)
+                .nationality(document.getNationality())
+                .reason(request.getReason())
+                .createdBy(request.getCreatedBy())
+                .status(BlacklistStatus.ACTIVE)
+                .build();
 
         // 5. Add proofs based on nationality
         switch (document.getNationality()) {
-
             case DOMESTIC -> {
-
                 if (document.getAadharNumber() != null
                         && !document.getAadharNumber().isBlank()) {
 
@@ -227,8 +107,7 @@ public class BlacklistServiceImpl implements BlacklistService
                             blacklist,
                             ProofType.AADHAAR,
                             document.getAadharNumber(),
-                            request.getCreatedBy()
-                    );
+                            request.getCreatedBy());
                 }
 
                 if (document.getPanNumber() != null
@@ -238,13 +117,11 @@ public class BlacklistServiceImpl implements BlacklistService
                             blacklist,
                             ProofType.PAN,
                             document.getPanNumber(),
-                            request.getCreatedBy()
-                    );
+                            request.getCreatedBy());
                 }
             }
 
             case INTERNATIONAL -> {
-
                 if (document.getPassportNumber() != null
                         && !document.getPassportNumber().isBlank()) {
 
@@ -252,37 +129,23 @@ public class BlacklistServiceImpl implements BlacklistService
                             blacklist,
                             ProofType.PASSPORT,
                             document.getPassportNumber(),
-                            request.getCreatedBy()
-                    );
+                            request.getCreatedBy());
                 }
             }
         }
 
         // 6. Required proof must exist
         if (blacklist.getProofs().isEmpty()) {
-            throw new IllegalArgumentException(
-                    "No valid identity proof found for visitor"
-            );
+            throw new IllegalArgumentException( "No valid identity proof found for visitor");
         }
 
         // 7. Save parent + child proofs
-        Blacklist savedBlacklist =
-                blacklistRepository.save(blacklist);
-
-        return blacklistMapper.toResponse(savedBlacklist);
+        Blacklist savedBlacklist = blacklistRepository.save(blacklist);
+        return toResponse(savedBlacklist);
     }
 
 
-    private void addBlacklistProof(
-            Blacklist blacklist,
-            ProofType proofType,
-            String proofBlindIndex,
-            String createdBy) {
-
-        // IMPORTANT:
-        // proofBlindIndex is already an HMAC-SHA-256 blind index
-        // from vms_document.
-        // DO NOT HMAC it again.
+    private void addBlacklistProof(Blacklist blacklist, ProofType proofType, String proofBlindIndex, String createdBy) {
 
         boolean alreadyBlacklisted =
                 blacklistProofRepository
@@ -290,87 +153,118 @@ public class BlacklistServiceImpl implements BlacklistService
                                 proofType,
                                 proofBlindIndex,
                                 BlacklistStatus.ACTIVE
-                        )
-                        .isPresent();
+                        ).isPresent();
 
         if (alreadyBlacklisted) {
             throw new BlacklistAlreadyExistsException(
-                    "Person with " + proofType
-                            + " proof is already in blacklist"
-            );
+                    "Person with " + proofType + " proof is already in blacklist");
         }
 
-        BlacklistProof blacklistProof =
-                new BlacklistProof();
+        BlacklistProof proof = BlacklistProof.builder()
+                .id(idGeneratorService.generateId("BLACKLIST_PROOF", "BLP"))
+                .blacklist(blacklist)
+                .proofType(proofType)
+                .proofBlindIndex(proofBlindIndex)
+                .createdBy(createdBy)
+                .build();
 
-        blacklistProof.setId(
-                idGeneratorService.generateId(
-                        "BLACKLIST_PROOF",
-                        "BLP"
-                )
-        );
-
-        blacklistProof.setBlacklist(blacklist);
-        blacklistProof.setProofType(proofType);
-
-        // Copy the existing blind index directly
-        blacklistProof.setProofBlindIndex(proofBlindIndex);
-
-        blacklistProof.setCreatedBy(createdBy);
-
-        blacklist.getProofs().add(blacklistProof);
+        blacklist.getProofs().add(proof);
     }
 
-    public BlacklistResponse removeFromBlacklist(
-            String blacklistId,
-            String removedBy) {
+    public BlacklistResponse removeFromBlacklist(String blacklistId, String removedBy) {
 
-        Blacklist blacklist =
-                blacklistRepository.findById(blacklistId)
-                        .orElseThrow(() ->
-                                new BlacklistNotFoundException(
-                                        "Blacklist record not found"
-                                )
-                        );
+        Blacklist blacklist = blacklistRepository.findById(blacklistId)
+                .orElseThrow(() ->new BlacklistNotFoundException("Blacklist record not found"));
 
         if (blacklist.getStatus() == BlacklistStatus.REMOVED) {
-            throw new BlacklistAlreadyRemovedException(
-                    "Person is already removed from blacklist"
-            );
+            throw new BlacklistAlreadyRemovedException("Person is already removed from blacklist");
         }
 
         blacklist.setStatus(BlacklistStatus.REMOVED);
         blacklist.setUpdatedBy(removedBy);
-
-        Blacklist updatedBlacklist =
-                blacklistRepository.save(blacklist);
-
-        return blacklistMapper.toResponse(
-                updatedBlacklist
-        );
+        Blacklist updatedBlacklist = blacklistRepository.save(blacklist);
+        return toResponse(updatedBlacklist);
     }
 
     @Transactional(readOnly = true)
     public List<BlacklistResponse> getAllBlacklistRecords() {
 
-        return blacklistRepository.findAll()
-                .stream()
-                .map(blacklistMapper::toResponse)
+        List<Blacklist> blacklists = blacklistRepository.findAll();
+
+        if (blacklists.isEmpty()) {
+            return List.of();
+        }
+
+        List<String> visitorIds = blacklists.stream()
+                .map(blacklist -> blacklist.getVisitor().getId())
+                .distinct()
+                .toList();
+
+        List<String> blacklistIds = blacklists.stream()
+                .map(Blacklist::getId)
+                .toList();
+
+        Map<String, VisitorType> visitorTypesByVisitorId = new HashMap<>();
+
+        visitRepository.findLatestVisitsByVisitorIds(visitorIds)
+                .forEach(row ->
+                        visitorTypesByVisitorId.putIfAbsent(
+                                (String) row[0],
+                                (VisitorType) row[1]
+                        )
+                );
+
+        Map<String, List<ProofType>> proofTypesByBlacklistId =
+                blacklistProofRepository.findByBlacklist_IdIn(blacklistIds)
+                        .stream()
+                        .collect(Collectors.groupingBy(
+                                proof -> proof.getBlacklist().getId(),
+                                Collectors.mapping(
+                                        BlacklistProof::getProofType,
+                                        Collectors.toList()
+                                )
+                        ));
+
+        return blacklists.stream()
+                .map(blacklist -> blacklistMapper.toResponse(
+                        blacklist,
+                        visitorTypesByVisitorId.get(
+                                blacklist.getVisitor().getId()
+                        ),
+                        proofTypesByBlacklistId.getOrDefault(
+                                blacklist.getId(),
+                                List.of()
+                        )
+                ))
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public BlacklistResponse getBlacklistById(
-            String id) {
+    public BlacklistResponse getBlacklistById(String id) {
+        Blacklist blacklist = blacklistRepository.findById(id)
+                .orElseThrow(() ->new BlacklistNotFoundException("Blacklist record not found"));
 
-        Blacklist blacklist =
-                blacklistRepository.findById(id)
-                        .orElseThrow(() ->
-                                new BlacklistNotFoundException(
-                                        "Blacklist record not found"
-                                )
-                        );
+        return toResponse(blacklist);
+    }
 
-        return blacklistMapper.toResponse(blacklist);
+    private BlacklistResponse toResponse(Blacklist blacklist) {
+        List<ProofType> matchingProofTypes =
+                blacklistProofRepository.findByBlacklistId(blacklist.getId())
+                        .stream()
+                        .map(BlacklistProof::getProofType)
+                        .toList();
+
+        VisitorType visitorType =
+                visitRepository.findTopByVisitorIdOrderByCreatedAtDesc(
+                                blacklist.getVisitor().getId()
+                        )
+                        .map(Visit::getVisitorType)
+                        .orElse(null);
+
+        return blacklistMapper.toResponse(
+                blacklist,
+                visitorType,
+                matchingProofTypes
+        );
     }
 }

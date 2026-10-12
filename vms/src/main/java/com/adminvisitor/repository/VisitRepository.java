@@ -40,35 +40,48 @@ public interface VisitRepository extends JpaRepository<Visit, String>, JpaSpecif
                 LocalDateTime time
         );
 
+        @EntityGraph(attributePaths = {"host", "host.department"})
         List<Visit> findByVisitorIdOrderByExpectedArrivalAtDesc(
                 String visitorId
         );
 
 
-        @Query("""
-    SELECT v
-    FROM Visit v
-    WHERE v.visitor.id IN :visitorIds
-      AND NOT EXISTS (
-          SELECT newer.id
-          FROM Visit newer
-          WHERE newer.visitor.id = v.visitor.id
-            AND (
-                newer.createdAt > v.createdAt
-                OR (
-                    newer.createdAt = v.createdAt
-                    AND newer.id > v.id
-                )
-            )
-      )
-    """)
-        List<Visit> findLatestVisitsForVisitors(
-                @Param("visitorIds") Collection<String> visitorIds
+        @EntityGraph(attributePaths = {"visitor", "host"})
+        @Override
+        List<Visit> findAll(
+                org.springframework.data.jpa.domain.Specification<Visit> specification,
+                org.springframework.data.domain.Sort sort
         );
+
+        @EntityGraph(attributePaths = {"visitor", "host"})
+        @Override
+        org.springframework.data.domain.Page<Visit> findAll(
+                org.springframework.data.jpa.domain.Specification<Visit> specification,
+                org.springframework.data.domain.Pageable pageable
+        );
+
+        @Query("SELECT v FROM Visit v WHERE v.id = :visitId")
+        @EntityGraph(attributePaths = {"visitor", "host", "host.department"})
+        Optional<Visit> findDetailsById(@Param("visitId") String visitId);
 
         List<Visit> findByStatusAndExpectedArrivalAtGreaterThanEqualAndExpectedArrivalAtLessThan(
                 VisitStatus status,
                 LocalDateTime start,
                 LocalDateTime end
         );
+
+
+        @Query("""
+    SELECT v.visitor.id, v.visitorType, v.expectedArrivalAt
+    FROM Visit v
+    WHERE v.visitor.id IN :visitorIds
+      AND v.createdAt = (
+          SELECT MAX(v2.createdAt)
+          FROM Visit v2
+          WHERE v2.visitor.id = v.visitor.id
+      )
+    """)
+        List<Object[]> findLatestVisitsByVisitorIds(
+                @Param("visitorIds") Collection<String> visitorIds);
+
 }

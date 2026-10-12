@@ -2,6 +2,7 @@ package com.adminvisitor.entity;
 
 import com.adminvisitor.enums.ProofType;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -35,4 +36,19 @@ public class BlacklistProof extends BaseEntity {
 
     @Column(name = "proof_blind_index", nullable = false, length = 43)
     private String proofBlindIndex;
+
+    @Builder
+    public BlacklistProof(
+            String id,
+            Blacklist blacklist,
+            ProofType proofType,
+            String proofBlindIndex,
+            String createdBy
+    ) {
+        this.id = id;
+        this.blacklist = blacklist;
+        this.proofType = proofType;
+        this.proofBlindIndex = proofBlindIndex;
+        this.setCreatedBy(createdBy);
+    }
 }

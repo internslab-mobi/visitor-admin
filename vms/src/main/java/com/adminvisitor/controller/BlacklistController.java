@@ -1,7 +1,6 @@
 package com.adminvisitor.controller;
 
 import com.adminvisitor.dto.requestdto.AddVisitorToBlacklistRequest;
-import com.adminvisitor.dto.requestdto.BlacklistRequest;
 import com.adminvisitor.dto.responsedto.BlacklistResponse;
 import com.adminvisitor.service.BlacklistService;
 import jakarta.validation.Valid;
@@ -18,18 +17,6 @@ import java.util.List;
 public class BlacklistController {
 
     private final BlacklistService blacklistService;
-
-    @PostMapping
-    public ResponseEntity<BlacklistResponse> addToBlacklist(
-            @Valid @RequestBody BlacklistRequest request) {
-
-        BlacklistResponse response =
-                blacklistService.addToBlacklist(request);
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
-    }
 
     @PutMapping("/{id}/remove")
     public ResponseEntity<BlacklistResponse> removeFromBlacklist(

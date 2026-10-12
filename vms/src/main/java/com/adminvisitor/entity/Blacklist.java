@@ -2,8 +2,8 @@ package com.adminvisitor.entity;
 
 import com.adminvisitor.enums.BlacklistStatus;
 import com.adminvisitor.enums.Nationality;
-import com.adminvisitor.enums.ProofType;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -43,4 +43,23 @@ public class Blacklist extends BaseEntity {
             orphanRemoval = true
     )
     private List<BlacklistProof> proofs = new ArrayList<>();
+
+    @Builder
+    public Blacklist(
+            String id,
+            Visitor visitor,
+            Nationality nationality,
+            String reason,
+            BlacklistStatus status,
+            List<BlacklistProof> proofs,
+            String createdBy
+    ) {
+        this.id = id;
+        this.visitor = visitor;
+        this.nationality = nationality;
+        this.reason = reason;
+        this.status = status;
+        this.proofs = proofs != null ? proofs : new ArrayList<>();
+        this.setCreatedBy(createdBy);
+    }
 }

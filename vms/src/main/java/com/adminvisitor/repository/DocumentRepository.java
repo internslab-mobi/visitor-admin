@@ -32,4 +32,6 @@ public interface DocumentRepository
 
     @EntityGraph(attributePaths = {"visitor"})
     List<Document> findByVisitorId(String visitorId);
+
+    boolean existsByVisitor_IdAndNationalityIsNotNull(String visitorId);
 }

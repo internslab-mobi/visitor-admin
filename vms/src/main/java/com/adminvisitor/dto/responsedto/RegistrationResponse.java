@@ -3,9 +3,11 @@ package com.adminvisitor.dto.responsedto;
 import com.adminvisitor.enums.RegistrationType;
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.enums.VisitorType;
+import lombok.Builder;
 
 import java.time.LocalDateTime;
 
+@Builder
 public record RegistrationResponse(
 
         String visitId,

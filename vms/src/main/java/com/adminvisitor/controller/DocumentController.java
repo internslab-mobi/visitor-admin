@@ -51,21 +51,10 @@ public class DocumentController {
         );
     }
 
-//    @GetMapping("/{visitorId}/identity-proof")
-//    public ResponseEntity<IdentityProofResponse> getIdentityProofs(
-//            @PathVariable String visitorId
-//    ) {
-//        return ResponseEntity.ok(
-//                documentService.getIdentityProofs(visitorId)
-//        );
-//    }
-
-
     @PostMapping(
             value = "/api/proof-documents/upload/{visitorId}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-
     public ResponseEntity<List<DocumentResponse>> uploadProofDocuments(
             @PathVariable String visitorId,
             @RequestParam("files") List<MultipartFile> files
@@ -81,7 +70,6 @@ public class DocumentController {
         List<DocumentResponse> response = uploadedDocuments.stream()
                 .map(documentMapper::toResponse)
                 .toList();
-
 
         return ResponseEntity.ok(response);
     }

@@ -2,11 +2,7 @@ package com.adminvisitor.service;
 
 import com.adminvisitor.dto.requestdto.CheckInRequest;
 import com.adminvisitor.dto.requestdto.RegistrationRequest;
-import com.adminvisitor.dto.responsedto.NdaStatusResponse;
-import com.adminvisitor.dto.responsedto.RegistrationResponse;
-import com.adminvisitor.dto.responsedto.VisitDashboardResponse;
-import com.adminvisitor.dto.responsedto.VisitDetailResponse;
-import com.adminvisitor.dto.responsedto.VisitorLogResponse;
+import com.adminvisitor.dto.responsedto.*;
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.enums.VisitView;
 import com.adminvisitor.enums.VisitorType;
@@ -59,8 +55,5 @@ public interface VisitService {
 
     NdaStatusResponse getNdaStatus(String visitId);
 
-    void verifyIdentity(
-            String visitId,
-            CheckInRequest request
-    );
+    void verifyIdentity(String visitId, CheckInRequest request);
 }

@@ -11,20 +11,17 @@ public interface BlacklistService {
 
     boolean isBlacklisted(String visitorId);
 
-    boolean isBlacklistedByProof(
-            ProofType proofType,
-            String proofNumber);
-
-    BlacklistResponse addToBlacklist(
-            BlacklistRequest request);
+    boolean isBlacklistedByProof(ProofType proofType, String proofNumber);
 
     BlacklistResponse addExistingVisitorToBlacklist(
             String visitorId,
-            AddVisitorToBlacklistRequest request);
+            AddVisitorToBlacklistRequest request
+    );
 
     BlacklistResponse removeFromBlacklist(
             String blacklistId,
-            String removedBy);
+            String removedBy
+    );
 
     List<BlacklistResponse> getAllBlacklistRecords();
 

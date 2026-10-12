@@ -13,10 +13,14 @@ import com.adminvisitor.enums.ProofType;
 import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.DocumentMetadataRepository;
 import com.adminvisitor.repository.DocumentRepository;
-import com.adminvisitor.repository.VisitRepository;
+//import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.repository.VisitorRepository;
+import com.adminvisitor.service.DocumentService;
+import com.adminvisitor.service.IdGeneratorService;
+import com.adminvisitor.service.ProofSecurityService;
 import lombok.RequiredArgsConstructor;
 import com.adminvisitor.service.DocumentStorageService;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -40,17 +44,21 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentRepository documentRepository;
     private final VisitorRepository visitorRepository;
     private final com.adminvisitor.service.IdGeneratorService idGeneratorService;
+   // private final IdGeneratorService idGeneratorService;
     private final DocumentMetadataRepository documentMetadataRepository;
     private final DocumentMapper documentMapper;
     private final DocumentStorageService documentStorageService;
      //Active service for generating HMAC-SHA-256 blind indexes.
 
-    private final com.adminvisitor.service.HmacBlindIndexService hmacBlindIndexService;
+    private final ProofSecurityService proofSecurityService;
 
 
+    @Value("${vms.document.nda-upload-dir}")
+    private String ndaUploadDir;
 
     @Value("${vms.document.upload-dir}")
     private String documentUploadDir;
+  //  private final VisitRepository visitRepository;
 
 
     @Value("${vms.document.photo-upload-dir}")
@@ -83,9 +91,6 @@ public class DocumentServiceImpl implements DocumentService {
                         )
                 );
 
-        /*
-         * Maximum visitor photo size: 5 MB.
-         */
         final long MAX_FILE_SIZE = 5 * 1024 * 1024;
 
         if (file.getSize() > MAX_FILE_SIZE) {
@@ -94,9 +99,6 @@ public class DocumentServiceImpl implements DocumentService {
             );
         }
 
-        /*
-         * Only image files are allowed.
-         */
         String contentType = file.getContentType();
 
         if (contentType == null
@@ -293,39 +295,34 @@ public class DocumentServiceImpl implements DocumentService {
         document.setVisitor(visitor);
         document.setNationality(nationality);
 
-        /*
-         * Aadhaar
-         */
+
+        //Aadhaar
         if (aadharNumber != null && !aadharNumber.isBlank()) {
 
             document.setAadharNumber(
-                    hmacBlindIndexService.generateBlindIndex(
+                    proofSecurityService.generateBlindIndex(
                             ProofType.AADHAAR,
                             aadharNumber
                     )
             );
         }
 
-        /*
-         * PAN
-         */
-        if (panNumber != null && !panNumber.isBlank()) {
+        //pan
+        if (panNumber != null && !panNumber.isBlank()){
 
             document.setPanNumber(
-                    hmacBlindIndexService.generateBlindIndex(
+                    proofSecurityService.generateBlindIndex(
                             ProofType.PAN,
                             panNumber
                     )
             );
         }
 
-        /*
-         * Passport
-         */
+        //passport
         if (passportNumber != null && !passportNumber.isBlank()) {
 
             document.setPassportNumber(
-                    hmacBlindIndexService.generateBlindIndex(
+                    proofSecurityService.generateBlindIndex(
                             ProofType.PASSPORT,
                             passportNumber
                     )
@@ -371,7 +368,7 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         String blindIndex =
-                hmacBlindIndexService.generateBlindIndex(
+                proofSecurityService.generateBlindIndex(
                         proofType,
                         proofNumber
                 );
@@ -406,17 +403,7 @@ public class DocumentServiceImpl implements DocumentService {
      * ============================================================
      * OLD AES ENCRYPTION FLOW
      * ============================================================
-     *
-     * Kept for future reference.
-     *
-     * IMPORTANT:
-     * Do NOT use this flow for the current vms_document
-     * identity-proof columns.
-     *
-     * Current columns contain HMAC blind indexes.
-     */
 
-    /*
     private final AesEncryptionService aesEncryptionService;
 
     @Transactional
@@ -554,9 +541,10 @@ public class DocumentServiceImpl implements DocumentService {
 
 
 
-
     @Transactional(readOnly = true)
-    public List<DocumentResponse> getAllDocuments(String visitorId) {
+    public List<DocumentResponse> getAllDocuments(
+            String visitorId
+    ) {
 
         visitorRepository.findById(visitorId)
                 .orElseThrow(() ->
