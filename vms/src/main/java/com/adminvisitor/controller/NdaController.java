@@ -41,34 +41,34 @@ public class NdaController {
         );
 
 
-            DocumentResponse response = new DocumentResponse(
-                    metadata.getId(),
-                    metadata.getDocumentPath(),
+        DocumentResponse response = new DocumentResponse(
+                metadata.getId(),
+                metadata.getDocumentPath(),
 
-                    // Actual upload/creation time
-                    metadata.getCreatedAt() != null
-                            ? metadata.getCreatedAt().toString()
-                            : null,
+                // Actual upload/creation time
+                metadata.getCreatedAt() != null
+                        ? metadata.getCreatedAt().toString()
+                        : null,
 
-                    // New NDA: Valid From = Created At
-                    metadata.getCreatedAt() != null
-                            ? metadata.getCreatedAt().toString()
-                            : null,
+                // New NDA: Valid From = Created At
+                metadata.getCreatedAt() != null
+                        ? metadata.getCreatedAt().toString()
+                        : null,
 
-                    // Valid Until
-                    metadata.getValidUntil() != null
-                            ? metadata.getValidUntil().toString()
-                            : null,
+                // Valid Until
+                metadata.getValidUntil() != null
+                        ? metadata.getValidUntil().toString()
+                        : null,
 
-                    // New NDA is not overriding another NDA
-                    null
-            );
+                // New NDA is not overriding another NDA
+                null
+        );
 
-            return ResponseEntity.ok(response);
-        }
+        return ResponseEntity.ok(response);
+    }
 
 
-        @PostMapping(
+    @PostMapping(
             value = "/{visitorId}/extend",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )

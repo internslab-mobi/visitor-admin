@@ -27,13 +27,13 @@ class VisitBadgeServiceTest {
     private VisitBadgeRepository visitBadgeRepository;
 
     @Mock
-    private IdGeneratorService idGeneratorService;
+    private com.adminvisitor.service.IdGeneratorService idGeneratorService;
 
     @Mock
-    private QrTokenService qrTokenService;
+    private com.adminvisitor.service.QrTokenService qrTokenService;
 
     @InjectMocks
-    private VisitBadgeService visitBadgeService;
+    private com.adminvisitor.service.VisitBadgeService visitBadgeService;
 
     // CREATE BADGE - SUCCESS
 

@@ -1,14 +1,11 @@
 package com.adminvisitor.repository;
 
-import com.adminvisitor.entity.Department;
-import com.adminvisitor.entity.Employee;
-import com.adminvisitor.entity.Visit;
-import com.adminvisitor.entity.VisitBadge;
-import com.adminvisitor.entity.Visitor;
+import com.adminvisitor.entity.*;
 import com.adminvisitor.enums.BadgeStatus;
 import com.adminvisitor.enums.RegistrationType;
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.enums.VisitorType;
+import lombok.Data;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +14,10 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Data
 @DataJpaTest
 class VisitBadgeRepositoryTest {
 

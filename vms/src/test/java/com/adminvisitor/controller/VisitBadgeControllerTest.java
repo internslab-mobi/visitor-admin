@@ -5,7 +5,6 @@ import com.adminvisitor.entity.VisitBadge;
 import com.adminvisitor.enums.BadgeStatus;
 import com.adminvisitor.exception.BadgeAlreadyExistsException;
 import com.adminvisitor.exception.GlobalExceptionHandler;
-import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.service.EmailService;
 import com.adminvisitor.service.QrCodeService;
