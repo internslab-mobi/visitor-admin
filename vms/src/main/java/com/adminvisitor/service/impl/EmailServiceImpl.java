@@ -4,6 +4,7 @@ package com.adminvisitor.service.impl;
 import com.adminvisitor.dto.responsedto.BadgeEmailData;
 import com.adminvisitor.dto.responsedto.CancellationEmailData;
 import com.adminvisitor.dto.responsedto.HostCheckInEmailData;
+import com.adminvisitor.dto.responsedto.HostDailyReminderEmailData;
 import com.adminvisitor.entity.Visit;
 import com.adminvisitor.service.EmailService;
 import com.adminvisitor.util.DateTimeFormats;
@@ -298,6 +299,57 @@ public class EmailServiceImpl implements EmailService {
         } catch (MessagingException exception) {
             throw new IllegalStateException(
                     "Failed to prepare visit cancellation email",
+                    exception
+            );
+        }
+    }
+
+    @Async
+    @Override
+    public void sendHostDailyReminderEmail(
+            HostDailyReminderEmailData data
+    ) {
+        Context context = new Context();
+
+        context.setVariable("hostName", data.hostName());
+        context.setVariable("reminderDate", data.reminderDate());
+        context.setVariable("visits", data.visits());
+
+        String htmlBody = templateEngine.process(
+                "emails/host-daily-reminder",
+                context
+        );
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(data.hostEmail());
+            helper.setSubject(
+                    "Today's Expected Visitors - " + data.reminderDate()
+            );
+            helper.setText(htmlBody, true);
+
+            mailSender.send(message);
+
+            log.info(
+                    "Host daily reminder email sent successfully. hostEmail={}, visitCount={}",
+                    data.hostEmail(),
+                    data.visits().size()
+            );
+
+        } catch (MessagingException exception) {
+            log.error(
+                    "Failed to send host daily reminder email. hostEmail={}",
+                    data.hostEmail(),
+                    exception
+            );
+
+            throw new IllegalStateException(
+                    "Failed to send host daily reminder email",
                     exception
             );
         }

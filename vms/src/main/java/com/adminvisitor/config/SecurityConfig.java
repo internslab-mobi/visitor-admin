@@ -198,8 +198,7 @@ public class SecurityConfig {
                         ).hasRole("FRONT_DESK")
 
                         .requestMatchers(
-                                HttpMethod.PATCH,
-                                "/api/visits/*/check-out"
+                                HttpMethod.PATCH, "/api/visits/*/check-out"
                         ).hasRole("FRONT_DESK")
 
                         .requestMatchers(

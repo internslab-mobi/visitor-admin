@@ -3,6 +3,7 @@ package com.adminvisitor.service;
 import com.adminvisitor.dto.responsedto.BadgeEmailData;
 import com.adminvisitor.dto.responsedto.CancellationEmailData;
 import com.adminvisitor.dto.responsedto.HostCheckInEmailData;
+import com.adminvisitor.dto.responsedto.HostDailyReminderEmailData;
 import com.adminvisitor.entity.Visit;
 
 public interface EmailService {
@@ -12,8 +13,14 @@ public interface EmailService {
     void sendVisitBadgeEmail(BadgeEmailData data);
 
     void sendHostCheckInNotification(
-            HostCheckInEmailData data);
+            HostCheckInEmailData data
+    );
 
     void sendVisitCancellationEmail(
-            CancellationEmailData data);
+            CancellationEmailData data
+    );
+
+    void sendHostDailyReminderEmail(
+            HostDailyReminderEmailData data
+    );
 }

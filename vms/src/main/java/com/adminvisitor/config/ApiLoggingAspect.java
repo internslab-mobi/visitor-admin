@@ -52,22 +52,18 @@ public class ApiLoggingAspect {
 
         } catch (Throwable ex) {
 
-            double durationMs =
-                    (System.nanoTime() - startTime) / 1_000_000.0;
+        double durationMs =
+                (System.nanoTime() - startTime) / 1_000_000.0;
 
-            int status =
-                    response.getStatus();
+        log.warn(
+                "API_FAILED method={} path={} durationMs={} exception={}",
+                httpMethod,
+                path,
+                String.format("%.2f", durationMs),
+                ex.getClass().getSimpleName()
+        );
 
-            log.warn(
-                    "API_FAILED method={} path={} status={} durationMs={} exception={}",
-                    httpMethod,
-                    path,
-                    status,
-                    String.format("%.2f", durationMs),
-                    ex.getClass().getSimpleName()
-            );
-
-            throw ex;
-        }
+        throw ex;
+    }
     }
 }

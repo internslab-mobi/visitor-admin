@@ -748,8 +748,4 @@ public class DocumentServiceImpl implements DocumentService {
         }
         documentMetadataRepository.delete(metadata);
     }
-
-
-
-    }
-
+}
