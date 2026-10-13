@@ -9,30 +9,39 @@ import com.adminvisitor.entity.Employee;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.time.Duration;
+
 @Mapper(componentModel = "spring")
 public interface VisitMapper {
 
     @Mapping(target = "visitId", source = "id")
     @Mapping(target = "visitorId", source = "visitor.id")
-    @Mapping(target = "visitorName", expression = "java(visitorName(visit.getVisitor()))")
-    @Mapping(target = "hostName", expression = "java(employeeName(visit.getHost()))")
-    @Mapping(target = "visitDate", expression = "java(visit.getExpectedArrivalAt() != null ? visit.getExpectedArrivalAt().toLocalDate() : null)")
+    @Mapping(target = "visitorName",
+            expression = "java(visitorName(visit.getVisitor()))")
+    @Mapping(target = "hostName",
+            expression = "java(employeeName(visit.getHost()))")
+    @Mapping(target = "visitDate",
+            expression = "java(visit.getExpectedArrivalAt() != null ? visit.getExpectedArrivalAt().toLocalDate() : null)")
     VisitorLogResponse toVisitorLogResponse(Visit visit);
 
     @Mapping(target = "visitId", source = "id")
     @Mapping(target = "visitorId", source = "visitor.id")
-    @Mapping(target = "visitorName", expression = "java(visitorName(visit.getVisitor()))")
+    @Mapping(target = "visitorName",
+            expression = "java(visitorName(visit.getVisitor()))")
     @Mapping(target = "visitorEmail", source = "visitor.email")
     @Mapping(target = "visitorMobile", source = "visitor.mobileNumber")
-    @Mapping(target = "hostName", expression = "java(employeeName(visit.getHost()))")
-    @Mapping(target = "lastVisit", expression = "java(visit.getExpectedArrivalAt() != null ? visit.getExpectedArrivalAt().toLocalDate() : null)")
+    @Mapping(target = "hostName",
+            expression = "java(employeeName(visit.getHost()))")
+    @Mapping(target = "lastVisit",
+            expression = "java(visit.getExpectedArrivalAt() != null ? visit.getExpectedArrivalAt().toLocalDate() : null)")
     VisitDashboardResponse toDashboardResponse(Visit visit);
 
     @Mapping(target = "visitId", source = "id")
     @Mapping(target = "visitor", source = "visitor")
     @Mapping(target = "host", source = "host")
     @Mapping(target = "audit", source = "visit")
-    @Mapping(target = "totalDurationSeconds", ignore = true)
+    @Mapping(target = "totalDurationSeconds",
+            expression = "java(calculateDuration(visit))")
     VisitDetailResponse toVisitDetailResponse(Visit visit);
 
     @Mapping(target = "visitorId", source = "id")
@@ -42,7 +51,8 @@ public interface VisitMapper {
     VisitDetailResponse.VisitorDetails toVisitorDetails(Visitor visitor);
 
     @Mapping(target = "hostId", source = "id")
-    @Mapping(target = "hostName", expression = "java(employeeName(employee))")
+    @Mapping(target = "hostName",
+            expression = "java(employeeName(employee))")
     @Mapping(target = "departmentId", source = "department.id")
     @Mapping(target = "departmentName", source = "department.departmentName")
     VisitDetailResponse.HostDetails toHostDetails(Employee employee);
@@ -53,14 +63,17 @@ public interface VisitMapper {
     @Mapping(target = "updatedBy", source = "updatedBy")
     VisitDetailResponse.AuditDetails toAuditDetails(Visit visit);
 
+    @Mapping(target = "visitorId", source = "visitor.id")
     @Mapping(target = "nationality", source = "nationality")
     @Mapping(target = "ndaAvailable", source = "ndaAvailable")
     @Mapping(target = "ndaDocumentId", source = "ndaDocumentId")
+    @Mapping(target = "existingVendor", source = "existingVendor")
     VisitDetailResponse.VisitorDetails toVisitorDetails(
             Visitor visitor,
             String nationality,
             boolean ndaAvailable,
-            String ndaDocumentId
+            String ndaDocumentId,
+            boolean existingVendor
     );
 
     @Mapping(target = "visitor", source = "visitorDetails")
@@ -74,8 +87,10 @@ public interface VisitMapper {
             return null;
         }
 
-        String firstName = visitor.getFirstName() == null ? "" : visitor.getFirstName();
-        String lastName = visitor.getLastName() == null ? "" : visitor.getLastName();
+        String firstName = visitor.getFirstName() == null
+                ? "" : visitor.getFirstName();
+        String lastName = visitor.getLastName() == null
+                ? "" : visitor.getLastName();
 
         return (firstName + " " + lastName).trim();
     }
@@ -85,22 +100,25 @@ public interface VisitMapper {
             return null;
         }
 
-        String firstName = employee.getFirstName() == null ? "" : employee.getFirstName();
-        String lastName = employee.getLastName() == null ? "" : employee.getLastName();
+        String firstName = employee.getFirstName() == null
+                ? "" : employee.getFirstName();
+        String lastName = employee.getLastName() == null
+                ? "" : employee.getLastName();
 
         return (firstName + " " + lastName).trim();
     }
 
-//    default Long calculateDuration(Visit visit) {
-//        if (visit == null
-//                || visit.getCheckedInAt() == null
-//                || visit.getCheckedOutAt() == null) {
-//            return null;
-//        }
-//
-//        return Duration.between(
-//                visit.getCheckedInAt(),
-//                visit.getCheckedOutAt()
-//        ).getSeconds();
-//    }
+    default Long calculateDuration(Visit visit) {
+        if (visit == null
+                || visit.getCheckedInAt() == null
+                || visit.getCheckedOutAt() == null) {
+            return null;
+        }
+
+        return Duration.between(
+                visit.getCheckedInAt(),
+                visit.getCheckedOutAt()
+        ).getSeconds();
+    }
 }
+

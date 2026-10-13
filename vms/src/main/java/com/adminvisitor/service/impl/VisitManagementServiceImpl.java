@@ -6,6 +6,7 @@ import com.adminvisitor.entity.*;
 import com.adminvisitor.enums.*;
 import com.adminvisitor.exception.BusinessRuleException;
 import com.adminvisitor.mapper.VisitMapper;
+import com.adminvisitor.repository.VendorRepository;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.service.*;
 import com.adminvisitor.specification.VisitSpecification;
@@ -20,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -29,12 +29,13 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class VisitManagementServiceImpl{
+public class VisitManagementServiceImpl {
 
     private static final DateTimeFormatter EMAIL_DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
 
     private final VisitRepository visitRepository;
+    private final VendorRepository vendorRepository;
     private final ProofSecurityService proofSecurityService;
     private final VisitMapper visitMapper;
     private final EmailService emailService;
@@ -48,8 +49,8 @@ public class VisitManagementServiceImpl{
 
     private Specification<Visit> addSpecification(
             Specification<Visit> current,
-            Specification<Visit> addition) {
-
+            Specification<Visit> addition
+    ) {
         return addition == null ? current : current.and(addition);
     }
 
@@ -67,57 +68,32 @@ public class VisitManagementServiceImpl{
             String sortDirection,
             String sortBy
     ) {
-
         Specification<Visit> specification =
                 (root, query, criteriaBuilder) ->
                         criteriaBuilder.conjunction();
 
         specification = addSpecification(
-                specification,
-                VisitSpecification.hasView(view)
-        );
-
+                specification, VisitSpecification.hasView(view));
         specification = addSpecification(
-                specification,
-                VisitSpecification.hasVisitorId(visitorId)
-        );
-
+                specification, VisitSpecification.hasVisitorId(visitorId));
         specification = addSpecification(
-                specification,
-                VisitSpecification.hasVisitorName(visitorName)
-        );
-
+                specification, VisitSpecification.hasVisitorName(visitorName));
         specification = addSpecification(
-                specification,
-                VisitSpecification.hasVisitorEmail(visitorEmail)
-        );
-
+                specification, VisitSpecification.hasVisitorEmail(visitorEmail));
         specification = addSpecification(
-                specification,
-                VisitSpecification.hasStatus(status)
-        );
-
+                specification, VisitSpecification.hasStatus(status));
         specification = addSpecification(
-                specification,
-                VisitSpecification.hasDate(date)
-        );
-
+                specification, VisitSpecification.hasDate(date));
         specification = addSpecification(
-                specification,
-                VisitSpecification.hasFromDate(fromDate)
-        );
-
+                specification, VisitSpecification.hasFromDate(fromDate));
         specification = addSpecification(
-                specification,
-                VisitSpecification.hasToDate(toDate)
-        );
+                specification, VisitSpecification.hasToDate(toDate));
 
         Sort.Direction direction =
                 "DESC".equalsIgnoreCase(sortDirection)
                         ? Sort.Direction.DESC
                         : Sort.Direction.ASC;
 
-        // Only supported fields are accepted for sorting.
         String sortField = switch (
                 sortBy == null ? "" : sortBy.trim()
                 ) {
@@ -131,7 +107,6 @@ public class VisitManagementServiceImpl{
             default -> "expectedArrivalAt";
         };
 
-        // Use visit ID as a stable tie-breaker for equal sort values.
         Sort sort = Sort.by(direction, sortField)
                 .and(Sort.by(Sort.Direction.ASC, "id"));
 
@@ -177,14 +152,12 @@ public class VisitManagementServiceImpl{
         try {
             if (page < 0) {
                 throw new BusinessRuleException(
-                        "Page number cannot be negative"
-                );
+                        "Page number cannot be negative");
             }
 
             if (size < 1 || size > 100) {
                 throw new BusinessRuleException(
-                        "Page size must be between 1 and 100"
-                );
+                        "Page size must be between 1 and 100");
             }
 
             Specification<Visit> specification =
@@ -192,42 +165,23 @@ public class VisitManagementServiceImpl{
                             criteriaBuilder.conjunction();
 
             specification = addSpecification(
-                    specification,
-                    VisitSpecification.hasSearch(search)
-            );
-
+                    specification, VisitSpecification.hasSearch(search));
             specification = addSpecification(
-                    specification,
-                    VisitSpecification.hasFromDate(fromDate)
-            );
-
+                    specification, VisitSpecification.hasFromDate(fromDate));
             specification = addSpecification(
-                    specification,
-                    VisitSpecification.hasToDate(toDate)
-            );
-
+                    specification, VisitSpecification.hasToDate(toDate));
             specification = addSpecification(
-                    specification,
-                    VisitSpecification.hasStatus(status)
-            );
-
+                    specification, VisitSpecification.hasStatus(status));
             specification = addSpecification(
-                    specification,
-                    VisitSpecification.hasVisitorType(visitorType)
-            );
-
+                    specification, VisitSpecification.hasVisitorType(visitorType));
             specification = addSpecification(
-                    specification,
-                    VisitSpecification.hasHostId(hostId)
-            );
+                    specification, VisitSpecification.hasHostId(hostId));
 
             Sort.Direction direction =
                     "ASC".equalsIgnoreCase(sortDirection)
                             ? Sort.Direction.ASC
                             : Sort.Direction.DESC;
 
-            // Stable ordering prevents records with equal arrival times
-            // from changing order arbitrarily between page requests.
             Sort sort = Sort.by(direction, "expectedArrivalAt")
                     .and(Sort.by(Sort.Direction.ASC, "id"));
 
@@ -265,32 +219,54 @@ public class VisitManagementServiceImpl{
         Visit visit = visitRepository.findDetailsById(visitId)
                 .orElseThrow(() ->
                         new BusinessRuleException(
-                                "Visit not found with id: " + visitId
-                        )
-                );
+                                "Visit not found with id: " + visitId));
 
         VisitDetailResponse response =
                 visitMapper.toVisitDetailResponse(visit);
 
-        return VisitDetailResponse.builder()
-                .visitId(response.visitId())
-                .visitReference(response.visitReference())
-                .visitor(response.visitor())
-                .visitorType(response.visitorType())
-                .registrationType(response.registrationType())
-                .purpose(response.purpose())
-                .host(response.host())
-                .expectedArrivalAt(response.expectedArrivalAt())
-                .expectedDepartureAt(response.expectedDepartureAt())
-                .checkedInAt(response.checkedInAt())
-                .checkedOutAt(response.checkedOutAt())
-                .totalDurationSeconds(calculateDuration(visit))
-                .remarks(response.remarks())
-                .status(response.status())
-                .audit(response.audit())
-                .build();
+        Document document = documentService
+                .getLatestIdentityDocument(visit.getVisitor().getId());
+
+        boolean existingVendor = false;
+        boolean ndaAvailable = false;
+        String ndaDocumentId = null;
+
+        if (visit.getVisitorType() == VisitorType.VENDOR) {
+
+            existingVendor = vendorRepository
+                    .findByVisitorId(visit.getVisitor().getId())
+                    .isPresent();
+
+            ndaAvailable = !documentService.isNdaRequired(
+                    visit.getVisitor());
+
+            if (ndaAvailable) {
+                DocumentMetadata latestNda =
+                        documentService.getLatestNda(
+                                visit.getVisitor().getId());
+
+                ndaDocumentId = latestNda.getId();
+            }
+        }
+
+        VisitDetailResponse.VisitorDetails visitorDetails =
+                visitMapper.toVisitorDetails(
+                        visit.getVisitor(),
+                        document.getNationality() == null
+                                ? null
+                                : document.getNationality().name(),
+                        ndaAvailable,
+                        ndaDocumentId,
+                        existingVendor
+                );
+
+        return visitMapper.toVisitDetailResponseWithVisitor(
+                response,
+                visitorDetails
+        );
     }
 
+    // VISIT DURATION
     public Long calculateDuration(Visit visit) {
         if (visit == null
                 || visit.getCheckedInAt() == null
@@ -298,7 +274,7 @@ public class VisitManagementServiceImpl{
             return null;
         }
 
-        return Duration.between(
+        return java.time.Duration.between(
                 visit.getCheckedInAt(),
                 visit.getCheckedOutAt()
         ).getSeconds();
@@ -311,9 +287,7 @@ public class VisitManagementServiceImpl{
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() ->
                         new BusinessRuleException(
-                                "Visit not found with id: " + visitId
-                        )
-                );
+                                "Visit not found with id: " + visitId));
 
         Visitor visitor = visit.getVisitor();
 
@@ -336,10 +310,11 @@ public class VisitManagementServiceImpl{
                 .visitorType(visit.getVisitorType().name())
                 .ndaRequired(ndaRequired)
                 .ndaAvailable(ndaAvailable)
-                .validUntil(latestNda != null ? latestNda.getValidUntil() : null)
-                .documentId(latestNda != null ? latestNda.getId() : null)
+                .validUntil(latestNda != null
+                        ? latestNda.getValidUntil() : null)
+                .documentId(latestNda != null
+                        ? latestNda.getId() : null)
                 .build();
-
     }
 
     // CANCEL VISIT
@@ -351,14 +326,11 @@ public class VisitManagementServiceImpl{
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() ->
                         new BusinessRuleException(
-                                "Visit not found with id: " + visitId
-                        )
-                );
+                                "Visit not found with id: " + visitId));
 
         if (visit.getStatus() != VisitStatus.REGISTERED) {
             throw new BusinessRuleException(
-                    "Only a registered visit can be cancelled"
-            );
+                    "Only a registered visit can be cancelled");
         }
 
         visit.setStatus(VisitStatus.CANCELLED);
@@ -367,8 +339,7 @@ public class VisitManagementServiceImpl{
 
         CancellationEmailData emailData = new CancellationEmailData(
                 cancelledVisit.getVisitor().getFirstName()
-                        + " "
-                        + cancelledVisit.getVisitor().getLastName(),
+                        + " " + cancelledVisit.getVisitor().getLastName(),
                 cancelledVisit.getVisitor().getEmail(),
                 cancelledVisit.getVisitReference(),
                 cancelledVisit.getPurpose(),
@@ -377,8 +348,7 @@ public class VisitManagementServiceImpl{
                 cancelledVisit.getExpectedDepartureAt()
                         .format(EMAIL_DATE_TIME_FORMATTER),
                 cancelledVisit.getHost().getFirstName()
-                        + " "
-                        + cancelledVisit.getHost().getLastName()
+                        + " " + cancelledVisit.getHost().getLastName()
         );
 
         emailService.sendVisitCancellationEmail(emailData);
@@ -406,25 +376,20 @@ public class VisitManagementServiceImpl{
             Visit visit = visitRepository.findById(visitId)
                     .orElseThrow(() ->
                             new BusinessRuleException(
-                                    "Visit not found with id: " + visitId
-                            )
-                    );
+                                    "Visit not found with id: " + visitId));
 
             if (visit.getStatus() != VisitStatus.REGISTERED) {
                 throw new BusinessRuleException(
-                        "Only a registered visit can be checked in"
-                );
+                        "Only a registered visit can be checked in");
             }
 
             if (!visit.getExpectedArrivalAt()
                     .toLocalDate()
                     .equals(LocalDate.now())) {
                 throw new BusinessRuleException(
-                        "Visit can only be checked in on the scheduled visit date"
-                );
+                        "Visit can only be checked in on the scheduled visit date");
             }
 
-            // Validate the visitor's submitted identity.
             validateVisitorIdentity(visit.getVisitor(), request);
 
             if (visit.getVisitorType() == VisitorType.VENDOR) {
@@ -433,18 +398,17 @@ public class VisitManagementServiceImpl{
 
                 if (ndaRequired) {
                     throw new BusinessRuleException(
-                            "A valid NDA is required for this vendor before check-in"
-                    );
+                            "A valid NDA is required for this vendor before check-in");
                 }
             }
 
             DocumentMetadata visitorPhoto =
                     documentService.uploadVisitorPhoto(
                             visit.getVisitor().getId(),
+                            visit.getId(),
                             photo
                     );
 
-            // Capture the timestamp once and reuse it consistently.
             LocalDateTime checkedInAt = LocalDateTime.now();
 
             visit.setCheckedInAt(checkedInAt);
@@ -452,14 +416,12 @@ public class VisitManagementServiceImpl{
 
             Visit checkedInVisit = visitRepository.save(visit);
 
-            // Create the badge and QR code after check-in.
             VisitBadge badge =
                     visitBadgeService.createBadge(checkedInVisit);
 
             String qrCode =
                     qrTokenService.generateQrCode(
-                            badge.getQrContainingToken()
-                    );
+                            badge.getQrContainingToken());
 
             log.info(
                     "QR code generated successfully. visitId={}, qrLength={}",
@@ -469,13 +431,11 @@ public class VisitManagementServiceImpl{
 
             BadgeEmailData emailData = new BadgeEmailData(
                     checkedInVisit.getVisitor().getFirstName()
-                            + " "
-                            + checkedInVisit.getVisitor().getLastName(),
+                            + " " + checkedInVisit.getVisitor().getLastName(),
                     checkedInVisit.getVisitor().getEmail(),
                     checkedInVisit.getVisitReference(),
                     checkedInVisit.getHost().getFirstName()
-                            + " "
-                            + checkedInVisit.getHost().getLastName(),
+                            + " " + checkedInVisit.getHost().getLastName(),
                     checkedInVisit.getHost().getEmail(),
                     badge.getIssuedAt().format(EMAIL_DATE_TIME_FORMATTER),
                     badge.getValidUntil().format(EMAIL_DATE_TIME_FORMATTER),
@@ -495,11 +455,9 @@ public class VisitManagementServiceImpl{
                     new HostCheckInEmailData(
                             checkedInVisit.getHost().getEmail(),
                             checkedInVisit.getHost().getFirstName()
-                                    + " "
-                                    + checkedInVisit.getHost().getLastName(),
+                                    + " " + checkedInVisit.getHost().getLastName(),
                             checkedInVisit.getVisitor().getFirstName()
-                                    + " "
-                                    + checkedInVisit.getVisitor().getLastName(),
+                                    + " " + checkedInVisit.getVisitor().getLastName(),
                             checkedInVisit.getVisitorType().name(),
                             checkedInVisit.getVisitor().getCompanyName(),
                             checkedInVisit.getVisitReference(),
@@ -546,9 +504,7 @@ public class VisitManagementServiceImpl{
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() ->
                         new BusinessRuleException(
-                                "Visit not found with id: " + visitId
-                        )
-                );
+                                "Visit not found with id: " + visitId));
 
         log.info(
                 "Visit loaded. visitId={}, status={}",
@@ -558,8 +514,7 @@ public class VisitManagementServiceImpl{
 
         if (visit.getStatus() != VisitStatus.CHECKED_IN) {
             throw new BusinessRuleException(
-                    "Only a checked-in visit can be checked out"
-            );
+                    "Only a checked-in visit can be checked out");
         }
 
         LocalDateTime checkedOutAt = LocalDateTime.now();
@@ -587,22 +542,23 @@ public class VisitManagementServiceImpl{
 
     @Transactional(readOnly = true)
     public void verifyIdentity(String visitId, CheckInRequest request) {
+
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() ->
                         new BusinessRuleException(
-                                "Visit not found with id: " + visitId
-                        )
-                );
+                                "Visit not found with id: " + visitId));
 
         if (visit.getStatus() != VisitStatus.REGISTERED) {
             throw new BusinessRuleException(
-                    "Only a registered visit can have its identity verified"
-            );
+                    "Only a registered visit can have its identity verified");
         }
 
         validateVisitorIdentity(visit.getVisitor(), request);
 
-        log.info("Visitor identity verified successfully. visitId={}", visitId);
+        log.info(
+                "Visitor identity verified successfully. visitId={}",
+                visitId
+        );
     }
 
     // IDENTITY VALIDATION
@@ -610,8 +566,9 @@ public class VisitManagementServiceImpl{
             Visitor visitor,
             CheckInRequest request
     ) {
+        Document identityDocument =
+                documentService.getLatestIdentityDocument(visitor.getId());
 
-        Document identityDocument = documentService.getLatestIdentityDocument(visitor.getId());
         Nationality nationality = identityDocument.getNationality();
 
         proofSecurityService.validate(
@@ -620,34 +577,44 @@ public class VisitManagementServiceImpl{
                 request.panNumber(),
                 request.passportNumber()
         );
+
         boolean identityMatches;
 
         switch (nationality) {
             case DOMESTIC -> {
-                boolean aadhaarMatches = documentService.verifyIdentityProof(
+                boolean aadhaarMatches =
+                        documentService.verifyIdentityProof(
                                 visitor,
                                 ProofType.AADHAAR,
-                                request.aadharNumber());
+                                request.aadharNumber()
+                        );
 
-                boolean panMatches = documentService.verifyIdentityProof(
+                boolean panMatches =
+                        documentService.verifyIdentityProof(
                                 visitor,
                                 ProofType.PAN,
-                                request.panNumber());
+                                request.panNumber()
+                        );
+
                 identityMatches = aadhaarMatches && panMatches;
             }
 
             case INTERNATIONAL ->
-                    identityMatches = documentService.verifyIdentityProof(
+                    identityMatches =
+                            documentService.verifyIdentityProof(
                                     visitor,
                                     ProofType.PASSPORT,
-                                    request.passportNumber());
+                                    request.passportNumber()
+                            );
 
             default -> throw new BusinessRuleException(
                     "Unsupported nationality for identity verification");
         }
 
         if (!identityMatches) {
-            throw new BusinessRuleException("Identity verification failed");
+            throw new BusinessRuleException(
+                    "Identity verification failed");
         }
     }
 }
+

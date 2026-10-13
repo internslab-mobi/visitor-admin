@@ -3,7 +3,6 @@ package com.adminvisitor.service;
 import com.adminvisitor.dto.requestdto.CheckInRequest;
 import com.adminvisitor.dto.requestdto.RegistrationRequest;
 import com.adminvisitor.dto.responsedto.*;
-import com.adminvisitor.entity.Visit;
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.enums.VisitView;
 import com.adminvisitor.enums.VisitorType;
@@ -58,6 +57,5 @@ public interface VisitService {
 
     void verifyIdentity(String visitId, CheckInRequest request);
 
-
-
+    String getVisitPhotoPath(String visitId);
 }
