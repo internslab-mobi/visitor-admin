@@ -210,9 +210,6 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
                         );
 
 
-        // ==========================================
-        // VISITOR TYPE + NATIONALITY
-        // ==========================================
 
         Visit latestVisit =
                 visitRepository
@@ -257,9 +254,6 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
                 );
 
 
-        // ==========================================
-        // VENDOR
-        // ==========================================
 
         VisitorEditResponse.VendorInfo vendorInfo = null;
 
