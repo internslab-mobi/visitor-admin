@@ -13,5 +13,8 @@ public interface VisitBadgeService {
             String visitId,
             LocalDateTime checkoutTime);
 
-    BadgeStatus validateQrToken(String qrToken);
+     VisitBadge validateQrToken(String qrToken);
+
+
+
 }

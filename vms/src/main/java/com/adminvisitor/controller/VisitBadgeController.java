@@ -63,41 +63,47 @@ public class VisitBadgeController {
         return ResponseEntity.ok(response);
     }
 
+
     @GetMapping("/validate")
     public ResponseEntity<QrValidationResponse> validateQr(
             @RequestParam String token
     ) {
-
         try {
-
-            BadgeStatus status =
+            VisitBadge badge =
                     visitBadgeService.validateQrToken(token);
 
-            if (status == BadgeStatus.ACTIVE) {
+            Visit visit = badge.getVisit();
 
-                return ResponseEntity.ok(
-                        new QrValidationResponse(
-                                BadgeStatus.ACTIVE,
-                                "QR code is valid"
-                        )
-                );
-            }
+            QrValidationResponse response =
+                    QrValidationResponse.builder()
+                            .status(BadgeStatus.ACTIVE)
+                            .message("QR code is valid")
+                            .visitorName(
+                                    visit.getVisitor().getFirstName() + " " +
+                                            visit.getVisitor().getLastName()
+                            )
+                            .visitReference(visit.getVisitReference())
+                            .hostName(
+                                    visit.getHost().getFirstName() + " " +
+                                            visit.getHost().getLastName()
+                            )
+                            .issuedAt(badge.getIssuedAt())
+                            .validUntil(badge.getValidUntil())
+                            .build();
 
-            return ResponseEntity.ok(
-                    new QrValidationResponse(
-                            BadgeStatus.INVALID,
-                            "QR code is no longer valid"
-                    )
-            );
+            return ResponseEntity.ok(response);
 
         } catch (IllegalArgumentException exception) {
 
-            return ResponseEntity.ok(
-                    new QrValidationResponse(
-                            BadgeStatus.INVALID,
-                            "Invalid QR code"
-                    )
-            );
+            QrValidationResponse response =
+                    QrValidationResponse.builder()
+                            .status(BadgeStatus.INVALID)
+                            .message("QR code is invalid or expired")
+                            .build();
+
+            return ResponseEntity.ok(response);
         }
     }
+
+
 }

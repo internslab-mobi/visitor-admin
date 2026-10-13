@@ -77,8 +77,13 @@ public class VisitBadgeServiceImpl implements VisitBadgeService {
         visitBadgeRepository.save(badge);
     }
 
+
+
+
+
+    @Override
     @Transactional(readOnly = true)
-    public BadgeStatus validateQrToken(String qrToken) {
+    public VisitBadge validateQrToken(String qrToken) {
 
         VisitBadge badge =
                 visitBadgeRepository
@@ -92,13 +97,17 @@ public class VisitBadgeServiceImpl implements VisitBadgeService {
         LocalDateTime now = LocalDateTime.now();
 
         if (badge.getStatus() != BadgeStatus.ACTIVE) {
-            return BadgeStatus.INVALID;
+            throw new IllegalArgumentException(
+                    "QR code is no longer valid"
+            );
         }
 
         if (now.isAfter(badge.getValidUntil())) {
-            return BadgeStatus.INVALID;
+            throw new IllegalArgumentException(
+                    "QR code has expired"
+            );
         }
 
-        return BadgeStatus.ACTIVE;
+        return badge;
     }
 }
