@@ -1,4 +1,4 @@
-package com.adminvisitor.service;
+package com.adminvisitor.service.impl;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
