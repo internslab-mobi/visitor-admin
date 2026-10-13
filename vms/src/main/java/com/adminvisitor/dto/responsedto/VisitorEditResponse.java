@@ -65,7 +65,7 @@ public record VisitorEditResponse(
 
             LocalDateTime checkedInAt,
             LocalDateTime checkedOutAt,
-           // Long totalDurationSeconds,
+            Long totalDurationSeconds,
 
 
             String remarks,

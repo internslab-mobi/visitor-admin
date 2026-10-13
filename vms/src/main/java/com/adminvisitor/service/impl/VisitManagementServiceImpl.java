@@ -291,7 +291,7 @@ public class VisitManagementServiceImpl{
                 .build();
     }
 
-    private Long calculateDuration(Visit visit) {
+    public Long calculateDuration(Visit visit) {
         if (visit == null
                 || visit.getCheckedInAt() == null
                 || visit.getCheckedOutAt() == null) {

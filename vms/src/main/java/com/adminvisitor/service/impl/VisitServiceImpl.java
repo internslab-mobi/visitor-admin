@@ -596,4 +596,7 @@ public class VisitServiceImpl implements VisitService {
     public NdaStatusResponse getNdaStatus(String visitId) {
         return visitManagementService.getNdaStatus(visitId);
     }
+
+
+
 }
