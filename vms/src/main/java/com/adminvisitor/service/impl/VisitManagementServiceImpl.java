@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -39,7 +40,7 @@ public class VisitManagementServiceImpl{
     private final EmailService emailService;
     private final DocumentService documentService;
     private final VisitBadgeService visitBadgeService;
-    private final QrCodeService qrCodeService;
+    private final QrTokenService qrTokenService;
 
     private double elapsedMillis(long startNanos) {
         return (System.nanoTime() - startNanos) / 1_000_000.0;
@@ -261,13 +262,46 @@ public class VisitManagementServiceImpl{
     @Transactional(readOnly = true)
     public VisitDetailResponse getVisitDetails(String visitId) {
 
-        return visitRepository.findDetailsById(visitId)
-                .map(visitMapper::toVisitDetailResponse)
+        Visit visit = visitRepository.findDetailsById(visitId)
                 .orElseThrow(() ->
                         new BusinessRuleException(
                                 "Visit not found with id: " + visitId
                         )
                 );
+
+        VisitDetailResponse response =
+                visitMapper.toVisitDetailResponse(visit);
+
+        return VisitDetailResponse.builder()
+                .visitId(response.visitId())
+                .visitReference(response.visitReference())
+                .visitor(response.visitor())
+                .visitorType(response.visitorType())
+                .registrationType(response.registrationType())
+                .purpose(response.purpose())
+                .host(response.host())
+                .expectedArrivalAt(response.expectedArrivalAt())
+                .expectedDepartureAt(response.expectedDepartureAt())
+                .checkedInAt(response.checkedInAt())
+                .checkedOutAt(response.checkedOutAt())
+                .totalDurationSeconds(calculateDuration(visit))
+                .remarks(response.remarks())
+                .status(response.status())
+                .audit(response.audit())
+                .build();
+    }
+
+    private Long calculateDuration(Visit visit) {
+        if (visit == null
+                || visit.getCheckedInAt() == null
+                || visit.getCheckedOutAt() == null) {
+            return null;
+        }
+
+        return Duration.between(
+                visit.getCheckedInAt(),
+                visit.getCheckedOutAt()
+        ).getSeconds();
     }
 
     // NDA STATUS
@@ -423,7 +457,7 @@ public class VisitManagementServiceImpl{
                     visitBadgeService.createBadge(checkedInVisit);
 
             String qrCode =
-                    qrCodeService.generateQrCode(
+                    qrTokenService.generateQrCode(
                             badge.getQrContainingToken()
                     );
 

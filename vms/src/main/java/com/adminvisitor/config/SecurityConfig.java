@@ -200,6 +200,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.PATCH, "/api/visits/*/check-out"
                         ).hasAnyRole("ADMIN", "FRONT_DESK")
+
                         .requestMatchers(
                                 HttpMethod.PATCH,
                                 "/api/visits/*/cancel"
@@ -239,6 +240,7 @@ public class SecurityConfig {
                                 HttpMethod.GET,
                                 "/api/vendors"
                         ).hasAnyRole("ADMIN", "FRONT_DESK")
+
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/vendors/*"

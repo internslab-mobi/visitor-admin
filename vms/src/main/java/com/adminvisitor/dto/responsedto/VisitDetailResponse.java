@@ -28,6 +28,7 @@ public record VisitDetailResponse(
 
 ) {
 
+
     @Builder
     public record VisitorDetails(
 
