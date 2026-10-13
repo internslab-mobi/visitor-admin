@@ -1,7 +1,8 @@
-package com.adminvisitor.service;
+package com.adminvisitor.service.impl;
 
 import com.adminvisitor.enums.Nationality;
 import com.adminvisitor.enums.ProofType;
+import com.adminvisitor.service.ProofSecurityService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

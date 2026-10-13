@@ -9,8 +9,6 @@ import com.adminvisitor.entity.Employee;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.time.Duration;
-
 @Mapper(componentModel = "spring")
 public interface VisitMapper {
 
@@ -34,7 +32,7 @@ public interface VisitMapper {
     @Mapping(target = "visitor", source = "visitor")
     @Mapping(target = "host", source = "host")
     @Mapping(target = "audit", source = "visit")
-    @Mapping(target = "totalDurationSeconds", expression = "java(calculateDuration(visit))")
+    @Mapping(target = "totalDurationSeconds", ignore = true)
     VisitDetailResponse toVisitDetailResponse(Visit visit);
 
     @Mapping(target = "visitorId", source = "id")
@@ -96,16 +94,16 @@ public interface VisitMapper {
         return (firstName + " " + lastName).trim();
     }
 
-    default Long calculateDuration(Visit visit) {
-        if (visit == null
-                || visit.getCheckedInAt() == null
-                || visit.getCheckedOutAt() == null) {
-            return null;
-        }
-
-        return Duration.between(
-                visit.getCheckedInAt(),
-                visit.getCheckedOutAt()
-        ).getSeconds();
-    }
+//    default Long calculateDuration(Visit visit) {
+//        if (visit == null
+//                || visit.getCheckedInAt() == null
+//                || visit.getCheckedOutAt() == null) {
+//            return null;
+//        }
+//
+//        return Duration.between(
+//                visit.getCheckedInAt(),
+//                visit.getCheckedOutAt()
+//        ).getSeconds();
+//    }
 }

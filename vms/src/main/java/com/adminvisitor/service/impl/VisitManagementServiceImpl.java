@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -275,7 +276,6 @@ public class VisitManagementServiceImpl{
 
         Document document = documentService
                 .getLatestIdentityDocument(visit.getVisitor().getId());
-
         boolean existingVendor = false;
         boolean ndaAvailable = false;
         String ndaDocumentId = null;
@@ -298,7 +298,6 @@ public class VisitManagementServiceImpl{
                 ndaDocumentId = latestNda.getId();
             }
         }
-
         VisitDetailResponse.VisitorDetails visitorDetails =
                 visitMapper.toVisitorDetails(
                         visit.getVisitor(),
@@ -309,11 +308,37 @@ public class VisitManagementServiceImpl{
                         ndaDocumentId,
                         existingVendor
                 );
+        return VisitDetailResponse.builder()
+                .visitId(response.visitId())
+                .visitReference(response.visitReference())
+                .visitor(response.visitor())
+                .visitorType(response.visitorType())
+                .registrationType(response.registrationType())
+                .purpose(response.purpose())
+                .host(response.host())
+                .expectedArrivalAt(response.expectedArrivalAt())
+                .expectedDepartureAt(response.expectedDepartureAt())
+                .checkedInAt(response.checkedInAt())
+                .checkedOutAt(response.checkedOutAt())
+                .totalDurationSeconds(calculateDuration(visit))
+                .remarks(response.remarks())
+                .status(response.status())
+                .audit(response.audit())
+                .build();
 
-        return visitMapper.toVisitDetailResponseWithVisitor(
-                response,
-                visitorDetails
-        );
+
+    }
+
+    public Long calculateDuration(Visit visit) {
+        if (visit == null
+                || visit.getCheckedInAt() == null
+                || visit.getCheckedOutAt() == null) {
+            return null;
+        }
+        return Duration.between(
+                visit.getCheckedInAt(),
+                visit.getCheckedOutAt()
+        ).getSeconds();
     }
 
     // NDA STATUS

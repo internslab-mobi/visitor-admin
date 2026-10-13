@@ -190,26 +190,26 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/visits"
-                        ).hasRole("FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
                         .requestMatchers(
                                 HttpMethod.PATCH,
                                 "/api/visits/*/check-in"
-                        ).hasRole("FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
                         .requestMatchers(
                                 HttpMethod.PATCH, "/api/visits/*/check-out"
-                        ).hasRole("FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
                         .requestMatchers(
                                 HttpMethod.PATCH,
                                 "/api/visits/*/cancel"
-                        ).hasRole("FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/visit-badges/*"
-                        ).hasRole("FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -219,7 +219,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/documents/visitor/*"
-                        ).hasRole("FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
                         .requestMatchers(
                                 HttpMethod.POST,
@@ -229,17 +229,17 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/documents/*/nda/download"
-                        ).hasRole("FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/documents/*/nda/all"
-                        ).hasRole("FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/vendors"
-                        ).hasAnyRole("ADMIN")
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
 
                         .requestMatchers(
                                 HttpMethod.GET,
