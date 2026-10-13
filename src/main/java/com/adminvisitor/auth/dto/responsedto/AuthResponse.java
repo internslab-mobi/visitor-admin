@@ -10,13 +10,15 @@ public record AuthResponse(
         boolean mustChangePassword,
         UserRole role,
         String userId,
-        String message
+        String message,
+        UserResponse user
 ) {
 
     public static AuthResponse firstLoginRequired(
             String accessToken,
             String userId,
-            UserRole role
+            UserRole role,
+            UserResponse user
     ) {
         return new AuthResponse(
                 accessToken,
@@ -24,22 +26,25 @@ public record AuthResponse(
                 true,
                 role,
                 userId,
-                "First login password change is required."
+                "First login password change is required.",
+                user
         );
     }
 
     public static AuthResponse firstLoginRequired(
             String userId,
-            UserRole role
+            UserRole role,
+            UserResponse user
     ) {
-        return firstLoginRequired(null, userId, role);
+        return firstLoginRequired(null, userId, role, user);
     }
 
     public static AuthResponse authenticated(
             String accessToken,
             String refreshToken,
             String userId,
-            UserRole role
+            UserRole role,
+            UserResponse user
     ) {
         return new AuthResponse(
                 accessToken,
@@ -47,14 +52,16 @@ public record AuthResponse(
                 false,
                 role,
                 userId,
-                "Authentication successful."
+                "Authentication successful.",
+                user
         );
     }
 
     public static AuthResponse authenticated(
             String userId,
-            UserRole role
+            UserRole role,
+            UserResponse user
     ) {
-        return authenticated(null, null, userId, role);
+        return authenticated(null, null, userId, role, user);
     }
 }

@@ -90,29 +90,65 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public AuthResult login(LoginRequest request) {
 
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.email(),
+                        request.password()
+                )
+        );
 
-        User user = userRepository.findByEmployeeEmail(request.email()).orElseThrow(() -> {
-            log.warn("LOGIN_FAILED reason=USER_NOT_FOUND");
-            return new BadCredentialsException("Invalid email or password");
-        });
+        User user = userRepository.findByEmployeeEmail(request.email())
+                .orElseThrow(() -> {
+                    log.warn("LOGIN_FAILED reason=USER_NOT_FOUND");
+                    return new BadCredentialsException("Invalid email or password");
+                });
 
         if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
             log.warn("LOGIN_FAILED reason=INACTIVE_ACCOUNT userId={}", user.getId());
-
             throw new BadCredentialsException("User account is inactive");
         }
 
+        Employee employee = user.getEmployee();
+
+        String fullName = employee.getFirstName() + " " + employee.getLastName();
+
+        UserResponse userResponse = new UserResponse(
+                user.getId(),
+                employee.getId(),
+                employee.getEmail(),
+                fullName,
+                user.getRole(),
+                user.getStatus(),
+                user.isMustChangePassword()
+        );
+
         if (user.isMustChangePassword()) {
+            log.info(
+                    "FIRST_LOGIN_PASSWORD_CHANGE_REQUIRED userId={} role={}",
+                    user.getId(),
+                    user.getRole()
+            );
 
-            log.info("FIRST_LOGIN_PASSWORD_CHANGE_REQUIRED userId={} role={}", user.getId(), user.getRole());
+            String restrictedToken = jwtService.generateRestrictedToken(
+                    user.getId(),
+                    user.getRole().name()
+            );
 
-            String restrictedToken = jwtService.generateRestrictedToken(user.getId(), user.getRole().name());
-
-            return new AuthResult(restrictedToken, null, true, user.getRole(), user.getId(), "First login password change is required.");
+            return new AuthResult(
+                    restrictedToken,
+                    null,
+                    true,
+                    user.getRole(),
+                    user.getId(),
+                    "First login password change is required.",
+                    userResponse
+            );
         }
 
-        String accessToken = jwtService.generateToken(user.getId(), user.getRole().name());
+        String accessToken = jwtService.generateToken(
+                user.getId(),
+                user.getRole().name()
+        );
 
         String rawRefreshToken = TokenUtils.generateOpaqueToken();
 
@@ -120,13 +156,25 @@ public class AuthServiceImpl implements AuthService {
         refreshToken.setUser(user);
         refreshToken.setTokenHash(TokenUtils.hashToken(rawRefreshToken));
         refreshToken.setCreatedAt(LocalDateTime.now());
-        refreshToken.setExpiresAt(LocalDateTime.now().plusSeconds(jwtService.getRefreshExpiration() / 1000));
+        refreshToken.setExpiresAt(
+                LocalDateTime.now().plusSeconds(
+                        jwtService.getRefreshExpiration() / 1000
+                )
+        );
 
         refreshTokenRepository.save(refreshToken);
 
         log.info("LOGIN_SUCCESS userId={} role={}", user.getId(), user.getRole());
 
-        return new AuthResult(accessToken, rawRefreshToken, false, user.getRole(), user.getId(), "Authentication successful.");
+        return new AuthResult(
+                accessToken,
+                rawRefreshToken,
+                false,
+                user.getRole(),
+                user.getId(),
+                "Authentication successful.",
+                userResponse
+        );
     }
 
     @Override
@@ -268,13 +316,28 @@ public class AuthServiceImpl implements AuthService {
                 user.getRole()
         );
 
+        Employee employee = user.getEmployee();
+
+        String fullName = employee.getFirstName() + " " + employee.getLastName();
+
+        UserResponse userResponse = new UserResponse(
+                user.getId(),
+                employee.getId(),
+                employee.getEmail(),
+                fullName,
+                user.getRole(),
+                user.getStatus(),
+                user.isMustChangePassword()
+        );
+
         return new AuthResult(
                 newAccessToken,
                 newRawRefreshToken,
                 false,
                 user.getRole(),
                 user.getId(),
-                "Authentication successful."
+                "Authentication successful.",
+                userResponse
         );
     }
 
