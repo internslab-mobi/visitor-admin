@@ -39,7 +39,7 @@ public class VisitManagementServiceImpl{
     private final EmailService emailService;
     private final DocumentService documentService;
     private final VisitBadgeService visitBadgeService;
-    private final QrCodeService qrCodeService;
+    private final QrTokenService qrTokenService;
 
     private double elapsedMillis(long startNanos) {
         return (System.nanoTime() - startNanos) / 1_000_000.0;
@@ -443,7 +443,7 @@ public class VisitManagementServiceImpl{
                     visitBadgeService.createBadge(checkedInVisit);
 
             String qrCode =
-                    qrCodeService.generateQrCode(
+                    qrTokenService.generateQrCode(
                             badge.getQrContainingToken()
                     );
 

@@ -6,7 +6,6 @@ import com.adminvisitor.entity.VisitBadge;
 import com.adminvisitor.enums.BadgeStatus;
 import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.VisitRepository;
-import com.adminvisitor.service.impl.QrCodeService;
 import com.adminvisitor.service.QrTokenService;
 import com.adminvisitor.service.VisitBadgeService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,6 @@ public class VisitBadgeController {
 
     private final VisitRepository visitRepository;
     private final VisitBadgeService visitBadgeService;
-    private final QrCodeService qrCodeService;
     private final QrTokenService qrTokenService;
 
     @PostMapping("/{visitId}")
