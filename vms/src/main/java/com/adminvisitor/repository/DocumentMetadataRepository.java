@@ -25,6 +25,12 @@ public interface DocumentMetadataRepository
             DocumentType documentType
     );
 
+    Optional<DocumentMetadata>
+    findTopByVisit_IdAndDocumentTypeOrderByCreatedAtDesc(
+            String visitId,
+            DocumentType documentType
+    );
+
     // Get all files of a particular type
     List<DocumentMetadata> findByDocumentIdAndDocumentType(
             String documentId,

@@ -6,6 +6,7 @@ import com.adminvisitor.entity.*;
 import com.adminvisitor.enums.*;
 import com.adminvisitor.exception.BusinessRuleException;
 import com.adminvisitor.mapper.VisitMapper;
+import com.adminvisitor.repository.VendorRepository;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.service.*;
 import com.adminvisitor.specification.VisitSpecification;
@@ -34,6 +35,7 @@ public class VisitManagementServiceImpl{
             DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
 
     private final VisitRepository visitRepository;
+    private final VendorRepository vendorRepository;
     private final ProofSecurityService proofSecurityService;
     private final VisitMapper visitMapper;
     private final EmailService emailService;
@@ -274,14 +276,38 @@ public class VisitManagementServiceImpl{
         Document document = documentService
                 .getLatestIdentityDocument(visit.getVisitor().getId());
 
+        boolean existingVendor = false;
+        boolean ndaAvailable = false;
+        String ndaDocumentId = null;
+
+        if (visit.getVisitorType() == VisitorType.VENDOR) {
+
+            existingVendor = vendorRepository
+                    .findByVisitorId(visit.getVisitor().getId())
+                    .isPresent();
+
+            ndaAvailable = !documentService.isNdaRequired(
+                    visit.getVisitor()
+            );
+
+            if (ndaAvailable) {
+                DocumentMetadata latestNda = documentService.getLatestNda(
+                        visit.getVisitor().getId()
+                );
+
+                ndaDocumentId = latestNda.getId();
+            }
+        }
+
         VisitDetailResponse.VisitorDetails visitorDetails =
                 visitMapper.toVisitorDetails(
                         visit.getVisitor(),
                         document.getNationality() == null
                                 ? null
                                 : document.getNationality().name(),
-                        response.visitor().ndaAvailable(),
-                        response.visitor().ndaDocumentId()
+                        ndaAvailable,
+                        ndaDocumentId,
+                        existingVendor
                 );
 
         return visitMapper.toVisitDetailResponseWithVisitor(
@@ -427,6 +453,7 @@ public class VisitManagementServiceImpl{
             DocumentMetadata visitorPhoto =
                     documentService.uploadVisitorPhoto(
                             visit.getVisitor().getId(),
+                            visit.getId(),
                             photo
                     );
 

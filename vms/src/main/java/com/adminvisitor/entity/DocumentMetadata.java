@@ -1,8 +1,7 @@
-
-
 package com.adminvisitor.entity;
 
 import com.adminvisitor.enums.DocumentType;
+import com.adminvisitor.entity.Visit;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -21,6 +20,11 @@ public class DocumentMetadata extends BaseEntity {
     @Id
     @Column(name = "id", nullable = false, length = 20)
     private String id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "visit_id")
+    @JsonIgnore
+    private Visit visit;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "document_id", nullable = false)

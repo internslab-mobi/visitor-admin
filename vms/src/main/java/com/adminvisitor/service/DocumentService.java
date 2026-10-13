@@ -15,7 +15,10 @@ import java.util.List;
 public interface DocumentService {
 
     DocumentMetadata uploadVisitorPhoto(
-            String visitorId, MultipartFile file);
+            String visitorId,
+            String visitId,
+            MultipartFile file
+    );
 
     boolean isNdaRequired(Visitor visitor);
 
@@ -50,6 +53,8 @@ public interface DocumentService {
 //
 //    IdentityProofResponse getIdentityProofsUsingAes(
 //            String visitorId);
+
+    DocumentMetadata getVisitPhoto(String visitId);
 
     List<DocumentResponse> getAllDocuments(String visitorId);
 

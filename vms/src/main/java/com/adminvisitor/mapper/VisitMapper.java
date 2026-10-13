@@ -55,14 +55,17 @@ public interface VisitMapper {
     @Mapping(target = "updatedBy", source = "updatedBy")
     VisitDetailResponse.AuditDetails toAuditDetails(Visit visit);
 
+    @Mapping(target = "visitorId", source = "visitor.id")
     @Mapping(target = "nationality", source = "nationality")
     @Mapping(target = "ndaAvailable", source = "ndaAvailable")
     @Mapping(target = "ndaDocumentId", source = "ndaDocumentId")
+    @Mapping(target = "existingVendor", source = "existingVendor")
     VisitDetailResponse.VisitorDetails toVisitorDetails(
             Visitor visitor,
             String nationality,
             boolean ndaAvailable,
-            String ndaDocumentId
+            String ndaDocumentId,
+            boolean existingVendor
     );
 
     @Mapping(target = "visitor", source = "visitorDetails")
