@@ -261,13 +261,33 @@ public class VisitManagementServiceImpl{
     @Transactional(readOnly = true)
     public VisitDetailResponse getVisitDetails(String visitId) {
 
-        return visitRepository.findDetailsById(visitId)
-                .map(visitMapper::toVisitDetailResponse)
+        Visit visit = visitRepository.findDetailsById(visitId)
                 .orElseThrow(() ->
                         new BusinessRuleException(
                                 "Visit not found with id: " + visitId
                         )
                 );
+
+        VisitDetailResponse response =
+                visitMapper.toVisitDetailResponse(visit);
+
+        Document document = documentService
+                .getLatestIdentityDocument(visit.getVisitor().getId());
+
+        VisitDetailResponse.VisitorDetails visitorDetails =
+                visitMapper.toVisitorDetails(
+                        visit.getVisitor(),
+                        document.getNationality() == null
+                                ? null
+                                : document.getNationality().name(),
+                        response.visitor().ndaAvailable(),
+                        response.visitor().ndaDocumentId()
+                );
+
+        return visitMapper.toVisitDetailResponseWithVisitor(
+                response,
+                visitorDetails
+        );
     }
 
     // NDA STATUS
