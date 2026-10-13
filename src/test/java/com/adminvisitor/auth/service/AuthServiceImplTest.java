@@ -16,6 +16,7 @@ import com.adminvisitor.auth.exception.PasswordValidationException;
 import com.adminvisitor.auth.exception.ResourceAlreadyExistsException;
 import com.adminvisitor.auth.exception.ResourceNotFoundException;
 import com.adminvisitor.auth.repository.EmployeeRepository;
+import com.adminvisitor.auth.repository.PasswordResetTokenRepository;
 import com.adminvisitor.auth.repository.RefreshTokenRepository;
 import com.adminvisitor.auth.repository.UserRepository;
 import com.adminvisitor.auth.util.TokenUtils;
@@ -57,6 +58,9 @@ class AuthServiceImplTest {
 
     @Mock
     private EmailService emailService;
+
+    @Mock
+    private PasswordResetTokenRepository passwordResetTokenRepository;
 
     @Mock
     private AuthenticationManager authenticationManager;

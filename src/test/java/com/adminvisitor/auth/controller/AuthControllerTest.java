@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -50,7 +51,12 @@ class AuthControllerTest {
 
     @BeforeEach
     void setUp() {
-        authController = new AuthController(authService);
+        AuthController controller = new AuthController(
+                authService,
+                900000L,
+                28800000L,
+                false
+        );
         mockMvc = MockMvcBuilders.standaloneSetup(authController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -73,10 +79,10 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken", is("accessToken123")))
-                .andExpect(jsonPath("$.refreshToken", is("refreshToken123")))
+                .andExpect(jsonPath("$.userId", is("USR001")))
+                .andExpect(jsonPath("$.role", is("ADMIN")))
                 .andExpect(jsonPath("$.mustChangePassword", is(false)))
-                .andExpect(header().doesNotExist("Set-Cookie"));
+                .andExpect(header().exists(HttpHeaders.SET_COOKIE));
     }
 
     @Test
@@ -97,10 +103,10 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken", is("restrictedToken123")))
+                .andExpect(jsonPath("$.userId", is("USR002")))
+                .andExpect(jsonPath("$.role", is("FRONT_DESK")))
                 .andExpect(jsonPath("$.mustChangePassword", is(true)))
-                .andExpect(jsonPath("$.refreshToken").doesNotExist())
-                .andExpect(header().doesNotExist("Set-Cookie"));
+                .andExpect(header().exists(HttpHeaders.SET_COOKIE));
     }
 
     @Test
@@ -209,9 +215,10 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new RefreshTokenRequest("refreshToken123"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken", is("newAccessToken123")))
-                .andExpect(jsonPath("$.refreshToken", is("newRefreshToken123")))
-                .andExpect(jsonPath("$.mustChangePassword", is(false)));
+                .andExpect(jsonPath("$.userId", is("USR001")))
+                .andExpect(jsonPath("$.role", is("ADMIN")))
+                .andExpect(jsonPath("$.mustChangePassword", is(false)))
+                .andExpect(header().exists(HttpHeaders.SET_COOKIE));
 
         verify(authService).refresh("refreshToken123");
     }

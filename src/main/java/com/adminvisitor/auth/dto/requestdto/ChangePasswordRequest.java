@@ -7,6 +7,12 @@ public record ChangePasswordRequest(
         String currentPassword,
 
         @NotBlank(message = "New password is required")
-        String newPassword
+        String newPassword,
+
+        @NotBlank(message = "Confirm new password is required")
+        String confirmNewPassword
 ) {
+        public ChangePasswordRequest(String currentPassword, String newPassword) {
+                this(currentPassword, newPassword, newPassword);
+        }
 }

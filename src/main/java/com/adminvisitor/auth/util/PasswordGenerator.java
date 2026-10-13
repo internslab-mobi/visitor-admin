@@ -26,19 +26,16 @@ public class PasswordGenerator {
         }
 
         List<Character> passwordChars = new ArrayList<>();
-        
-        // Ensure at least one character from each category
+
         passwordChars.add(LOWERCASE.charAt(RANDOM.nextInt(LOWERCASE.length())));
         passwordChars.add(UPPERCASE.charAt(RANDOM.nextInt(UPPERCASE.length())));
         passwordChars.add(DIGITS.charAt(RANDOM.nextInt(DIGITS.length())));
         passwordChars.add(SPECIAL.charAt(RANDOM.nextInt(SPECIAL.length())));
 
-        // Fill remaining length with random characters from ALL_CHARACTERS
         for (int i = 4; i < length; i++) {
             passwordChars.add(ALL_CHARACTERS.charAt(RANDOM.nextInt(ALL_CHARACTERS.length())));
         }
 
-        // Shuffle characters to avoid predictable patterns
         Collections.shuffle(passwordChars, RANDOM);
 
         StringBuilder password = new StringBuilder(length);

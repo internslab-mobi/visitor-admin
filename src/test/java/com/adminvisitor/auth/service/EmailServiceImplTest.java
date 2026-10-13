@@ -11,7 +11,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.ITemplateEngine;
+import org.thymeleaf.context.IContext;
 
 import java.util.Properties;
 
@@ -31,7 +32,7 @@ class EmailServiceImplTest {
     private JavaMailSender mailSender;
 
     @Mock
-    private TemplateEngine templateEngine;
+    private ITemplateEngine templateEngine;
 
     private EmailServiceImpl emailService;
 
@@ -41,80 +42,63 @@ class EmailServiceImplTest {
                 mailSender,
                 templateEngine
         );
+        org.springframework.test.util.ReflectionTestUtils.setField(
+                emailService,
+                "mailUsername",
+                "noreply@adminvisitor.com"
+        );
     }
 
     @Test
     void testSendOnboardingEmailSuccess() {
 
-        Session session =
-                Session.getInstance(new Properties());
+        Session session = Session.getInstance(new Properties());
+        MimeMessage mimeMessage = new MimeMessage(session);
 
-        MimeMessage mimeMessage =
-                new MimeMessage(session);
-
-        UserCreatedEvent data =
-                new UserCreatedEvent(
-                        "john@example.com",
-                        "John",
-                        "TempPassword123!"
-                );
+        UserCreatedEvent data = new UserCreatedEvent(
+                "john@example.com",
+                "John",
+                "TempPassword123!"
+        );
 
         when(templateEngine.process(
                 eq("email/onboarding-email"),
-                any()
-        )).thenReturn(
-                "<html><body>Test Email</body></html>"
-        );
+                any(IContext.class)
+        )).thenReturn("<html><body>Test Email</body></html>");
 
-        when(mailSender.createMimeMessage())
-                .thenReturn(mimeMessage);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
 
-        assertDoesNotThrow(() ->
-                emailService.sendOnboardingEmail(data)
-        );
+        assertDoesNotThrow(() -> emailService.sendOnboardingEmail(data));
 
         verify(templateEngine, times(1)).process(
                 eq("email/onboarding-email"),
-                any()
+                any(IContext.class)
         );
 
-        verify(mailSender, times(1))
-                .send(mimeMessage);
+        verify(mailSender, times(1)).send(mimeMessage);
     }
 
     @Test
     void testSendOnboardingEmailFailureThrowsEmailSendException() {
 
-        Session session =
-                Session.getInstance(new Properties());
+        Session session = Session.getInstance(new Properties());
+        MimeMessage mimeMessage = new MimeMessage(session);
 
-        MimeMessage mimeMessage =
-                new MimeMessage(session);
-
-        UserCreatedEvent data =
-                new UserCreatedEvent(
-                        "john@example.com",
-                        "John",
-                        "TempPassword123!"
-                );
+        UserCreatedEvent data = new UserCreatedEvent(
+                "john@example.com",
+                "John",
+                "TempPassword123!"
+        );
 
         when(templateEngine.process(
                 eq("email/onboarding-email"),
-                any()
-        )).thenReturn(
-                "<html><body>Test Email</body></html>"
-        );
+                any(IContext.class)
+        )).thenReturn("<html><body>Test Email</body></html>");
 
-        when(mailSender.createMimeMessage())
-                .thenReturn(mimeMessage);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
 
-        doThrow(
-                new MailSendException(
-                        "SMTP server connection failed"
-                )
-        )
-                .when(mailSender)
-                .send(mimeMessage);
+        doThrow(new MailSendException("SMTP server connection failed"))
+                .when(mailSender).send(mimeMessage);
 
         assertThrows(
                 EmailSendException.class,
@@ -123,10 +107,36 @@ class EmailServiceImplTest {
 
         verify(templateEngine, times(1)).process(
                 eq("email/onboarding-email"),
-                any()
+                any(IContext.class)
         );
 
-        verify(mailSender, times(1))
-                .send(mimeMessage);
+        verify(mailSender, times(1)).send(mimeMessage);
+    }
+
+    @Test
+    void testSendPasswordResetOtpEmailSuccess() {
+        Session session = Session.getInstance(new Properties());
+        MimeMessage mimeMessage = new MimeMessage(session);
+
+        when(templateEngine.process(
+                eq("email/password-reset-email"),
+                any(IContext.class)
+        )).thenReturn("<html><body>OTP Email</body></html>");
+
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        assertDoesNotThrow(() -> emailService.sendPasswordResetOtpEmail(
+                "john@example.com",
+                "Logeshwaran J",
+                "525520",
+                5
+        ));
+
+        verify(templateEngine, times(1)).process(
+                eq("email/password-reset-email"),
+                any(IContext.class)
+        );
+
+        verify(mailSender, times(1)).send(mimeMessage);
     }
 }

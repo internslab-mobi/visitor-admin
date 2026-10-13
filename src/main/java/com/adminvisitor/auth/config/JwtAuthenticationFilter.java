@@ -5,9 +5,9 @@ import com.adminvisitor.auth.service.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.List;
 
 @Component
-@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     public static final String INITIAL_PASSWORD_CHANGE_AUTHORITY =
@@ -29,6 +28,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserRepository userRepository;
 
+    public JwtAuthenticationFilter(
+            JwtService jwtService,
+            UserRepository userRepository
+    ) {
+        this.jwtService = jwtService;
+        this.userRepository = userRepository;
+    }
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -36,81 +43,105 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
+        // Read the access token from the HttpOnly cookie.
+        final String jwt = getAccessTokenFromCookie(request);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        // No access token: continue and let Spring Security
+        // decide whether the endpoint requires authentication.
+        if (jwt == null || jwt.isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        final String jwt = authHeader.substring(7);
-
-        if (jwtService.isTokenValid(jwt)) {
-            try {
-                Claims claims = jwtService.parseClaims(jwt);
-
-                String userId = claims.getSubject();
-                if (userId == null || !userRepository.existsByIdAndStatus(userId, "ACTIVE")) {
-                    SecurityContextHolder.clearContext();
-                    filterChain.doFilter(request, response);
-                    return;
-                }
-                String role = claims.get("role", String.class);
-                String state = claims.get("state", String.class);
-
-                List<SimpleGrantedAuthority> authorities;
-
-                if (JwtService.STATE_INITIAL_PASSWORD_CHANGE_REQUIRED.equals(state)) {
-
-                    authorities = Collections.singletonList(
-                            new SimpleGrantedAuthority(
-                                    INITIAL_PASSWORD_CHANGE_AUTHORITY
-                            )
-                    );
-
-                } else if (JwtService.STATE_AUTHENTICATED.equals(state)) {
-
-                    if (!"ADMIN".equals(role) && !"FRONT_DESK".equals(role)) {
-                        SecurityContextHolder.clearContext();
-                        filterChain.doFilter(request, response);
-                        return;
-                    }
-
-                    authorities = Collections.singletonList(
-                            new SimpleGrantedAuthority("ROLE_" + role)
-                    );
-
-                } else {
-
-                    SecurityContextHolder.clearContext();
-                    filterChain.doFilter(request, response);
-                    return;
-                }
-
-                if (userId != null
-                        && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    userId,
-                                    null,
-                                    authorities
-                            );
-
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource()
-                                    .buildDetails(request)
-                    );
-
-                    SecurityContextHolder.getContext()
-                            .setAuthentication(authToken);
-                }
-
-            } catch (Exception e) {
+        try {
+            if (!jwtService.isTokenValid(jwt)) {
                 SecurityContextHolder.clearContext();
+                filterChain.doFilter(request, response);
+                return;
             }
+
+            Claims claims = jwtService.parseClaims(jwt);
+
+            String userId = claims.getSubject();
+
+            if (userId == null
+                    || !userRepository.existsByIdAndStatus(userId, "ACTIVE")) {
+                SecurityContextHolder.clearContext();
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            String role = claims.get("role", String.class);
+            String state = claims.get("state", String.class);
+
+            List<SimpleGrantedAuthority> authorities;
+
+            if (JwtService.STATE_INITIAL_PASSWORD_CHANGE_REQUIRED
+                    .equals(state)) {
+
+                authorities = Collections.singletonList(
+                        new SimpleGrantedAuthority(
+                                INITIAL_PASSWORD_CHANGE_AUTHORITY
+                        )
+                );
+
+            } else if (JwtService.STATE_AUTHENTICATED.equals(state)) {
+
+                if (!"ADMIN".equals(role) && !"FRONT_DESK".equals(role)) {
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
+                authorities = Collections.singletonList(
+                        new SimpleGrantedAuthority("ROLE_" + role)
+                );
+
+            } else {
+                SecurityContextHolder.clearContext();
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userId,
+                                null,
+                                authorities
+                        );
+
+                authToken.setDetails(
+                        new WebAuthenticationDetailsSource()
+                                .buildDetails(request)
+                );
+
+                SecurityContextHolder.getContext()
+                        .setAuthentication(authToken);
+            }
+
+        } catch (Exception e) {
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String getAccessTokenFromCookie(HttpServletRequest request) {
+
+        Cookie[] cookies = request.getCookies();
+
+        if (cookies == null) {
+            return null;
+        }
+
+        for (Cookie cookie : cookies) {
+            if ("ACCESS_TOKEN".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+
+        return null;
     }
 }
