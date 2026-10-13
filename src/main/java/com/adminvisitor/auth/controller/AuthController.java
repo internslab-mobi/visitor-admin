@@ -132,11 +132,19 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request
     ) {
-        authService.forgotPassword(request);
+        boolean accepted = authService.forgotPassword(request);
+
+        if (!accepted) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of(
+                            "message",
+                            "No active account found for this email. Please check your email address or contact your administrator."
+                    ));
+        }
 
         return ResponseEntity.ok(Map.of(
                 "message",
-                "If an account exists for this email, a verification code has been sent."
+                "Verification code sent. Please check your inbox and spam folder."
         ));
     }
 
@@ -144,11 +152,19 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> resendForgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request
     ) {
-        authService.forgotPassword(request);
+        boolean accepted = authService.forgotPassword(request);
+
+        if (!accepted) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of(
+                            "message",
+                            "No active account found for this email. Please check your email address or contact your administrator."
+                    ));
+        }
 
         return ResponseEntity.ok(Map.of(
                 "message",
-                "If an account exists for this email, a verification code has been sent."
+                "Verification code sent. Please check your inbox and spam folder."
         ));
     }
 

@@ -196,76 +196,100 @@ public class AuthServiceImpl implements AuthService {
         log.info("PASSWORD_CHANGED userId={}", userId);
     }
 
+
     @Override
     @Transactional
     public AuthResult refresh(String rawRefreshToken) {
 
         if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
             log.warn("REFRESH_REJECTED reason=MISSING_TOKEN");
-
             throw new InvalidTokenException("Refresh token is missing");
         }
 
         String tokenHash = TokenUtils.hashToken(rawRefreshToken);
 
-        RefreshToken refreshToken = refreshTokenRepository.findByTokenHash(tokenHash).orElseThrow(() -> {
-            log.warn("REFRESH_REJECTED reason=INVALID_TOKEN");
+        RefreshToken refreshToken = refreshTokenRepository
+                .findByTokenHashForUpdate(tokenHash)
+                .orElseThrow(() -> {
+                    log.warn("REFRESH_REJECTED reason=INVALID_TOKEN");
+                    return new InvalidTokenException(
+                            "Invalid or unrecognized refresh token"
+                    );
+                });
 
-            return new InvalidTokenException("Invalid or unrecognized refresh token");
-        });
+        LocalDateTime now = LocalDateTime.now();
 
         if (refreshToken.getRevokedAt() != null) {
             log.warn("REFRESH_REJECTED reason=REVOKED_TOKEN");
-
             throw new InvalidTokenException("Refresh token has been revoked");
         }
 
-        if (refreshToken.getExpiresAt().isBefore(LocalDateTime.now())) {
-
-            log.warn("REFRESH_REJECTED reason=EXPIRED_TOKEN userId={}", refreshToken.getUser().getId());
-
+        if (!refreshToken.getExpiresAt().isAfter(now)) {
+            log.warn(
+                    "REFRESH_REJECTED reason=EXPIRED_TOKEN userId={}",
+                    refreshToken.getUser().getId()
+            );
             throw new InvalidTokenException("Refresh token has expired");
         }
 
         User user = refreshToken.getUser();
 
         if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
-            log.warn("REFRESH_REJECTED reason=INACTIVE_ACCOUNT userId={}", user.getId());
-
-            throw new InvalidTokenException("Associated user account is inactive");
+            log.warn(
+                    "REFRESH_REJECTED reason=INACTIVE_ACCOUNT userId={}",
+                    user.getId()
+            );
+            throw new InvalidTokenException(
+                    "Associated user account is inactive"
+            );
         }
-
-        refreshToken.setRevokedAt(LocalDateTime.now());
-        refreshTokenRepository.save(refreshToken);
 
         String newRawRefreshToken = TokenUtils.generateOpaqueToken();
 
-        RefreshToken newRefreshToken = new RefreshToken();
-        newRefreshToken.setUser(user);
-        newRefreshToken.setTokenHash(TokenUtils.hashToken(newRawRefreshToken));
-        newRefreshToken.setCreatedAt(LocalDateTime.now());
-        newRefreshToken.setExpiresAt(LocalDateTime.now().plusSeconds(jwtService.getRefreshExpiration() / 1000));
+        refreshToken.setTokenHash(
+                TokenUtils.hashToken(newRawRefreshToken)
+        );
+        refreshToken.setExpiresAt(
+                now.plusSeconds(
+                        jwtService.getRefreshExpiration() / 1000
+                )
+        );
 
-        refreshTokenRepository.save(newRefreshToken);
+        refreshTokenRepository.save(refreshToken);
 
-        String newAccessToken = jwtService.generateToken(user.getId(), user.getRole().name());
+        String newAccessToken = jwtService.generateToken(
+                user.getId(),
+                user.getRole().name()
+        );
 
-        log.info("REFRESH_SUCCESS userId={} role={}", user.getId(), user.getRole());
+        log.info(
+                "REFRESH_SUCCESS userId={} role={}",
+                user.getId(),
+                user.getRole()
+        );
 
-        return new AuthResult(newAccessToken, newRawRefreshToken, false, user.getRole(), user.getId(), "Authentication successful.");
+        return new AuthResult(
+                newAccessToken,
+                newRawRefreshToken,
+                false,
+                user.getRole(),
+                user.getId(),
+                "Authentication successful."
+        );
     }
 
     @Override
     @Transactional
-    public void forgotPassword(ForgotPasswordRequest request) {
+    public boolean forgotPassword(ForgotPasswordRequest request) {
 
         Optional<User> userOpt = userRepository.findByEmployeeEmail(request.email());
 
-        if (userOpt.isEmpty() || !"ACTIVE".equalsIgnoreCase(userOpt.get().getStatus())) {
+        if (userOpt.isEmpty() ||
+                !"ACTIVE".equalsIgnoreCase(userOpt.get().getStatus())) {
 
             log.info("FORGOT_PASSWORD_PROCESSED reason=ACCOUNT_NOT_FOUND_OR_INACTIVE");
 
-            return;
+            return false;
         }
 
         User user = userOpt.get();
@@ -316,6 +340,8 @@ public class AuthServiceImpl implements AuthService {
         String fullName = user.getEmployee().getFirstName() + " " + user.getEmployee().getLastName();
 
         emailService.sendPasswordResetOtpEmail(user.getEmployee().getEmail(), fullName, rawOtp, 5);
+
+        return true;
     }
 
     @Override

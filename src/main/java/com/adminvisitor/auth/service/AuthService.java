@@ -20,7 +20,7 @@ public interface AuthService {
 
     AuthResult refresh(String rawRefreshToken);
 
-    void forgotPassword(ForgotPasswordRequest request);
+    boolean forgotPassword(ForgotPasswordRequest request);
 
     VerifyOtpResponse verifyResetOtp(VerifyOtpRequest request);
 
