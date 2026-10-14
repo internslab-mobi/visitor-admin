@@ -8,6 +8,8 @@ public record AuthResult(
         boolean mustChangePassword,
         UserRole role,
         String userId,
-        String message
+        String message,
+        UserResponse user
 ) {
 }
+

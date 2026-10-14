@@ -2,6 +2,7 @@ package com.adminvisitor.auth.service;
 
 import com.adminvisitor.auth.event.UserCreatedEvent;
 import com.adminvisitor.auth.exception.EmailSendException;
+import com.adminvisitor.auth.service.Impl.EmailServiceImpl;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,4 +1,4 @@
-package com.adminvisitor.auth.service;
+package com.adminvisitor.auth.service.Impl;
 
 import com.adminvisitor.auth.dto.requestdto.*;
 import com.adminvisitor.auth.dto.responsedto.AuthResult;
@@ -14,6 +14,10 @@ import com.adminvisitor.auth.repository.EmployeeRepository;
 import com.adminvisitor.auth.repository.PasswordResetTokenRepository;
 import com.adminvisitor.auth.repository.RefreshTokenRepository;
 import com.adminvisitor.auth.repository.UserRepository;
+import com.adminvisitor.auth.service.AuthService;
+import com.adminvisitor.auth.service.EmailService;
+import com.adminvisitor.auth.security.JwtService;
+import com.adminvisitor.auth.service.IdGeneratorService;
 import com.adminvisitor.auth.util.PasswordGenerator;
 import com.adminvisitor.auth.util.TokenUtils;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +48,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final EmailService emailService;
+    private final IdGeneratorService idGeneratorService;
     private final AuthenticationManager authenticationManager;
 
     @Override
@@ -60,7 +65,7 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("Employee is not active: " + request.employeeId());
         }
 
-        String newUserId = generateNextUserId();
+        String newUserId = idGeneratorService.generateId("USER", "USR-");
         String tempPassword = PasswordGenerator.generateTemporaryPassword();
 
         User user = new User();
@@ -90,43 +95,94 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public AuthResult login(LoginRequest request) {
 
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.email(),
+                        request.password()
+                )
+        );
 
-        User user = userRepository.findByEmployeeEmail(request.email()).orElseThrow(() -> {
-            log.warn("LOGIN_FAILED reason=USER_NOT_FOUND");
-            return new BadCredentialsException("Invalid email or password");
-        });
+        User user = userRepository.findByEmployeeEmail(request.email())
+                .orElseThrow(() -> {
+                    log.warn("LOGIN_FAILED reason=USER_NOT_FOUND");
+                    return new BadCredentialsException("Invalid email or password");
+                });
 
         if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
             log.warn("LOGIN_FAILED reason=INACTIVE_ACCOUNT userId={}", user.getId());
-
             throw new BadCredentialsException("User account is inactive");
         }
 
+        Employee employee = user.getEmployee();
+
+        String fullName = employee.getFirstName() + " " + employee.getLastName();
+
+        UserResponse userResponse = new UserResponse(
+                user.getId(),
+                employee.getId(),
+                employee.getEmail(),
+                fullName,
+                user.getRole(),
+                user.getStatus(),
+                user.isMustChangePassword()
+        );
+
         if (user.isMustChangePassword()) {
+            log.info(
+                    "FIRST_LOGIN_PASSWORD_CHANGE_REQUIRED userId={} role={}",
+                    user.getId(),
+                    user.getRole()
+            );
 
-            log.info("FIRST_LOGIN_PASSWORD_CHANGE_REQUIRED userId={} role={}", user.getId(), user.getRole());
+            String restrictedToken = jwtService.generateRestrictedToken(
+                    user.getId(),
+                    user.getRole().name()
+            );
 
-            String restrictedToken = jwtService.generateRestrictedToken(user.getId(), user.getRole().name());
-
-            return new AuthResult(restrictedToken, null, true, user.getRole(), user.getId(), "First login password change is required.");
+            return new AuthResult(
+                    restrictedToken,
+                    null,
+                    true,
+                    user.getRole(),
+                    user.getId(),
+                    "First login password change is required.",
+                    userResponse
+            );
         }
 
-        String accessToken = jwtService.generateToken(user.getId(), user.getRole().name());
+        String accessToken = jwtService.generateToken(
+                user.getId(),
+                user.getRole().name()
+        );
 
         String rawRefreshToken = TokenUtils.generateOpaqueToken();
 
         RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setId(
+                idGeneratorService.generateId("REFRESH_TOKEN", "RTK-")
+        );
         refreshToken.setUser(user);
         refreshToken.setTokenHash(TokenUtils.hashToken(rawRefreshToken));
         refreshToken.setCreatedAt(LocalDateTime.now());
-        refreshToken.setExpiresAt(LocalDateTime.now().plusSeconds(jwtService.getRefreshExpiration() / 1000));
+        refreshToken.setExpiresAt(
+                LocalDateTime.now().plusSeconds(
+                        jwtService.getRefreshExpiration() / 1000
+                )
+        );
 
         refreshTokenRepository.save(refreshToken);
 
         log.info("LOGIN_SUCCESS userId={} role={}", user.getId(), user.getRole());
 
-        return new AuthResult(accessToken, rawRefreshToken, false, user.getRole(), user.getId(), "Authentication successful.");
+        return new AuthResult(
+                accessToken,
+                rawRefreshToken,
+                false,
+                user.getRole(),
+                user.getId(),
+                "Authentication successful.",
+                userResponse
+        );
     }
 
     @Override
@@ -268,13 +324,28 @@ public class AuthServiceImpl implements AuthService {
                 user.getRole()
         );
 
+        Employee employee = user.getEmployee();
+
+        String fullName = employee.getFirstName() + " " + employee.getLastName();
+
+        UserResponse userResponse = new UserResponse(
+                user.getId(),
+                employee.getId(),
+                employee.getEmail(),
+                fullName,
+                user.getRole(),
+                user.getStatus(),
+                user.isMustChangePassword()
+        );
+
         return new AuthResult(
                 newAccessToken,
                 newRawRefreshToken,
                 false,
                 user.getRole(),
                 user.getId(),
-                "Authentication successful."
+                "Authentication successful.",
+                userResponse
         );
     }
 
@@ -323,7 +394,9 @@ public class AuthServiceImpl implements AuthService {
         String otpHash = TokenUtils.hashToken(rawOtp);
 
         PasswordResetToken resetToken = new PasswordResetToken();
-
+        resetToken.setId(
+                idGeneratorService.generateId("PASSWORD_RESET", "PRT_")
+        );
         resetToken.setUser(user);
         resetToken.setOtpHash(otpHash);
         resetToken.setOtpExpiresAt(now.plusMinutes(5));
@@ -507,18 +580,7 @@ public class AuthServiceImpl implements AuthService {
         log.info("RESET_PASSWORD_SUCCESS userId={}", user.getId());
     }
 
-    private synchronized String generateNextUserId() {
 
-        long count = userRepository.count() + 1;
-        String nextId = String.format("USR%03d", count);
-
-        while (userRepository.existsById(nextId)) {
-            count++;
-            nextId = String.format("USR%03d", count);
-        }
-
-        return nextId;
-    }
 
     private void validateNewPasswordPolicy(String newPassword, String currentPassword) {
 

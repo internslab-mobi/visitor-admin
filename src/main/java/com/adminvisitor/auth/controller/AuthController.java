@@ -74,7 +74,8 @@ public class AuthController {
             return response.body(
                     AuthResponse.firstLoginRequired(
                             result.userId(),
-                            result.role()
+                            result.role(),
+                            result.user()
                     )
             );
         }
@@ -94,7 +95,8 @@ public class AuthController {
         return response.body(
                 AuthResponse.authenticated(
                         result.userId(),
-                        result.role()
+                        result.role(),
+                        result.user()
                 )
         );
     }
@@ -217,7 +219,8 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(AuthResponse.authenticated(
                         result.userId(),
-                        result.role()
+                        result.role(),
+                        result.user()
                 ));
     }
 

@@ -1,4 +1,4 @@
-package com.adminvisitor.auth.config;
+package com.adminvisitor.auth.security;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

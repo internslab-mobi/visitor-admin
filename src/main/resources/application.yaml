@@ -42,4 +42,4 @@ app:
 logging:
   level:
     root: INFO
-    com.adminvisitor: DEBUG
+    com.adminvisitor.auth: DEBUG
