@@ -286,6 +286,14 @@ public final class VisitSpecification {
                             searchValue
                     ),
 
+                    // Company name (searchable, not displayed in the table)
+                    criteriaBuilder.like(
+                            criteriaBuilder.lower(
+                                    visitor.get("companyName")
+                            ),
+                            searchValue
+                    ),
+
                     // Host first name
                     criteriaBuilder.like(
                             criteriaBuilder.lower(
