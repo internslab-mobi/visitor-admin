@@ -16,46 +16,5 @@ public interface VisitService {
 
     RegistrationResponse register(RegistrationRequest request);
 
-    List<VisitDashboardResponse> getDashboardVisits(
-            VisitView view,
-            String visitorId,
-            String visitorName,
-            String visitorEmail,
-            VisitStatus status,
-            LocalDate date,
-            LocalDate fromDate,
-            LocalDate toDate,
-            String sortDirection,
-            String sortBy
-    );
-
-    Page<VisitorLogResponse> getVisitorLog(
-            String search,
-            LocalDate fromDate,
-            LocalDate toDate,
-            VisitStatus status,
-            VisitorType visitorType,
-            String hostId,
-            int page,
-            int size,
-            String sortDirection
-    );
-
-    VisitDetailResponse getVisitDetails(String visitId);
-
-    VisitDetailResponse cancelVisit(String visitId);
-
-    VisitDetailResponse checkIn(
-            String visitId,
-            CheckInRequest request,
-            MultipartFile photo
-    );
-
-    VisitDetailResponse checkOut(String visitId);
-
-    NdaStatusResponse getNdaStatus(String visitId);
-
-    void verifyIdentity(String visitId, CheckInRequest request);
-
     String getVisitPhotoPath(String visitId);
 }

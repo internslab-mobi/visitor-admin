@@ -6,19 +6,14 @@ import com.adminvisitor.dto.responsedto.NdaStatusResponse;
 import com.adminvisitor.dto.responsedto.RegistrationResponse;
 import com.adminvisitor.dto.responsedto.VisitDashboardResponse;
 import com.adminvisitor.dto.responsedto.VisitDetailResponse;
-import com.adminvisitor.service.DocumentService;
+import com.adminvisitor.service.VisitManagementService;
 import com.adminvisitor.service.VisitService;
-import com.adminvisitor.service.impl.VisitServiceImpl;
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.enums.VisitView;
-import com.adminvisitor.entity.DocumentMetadata;
-import com.adminvisitor.exception.ResourceNotFoundException;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaTypeFactory;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +35,7 @@ import java.util.List;
 public class VisitController {
 
     private final VisitService visitService;
-    private final DocumentService documentService;
+    private final VisitManagementService visitManagementService;
 
     @PostMapping
     public ResponseEntity<RegistrationResponse> register(
@@ -93,7 +88,7 @@ public class VisitController {
     ) {
 
         List<VisitDashboardResponse> visits =
-                visitService.getDashboardVisits(
+                visitManagementService.getDashboardVisits(
                         view,
                         visitorId,
                         visitorName,
@@ -115,7 +110,7 @@ public class VisitController {
     ) {
 
         VisitDetailResponse response =
-                visitService.getVisitDetails(visitId);
+                visitManagementService.getVisitDetails(visitId);
 
         return ResponseEntity.ok(response);
     }
@@ -126,7 +121,7 @@ public class VisitController {
     ) {
 
         VisitDetailResponse response =
-                visitService.cancelVisit(visitId);
+                visitManagementService.cancelVisit(visitId);
 
         return ResponseEntity.ok(response);
     }
@@ -154,7 +149,7 @@ public class VisitController {
             MultipartFile photo
     ) {
         return ResponseEntity.ok(
-                visitService.checkIn(
+                visitManagementService.checkIn(
                         visitId,
                         request,
                         photo
@@ -167,7 +162,7 @@ public class VisitController {
             @PathVariable String visitId) {
 
         VisitDetailResponse response =
-                visitService.checkOut(visitId);
+                visitManagementService.checkOut(visitId);
 
         return ResponseEntity.ok(response);
     }
@@ -177,7 +172,7 @@ public class VisitController {
             @PathVariable String visitId,
             @RequestBody @Valid CheckInRequest request
     ) {
-        visitService.verifyIdentity(visitId, request);
+        visitManagementService.verifyIdentity(visitId, request);
         return ResponseEntity.noContent().build();
     }
 
@@ -186,7 +181,7 @@ public class VisitController {
             @PathVariable String visitId) {
 
         return ResponseEntity.ok(
-                visitService.getNdaStatus(visitId)
+                visitManagementService.getNdaStatus(visitId)
         );
     }
 
@@ -210,5 +205,4 @@ public class VisitController {
                 )
                 .body(photo);
     }
-
 }

@@ -30,7 +30,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class VisitManagementServiceImpl{
+public class VisitManagementServiceImpl implements VisitManagementService{
     private static final List<VisitStatus> OPERATIONAL_STATUSES =
             List.of(VisitStatus.REGISTERED,VisitStatus.CHECKED_IN);
 
