@@ -1,7 +1,6 @@
-package com.adminvisitor.auth.config;
+package com.adminvisitor.auth.security;
 
 import com.adminvisitor.auth.repository.UserRepository;
-import com.adminvisitor.auth.service.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

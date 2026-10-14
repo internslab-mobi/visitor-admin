@@ -1,4 +1,4 @@
-package com.adminvisitor.auth.service;
+package com.adminvisitor.auth.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

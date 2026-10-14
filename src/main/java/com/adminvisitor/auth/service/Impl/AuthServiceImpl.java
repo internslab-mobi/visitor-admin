@@ -1,4 +1,4 @@
-package com.adminvisitor.auth.service;
+package com.adminvisitor.auth.service.Impl;
 
 import com.adminvisitor.auth.dto.requestdto.*;
 import com.adminvisitor.auth.dto.responsedto.AuthResult;
@@ -14,6 +14,10 @@ import com.adminvisitor.auth.repository.EmployeeRepository;
 import com.adminvisitor.auth.repository.PasswordResetTokenRepository;
 import com.adminvisitor.auth.repository.RefreshTokenRepository;
 import com.adminvisitor.auth.repository.UserRepository;
+import com.adminvisitor.auth.service.AuthService;
+import com.adminvisitor.auth.service.EmailService;
+import com.adminvisitor.auth.security.JwtService;
+import com.adminvisitor.auth.service.IdGeneratorService;
 import com.adminvisitor.auth.util.PasswordGenerator;
 import com.adminvisitor.auth.util.TokenUtils;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +48,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final EmailService emailService;
+    private final IdGeneratorService idGeneratorService;
     private final AuthenticationManager authenticationManager;
 
     @Override
@@ -60,7 +65,7 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("Employee is not active: " + request.employeeId());
         }
 
-        String newUserId = generateNextUserId();
+        String newUserId = idGeneratorService.generateId("USER", "USR-");
         String tempPassword = PasswordGenerator.generateTemporaryPassword();
 
         User user = new User();
@@ -153,6 +158,9 @@ public class AuthServiceImpl implements AuthService {
         String rawRefreshToken = TokenUtils.generateOpaqueToken();
 
         RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setId(
+                idGeneratorService.generateId("REFRESH_TOKEN", "RTK-")
+        );
         refreshToken.setUser(user);
         refreshToken.setTokenHash(TokenUtils.hashToken(rawRefreshToken));
         refreshToken.setCreatedAt(LocalDateTime.now());
@@ -386,7 +394,9 @@ public class AuthServiceImpl implements AuthService {
         String otpHash = TokenUtils.hashToken(rawOtp);
 
         PasswordResetToken resetToken = new PasswordResetToken();
-
+        resetToken.setId(
+                idGeneratorService.generateId("PASSWORD_RESET", "PRT_")
+        );
         resetToken.setUser(user);
         resetToken.setOtpHash(otpHash);
         resetToken.setOtpExpiresAt(now.plusMinutes(5));
@@ -570,18 +580,7 @@ public class AuthServiceImpl implements AuthService {
         log.info("RESET_PASSWORD_SUCCESS userId={}", user.getId());
     }
 
-    private synchronized String generateNextUserId() {
 
-        long count = userRepository.count() + 1;
-        String nextId = String.format("USR%03d", count);
-
-        while (userRepository.existsById(nextId)) {
-            count++;
-            nextId = String.format("USR%03d", count);
-        }
-
-        return nextId;
-    }
 
     private void validateNewPasswordPolicy(String newPassword, String currentPassword) {
 

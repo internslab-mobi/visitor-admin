@@ -1,7 +1,8 @@
-package com.adminvisitor.auth.service;
+package com.adminvisitor.auth.service.Impl;
 
 import com.adminvisitor.auth.event.UserCreatedEvent;
 import com.adminvisitor.auth.exception.EmailSendException;
+import com.adminvisitor.auth.service.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
@@ -100,6 +101,7 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    @Async
     @Override
     public void sendPasswordResetOtpEmail(
             String recipientEmail,

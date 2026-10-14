@@ -1,4 +1,4 @@
-package com.adminvisitor.auth.service;
+package com.adminvisitor.auth.security;
 
 import com.adminvisitor.auth.entity.User;
 import com.adminvisitor.auth.repository.UserRepository;

@@ -1,6 +1,10 @@
 package com.adminvisitor.auth.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -11,11 +15,14 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_vms_password_reset_token_hash", columnList = "reset_token_hash")
         }
 )
+@Getter
+@Setter
+@NoArgsConstructor
 public class PasswordResetToken {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id", nullable = false, length = 20)
+    private String id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
@@ -53,111 +60,4 @@ public class PasswordResetToken {
 
     @Column(name = "reset_token_used_at")
     private LocalDateTime resetTokenUsedAt;
-
-    public PasswordResetToken() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public String getOtpHash() {
-        return otpHash;
-    }
-
-    public void setOtpHash(String otpHash) {
-        this.otpHash = otpHash;
-    }
-
-    public LocalDateTime getOtpExpiresAt() {
-        return otpExpiresAt;
-    }
-
-    public void setOtpExpiresAt(LocalDateTime otpExpiresAt) {
-        this.otpExpiresAt = otpExpiresAt;
-    }
-
-    public int getOtpAttemptCount() {
-        return otpAttemptCount;
-    }
-
-    public void setOtpAttemptCount(int otpAttemptCount) {
-        this.otpAttemptCount = otpAttemptCount;
-    }
-
-    public LocalDateTime getOtpVerifiedAt() {
-        return otpVerifiedAt;
-    }
-
-    public void setOtpVerifiedAt(LocalDateTime otpVerifiedAt) {
-        this.otpVerifiedAt = otpVerifiedAt;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getLastSentAt() {
-        return lastSentAt;
-    }
-
-    public void setLastSentAt(LocalDateTime lastSentAt) {
-        this.lastSentAt = lastSentAt;
-    }
-
-    public int getSendCount() {
-        return sendCount;
-    }
-
-    public void setSendCount(int sendCount) {
-        this.sendCount = sendCount;
-    }
-
-    public boolean isInvalidated() {
-        return invalidated;
-    }
-
-    public void setInvalidated(boolean invalidated) {
-        this.invalidated = invalidated;
-    }
-
-    public String getResetTokenHash() {
-        return resetTokenHash;
-    }
-
-    public void setResetTokenHash(String resetTokenHash) {
-        this.resetTokenHash = resetTokenHash;
-    }
-
-    public LocalDateTime getResetTokenExpiresAt() {
-        return resetTokenExpiresAt;
-    }
-
-    public void setResetTokenExpiresAt(LocalDateTime resetTokenExpiresAt) {
-        this.resetTokenExpiresAt = resetTokenExpiresAt;
-    }
-
-    public LocalDateTime getResetTokenUsedAt() {
-        return resetTokenUsedAt;
-    }
-
-    public void setResetTokenUsedAt(LocalDateTime resetTokenUsedAt) {
-        this.resetTokenUsedAt = resetTokenUsedAt;
-    }
 }

@@ -1,5 +1,6 @@
 package com.adminvisitor.auth.service;
 
+import com.adminvisitor.auth.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
