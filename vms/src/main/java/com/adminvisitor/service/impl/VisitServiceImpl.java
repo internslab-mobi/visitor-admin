@@ -8,6 +8,7 @@ import com.adminvisitor.enums.*;
 import com.adminvisitor.exception.BusinessRuleException;
 import com.adminvisitor.exception.EmailAlreadyExistsException;
 import com.adminvisitor.exception.MobileNumberAlreadyExistsException;
+import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.*;
 import com.adminvisitor.service.*;
 import com.adminvisitor.util.VisitReferenceUtil;
@@ -20,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -595,5 +598,23 @@ public class VisitServiceImpl implements VisitService {
     @Override
     public NdaStatusResponse getNdaStatus(String visitId) {
         return visitManagementService.getNdaStatus(visitId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getVisitPhotoPath(String visitId) {
+
+        String photoPath =
+                documentService.getVisitPhoto(visitId).getDocumentPath();
+
+        Path path = Path.of(photoPath);
+
+        if (!Files.exists(path) || !Files.isReadable(path)) {
+            throw new ResourceNotFoundException(
+                    "Visitor photo file not found for visit: " + visitId
+            );
+        }
+
+        return photoPath;
     }
 }

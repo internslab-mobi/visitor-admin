@@ -12,6 +12,7 @@ import com.adminvisitor.exception.EmailAlreadyExistsException;
 import com.adminvisitor.exception.MobileNumberAlreadyExistsException;
 import com.adminvisitor.exception.VisitorNotFoundException;
 import com.adminvisitor.repository.*;
+import com.adminvisitor.service.VisitService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,7 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
     private final DocumentMetadataRepository documentMetadataRepository;
     private final BlacklistRepository blacklistRepository;
     private final VisitRepository visitRepository;
-
+    private final VisitManagementServiceImpl visitManagementService;
     @Transactional(readOnly = true)
     public VisitorResponse getVisitor(String visitorId) {
 
@@ -210,9 +211,6 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
                         );
 
 
-        // ==========================================
-        // VISITOR TYPE + NATIONALITY
-        // ==========================================
 
         Visit latestVisit =
                 visitRepository
@@ -257,9 +255,6 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
                 );
 
 
-        // ==========================================
-        // VENDOR
-        // ==========================================
 
         VisitorEditResponse.VendorInfo vendorInfo = null;
 
@@ -357,6 +352,8 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
                                     visit.getCheckedInAt(),
 
                                     visit.getCheckedOutAt(),
+
+                                    visitManagementService.calculateDuration(visit),
 
                                     visit.getRemarks(),
 

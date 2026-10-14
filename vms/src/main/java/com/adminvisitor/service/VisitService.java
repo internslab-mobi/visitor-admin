@@ -56,4 +56,6 @@ public interface VisitService {
     NdaStatusResponse getNdaStatus(String visitId);
 
     void verifyIdentity(String visitId, CheckInRequest request);
+
+    String getVisitPhotoPath(String visitId);
 }

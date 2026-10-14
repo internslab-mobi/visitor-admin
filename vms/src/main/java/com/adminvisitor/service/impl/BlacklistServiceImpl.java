@@ -6,10 +6,7 @@ import com.adminvisitor.entity.*;
 import com.adminvisitor.enums.BlacklistStatus;
 import com.adminvisitor.enums.ProofType;
 import com.adminvisitor.enums.VisitorType;
-import com.adminvisitor.exception.BlacklistAlreadyExistsException;
-import com.adminvisitor.exception.BlacklistAlreadyRemovedException;
-import com.adminvisitor.exception.BlacklistNotFoundException;
-import com.adminvisitor.exception.VisitorNotFoundException;
+import com.adminvisitor.exception.*;
 import com.adminvisitor.mapper.BlacklistMapper;
 import com.adminvisitor.repository.*;
 import com.adminvisitor.service.BlacklistService;
@@ -78,7 +75,9 @@ public class BlacklistServiceImpl implements BlacklistService {
         // 2. Find the latest document of the visitor
         Document document = documentRepository
                 .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
-                .orElseThrow(() ->new IllegalArgumentException("No document found for visitor"));
+                .orElseThrow(() -> new DocumentNotFoundException(
+                        "No identity document found for visitor"
+                ));
 
         // 3. Prevent duplicate active blacklist for this visitor
         boolean alreadyBlacklisted = blacklistRepository.findByVisitorIdAndStatus(visitorId, BlacklistStatus.ACTIVE).isPresent();

@@ -6,9 +6,19 @@ import com.adminvisitor.dto.responsedto.NdaStatusResponse;
 import com.adminvisitor.dto.responsedto.RegistrationResponse;
 import com.adminvisitor.dto.responsedto.VisitDashboardResponse;
 import com.adminvisitor.dto.responsedto.VisitDetailResponse;
+import com.adminvisitor.service.DocumentService;
+import com.adminvisitor.service.VisitService;
 import com.adminvisitor.service.impl.VisitServiceImpl;
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.enums.VisitView;
+import com.adminvisitor.entity.DocumentMetadata;
+import com.adminvisitor.exception.ResourceNotFoundException;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaTypeFactory;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +39,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class VisitController {
 
-    private final VisitServiceImpl visitService;
+    private final VisitService visitService;
+    private final DocumentService documentService;
 
     @PostMapping
     public ResponseEntity<RegistrationResponse> register(
@@ -179,5 +190,25 @@ public class VisitController {
         );
     }
 
+    @GetMapping("/{visitId}/photo")
+    public ResponseEntity<Resource> getVisitPhoto(
+            @PathVariable String visitId) {
+
+        Resource photo = new FileSystemResource(
+                visitService.getVisitPhotoPath(visitId)
+        );
+
+        MediaType mediaType =
+                MediaTypeFactory.getMediaType(photo.getFilename())
+                        .orElse(MediaType.APPLICATION_OCTET_STREAM);
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"" + photo.getFilename() + "\""
+                )
+                .body(photo);
+    }
 
 }

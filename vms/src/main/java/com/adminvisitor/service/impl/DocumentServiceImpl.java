@@ -1,6 +1,8 @@
 package com.adminvisitor.service.impl;
 
+import com.adminvisitor.entity.Visit;
 import com.adminvisitor.mapper.DocumentMapper;
+import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.service.DocumentService;
 import com.adminvisitor.dto.responsedto.DocumentResponse;
 // import com.adminvisitor.dto.responsedto.DocumentResponse;
@@ -45,6 +47,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final VisitorRepository visitorRepository;
     private final com.adminvisitor.service.IdGeneratorService idGeneratorService;
    // private final IdGeneratorService idGeneratorService;
+   private final VisitRepository visitRepository;
     private final DocumentMetadataRepository documentMetadataRepository;
     private final DocumentMapper documentMapper;
     private final DocumentStorageService documentStorageService;
@@ -66,8 +69,10 @@ public class DocumentServiceImpl implements DocumentService {
 
 
     @Transactional
+    @Override
     public DocumentMetadata uploadVisitorPhoto(
             String visitorId,
+            String visitId,
             MultipartFile file
     ) {
 
@@ -80,6 +85,19 @@ public class DocumentServiceImpl implements DocumentService {
         if (!visitorRepository.existsById(visitorId)) {
             throw new ResourceNotFoundException(
                     "Visitor not found: " + visitorId
+            );
+        }
+
+        Visit visit = visitRepository.findById(visitId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Visit not found: " + visitId
+                        )
+                );
+
+        if (!visit.getVisitor().getId().equals(visitorId)) {
+            throw new IllegalArgumentException(
+                    "The visit does not belong to the specified visitor"
             );
         }
 
@@ -128,6 +146,7 @@ public class DocumentServiceImpl implements DocumentService {
 
             metadata.setId(metadataId);
             metadata.setDocument(document);
+            metadata.setVisit(visit);
             metadata.setDocumentType(DocumentType.VISITOR_PHOTO);
             metadata.setDocumentPath(filePath.toString());
 
@@ -141,15 +160,6 @@ public class DocumentServiceImpl implements DocumentService {
             );
         }
     }
-
-
-
-
-
-
-
-
-
 
     public boolean isNdaRequired(Visitor visitor) {
 
@@ -538,7 +548,21 @@ public class DocumentServiceImpl implements DocumentService {
     }
     */
 
+    @Transactional(readOnly = true)
+    @Override
+    public DocumentMetadata getVisitPhoto(String visitId) {
 
+        return documentMetadataRepository
+                .findTopByVisit_IdAndDocumentTypeOrderByCreatedAtDesc(
+                        visitId,
+                        DocumentType.VISITOR_PHOTO
+                )
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Visitor photo not found for visit: " + visitId
+                        )
+                );
+    }
 
 
     @Transactional(readOnly = true)

@@ -40,7 +40,8 @@ public record VisitDetailResponse(
             String companyName,
             String nationality,
             boolean ndaAvailable,
-            String ndaDocumentId
+            String ndaDocumentId,
+            boolean existingVendor
 
     ) {
     }
