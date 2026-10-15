@@ -60,4 +60,12 @@ public interface DocumentMetadataRepository
             String visitorId,
             List<DocumentType> documentTypes
     );
+
+
+    @EntityGraph(attributePaths = "document")
+    Optional<DocumentMetadata>
+    findTopByDocument_Visitor_IdAndDocumentTypeAndOverwrittenByIsNullOrderByCreatedAtDesc(
+            String visitorId,
+            DocumentType documentType
+    );
 }

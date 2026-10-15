@@ -53,8 +53,8 @@ public interface VisitService {
 
     VisitDetailResponse checkOut(String visitId);
 
-    NdaStatusResponse getNdaStatus(String visitId);
-
+//    NdaStatusResponse getNdaStatus(String visitId);
+//
     void verifyIdentity(String visitId, CheckInRequest request);
 
     String getVisitPhotoPath(String visitId);

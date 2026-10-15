@@ -12,10 +12,13 @@ import java.time.LocalDateTime;
 public interface DocumentMapper {
 
     @Mapping(source = "id", target = "documentId")
+    @Mapping(source = "documentPath", target = "documentPath")
     @Mapping(source = "createdAt", target = "createdAt")
-    @Mapping(target = "validFrom", ignore = true)
-    @Mapping(target = "validUntil", ignore = true)
-    @Mapping(target = "overwrittenBy", ignore = true)
+    @Mapping(source = "effective_validity", target = "effective_validity")
+    @Mapping(source = "validUntil", target = "validUntil")
+    @Mapping(source = "overwrittenBy", target = "overwrittenBy")
+    @Mapping(target = "status", expression =
+            "java(metadata.getStatus() == null ? null : metadata.getStatus().name())")
     DocumentResponse toResponse(DocumentMetadata metadata);
 
     default String map(LocalDateTime dateTime) {

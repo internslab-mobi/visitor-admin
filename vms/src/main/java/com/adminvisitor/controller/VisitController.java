@@ -2,7 +2,7 @@ package com.adminvisitor.controller;
 
 import com.adminvisitor.dto.requestdto.CheckInRequest;
 import com.adminvisitor.dto.requestdto.RegistrationRequest;
-import com.adminvisitor.dto.responsedto.NdaStatusResponse;
+
 import com.adminvisitor.dto.responsedto.RegistrationResponse;
 import com.adminvisitor.dto.responsedto.VisitDashboardResponse;
 import com.adminvisitor.dto.responsedto.VisitDetailResponse;
@@ -181,14 +181,14 @@ public class VisitController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{visitId}/nda-status")
-    public ResponseEntity<NdaStatusResponse> getNdaStatus(
-            @PathVariable String visitId) {
-
-        return ResponseEntity.ok(
-                visitService.getNdaStatus(visitId)
-        );
-    }
+//    @GetMapping("/{visitId}/nda-status")
+//    public ResponseEntity<NdaStatusResponse> getNdaStatus(
+//            @PathVariable String visitId) {
+//
+//        return ResponseEntity.ok(
+//                visitService.getNdaStatus(visitId)
+//        );
+//    }
 
 
     @GetMapping("/{visitId}/photo")

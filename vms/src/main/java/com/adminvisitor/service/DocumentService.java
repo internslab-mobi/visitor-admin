@@ -20,15 +20,15 @@ public interface DocumentService {
             MultipartFile file
     );
 
-    boolean isNdaRequired(Visitor visitor);
+//    boolean isNdaRequired(Visitor visitor);
 
-    DocumentMetadata getLatestNda(String visitorId);
+//    DocumentMetadata getLatestNda(String visitorId);
 
     DocumentMetadata getLatestVisitorPhoto(String visitorId);
 
-    DocumentMetadata getValidNda(Visitor visitor);
+   // DocumentMetadata getValidNda(Visitor visitor);
 
-    Resource getNdaFile(String visitorId);
+//  Resource getNdaFile(String visitorId);
 
     Document saveIdentityProofs(
             Visitor visitor,

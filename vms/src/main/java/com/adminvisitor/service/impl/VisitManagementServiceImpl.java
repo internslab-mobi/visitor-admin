@@ -42,7 +42,7 @@ public class VisitManagementServiceImpl {
     private final DocumentService documentService;
     private final VisitBadgeService visitBadgeService;
     private final QrTokenService qrTokenService;
-
+private final NdaService ndaService;
     private double elapsedMillis(long startNanos) {
         return (System.nanoTime() - startNanos) / 1_000_000.0;
     }
@@ -237,12 +237,12 @@ public class VisitManagementServiceImpl {
                     .findByVisitorId(visit.getVisitor().getId())
                     .isPresent();
 
-            ndaAvailable = !documentService.isNdaRequired(
+            ndaAvailable = !ndaService.isNdaRequired(
                     visit.getVisitor());
 
             if (ndaAvailable) {
                 DocumentMetadata latestNda =
-                        documentService.getLatestNda(
+                        ndaService.getLatestNda(
                                 visit.getVisitor().getId());
 
                 ndaDocumentId = latestNda.getId();
@@ -281,41 +281,41 @@ public class VisitManagementServiceImpl {
     }
 
     // NDA STATUS
-    @Transactional(readOnly = true)
-    public NdaStatusResponse getNdaStatus(String visitId) {
-
-        Visit visit = visitRepository.findById(visitId)
-                .orElseThrow(() ->
-                        new BusinessRuleException(
-                                "Visit not found with id: " + visitId));
-
-        Visitor visitor = visit.getVisitor();
-
-        boolean ndaRequired =
-                visit.getVisitorType() == VisitorType.VENDOR
-                        && documentService.isNdaRequired(visitor);
-
-        boolean ndaAvailable =
-                visit.getVisitorType() == VisitorType.VENDOR
-                        && !ndaRequired;
-
-        DocumentMetadata latestNda = null;
-
-        if (ndaAvailable) {
-            latestNda = documentService.getLatestNda(visitor.getId());
-        }
-
-        return NdaStatusResponse.builder()
-                .visitorId(visitor.getId())
-                .visitorType(visit.getVisitorType().name())
-                .ndaRequired(ndaRequired)
-                .ndaAvailable(ndaAvailable)
-                .validUntil(latestNda != null
-                        ? latestNda.getValidUntil() : null)
-                .documentId(latestNda != null
-                        ? latestNda.getId() : null)
-                .build();
-    }
+//    @Transactional(readOnly = true)
+//    public NdaStatusResponse getNdaStatus(String visitId) {
+//
+//        Visit visit = visitRepository.findById(visitId)
+//                .orElseThrow(() ->
+//                        new BusinessRuleException(
+//                                "Visit not found with id: " + visitId));
+//
+//        Visitor visitor = visit.getVisitor();
+//
+//        boolean ndaRequired =
+//                visit.getVisitorType() == VisitorType.VENDOR
+//                        && documentService.isNdaRequired(visitor);
+//
+//        boolean ndaAvailable =
+//                visit.getVisitorType() == VisitorType.VENDOR
+//                        && !ndaRequired;
+//
+//        DocumentMetadata latestNda = null;
+//
+//        if (ndaAvailable) {
+//            latestNda = ndaService.getLatestNda(visitor.getId());
+//        }
+//
+//        return NdaStatusResponse.builder()
+//                .visitorId(visitor.getId())
+//                .visitorType(visit.getVisitorType().name())
+//                .ndaRequired(ndaRequired)
+//                .ndaAvailable(ndaAvailable)
+//                .validUntil(latestNda != null
+//                        ? latestNda.getValidUntil() : null)
+//                .documentId(latestNda != null
+//                        ? latestNda.getId() : null)
+//                .build();
+//    }
 
     // CANCEL VISIT
     @Transactional
@@ -394,7 +394,7 @@ public class VisitManagementServiceImpl {
 
             if (visit.getVisitorType() == VisitorType.VENDOR) {
                 boolean ndaRequired =
-                        documentService.isNdaRequired(visit.getVisitor());
+                        ndaService.isNdaRequired(visit.getVisitor());
 
                 if (ndaRequired) {
                     throw new BusinessRuleException(

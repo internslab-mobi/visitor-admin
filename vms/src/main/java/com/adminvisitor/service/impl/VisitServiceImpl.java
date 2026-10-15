@@ -595,10 +595,10 @@ public class VisitServiceImpl implements VisitService {
         return visitManagementService.checkOut(visitId);
     }
 
-    @Override
-    public NdaStatusResponse getNdaStatus(String visitId) {
-        return visitManagementService.getNdaStatus(visitId);
-    }
+//    @Override
+//    public NdaStatusResponse getNdaStatus(String visitId) {
+//        return visitManagementService.getNdaStatus(visitId);
+//    }
 
     @Override
     @Transactional(readOnly = true)
