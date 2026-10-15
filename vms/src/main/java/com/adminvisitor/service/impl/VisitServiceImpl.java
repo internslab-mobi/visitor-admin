@@ -1,6 +1,5 @@
 package com.adminvisitor.service.impl;
 
-import com.adminvisitor.dto.requestdto.CheckInRequest;
 import com.adminvisitor.dto.requestdto.RegistrationRequest;
 import com.adminvisitor.dto.responsedto.*;
 import com.adminvisitor.entity.*;
@@ -16,19 +15,14 @@ import com.adminvisitor.util.VisitReferenceUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import static com.zaxxer.hikari.util.ClockSource.elapsedMillis;
 
 @Service
 @RequiredArgsConstructor
@@ -262,7 +256,7 @@ public class VisitServiceImpl implements VisitService {
             // 8. Persist the visit.
             stageStart = System.nanoTime();
 
-        Visit savedVisit = visitRepository.save(visit);
+            Visit savedVisit = visitRepository.save(visit);
 
             log.debug(
                     "Timing: visitRepository.save={} ms",
@@ -279,14 +273,14 @@ public class VisitServiceImpl implements VisitService {
                     elapsedMillis(stageStart)
             );
 
-        log.info(
-                "Visit registered successfully. visitId={}, visitReference={}, visitorId={}, registrationType={}, status={}",
-                savedVisit.getId(),
-                savedVisit.getVisitReference(),
-                visitor.getId(),
-                savedVisit.getRegistrationType(),
-                savedVisit.getStatus()
-        );
+            log.info(
+                    "Visit registered successfully. visitId={}, visitReference={}, visitorId={}, registrationType={}, status={}",
+                    savedVisit.getId(),
+                    savedVisit.getVisitReference(),
+                    visitor.getId(),
+                    savedVisit.getRegistrationType(),
+                    savedVisit.getStatus()
+            );
 
             // 10. Return the existing registration response structure.
             return RegistrationResponse.builder()
@@ -325,7 +319,6 @@ public class VisitServiceImpl implements VisitService {
     }
 
     // FIND OR CREATE VISITOR
-    // FIND OR CREATE VISITOR
     private Visitor findOrCreateVisitor(RegistrationRequest request) {
 
         String email = request.email();
@@ -346,38 +339,28 @@ public class VisitServiceImpl implements VisitService {
 
             log.info(
                     "Existing visitor found. visitorId={}",
-                    visitorByEmail.getId()
-            );
-
+                    visitorByEmail.getId());
             return visitorByEmail;
         }
 
         if (visitorByEmail != null) {
-
             log.warn(
-                    "Visitor registration rejected because the supplied email is already associated with another visitor"
-            );
+                    "Visitor registration rejected because the supplied email is already associated with another visitor");
 
             throw new EmailAlreadyExistsException(
-                    "This email is already associated with another visitor"
-            );
+                    "This email is already associated with another visitor");
         }
 
         if (visitorByMobileNumber != null) {
-
             log.warn(
-                    "Visitor registration rejected because the supplied mobile number is already associated with another visitor"
-            );
+                    "Visitor registration rejected because the supplied mobile number is already associated with another visitor");
 
             throw new MobileNumberAlreadyExistsException(
-                    "This mobile number is already associated with another visitor"
-            );
+                    "This mobile number is already associated with another visitor");
         }
 
         Visitor newVisitor = new Visitor();
-        newVisitor.setId(
-                idGeneratorService.generateId("VISITOR", "VTR")
-        );
+        newVisitor.setId(idGeneratorService.generateId("VISITOR", "VTR"));
         newVisitor.setFirstName(request.firstName());
         newVisitor.setLastName(request.lastName());
         newVisitor.setEmail(email);
@@ -387,32 +370,25 @@ public class VisitServiceImpl implements VisitService {
         Visitor savedVisitor = visitorRepository.save(newVisitor);
         log.info(
                 "New visitor profile created. visitorId={}",
-                savedVisitor.getId()
-        );
+                savedVisitor.getId());
         return savedVisitor;
     }
 
     // VISIT TIMING AND MESSAGES
     private void validateVisitTiming(RegistrationRequest request) {
-
-        if (!request.expectedDepartureTime()
-                .isAfter(request.expectedArrivalTime())) {
-
+        if (!request.expectedDepartureTime() .isAfter(request.expectedArrivalTime())) {
             log.warn(
                     "Visit registration rejected because expected departure time is not after expected arrival time. visitDate={}, arrivalTime={}, departureTime={}",
                     request.visitDate(),
                     request.expectedArrivalTime(),
-                    request.expectedDepartureTime()
-            );
+                    request.expectedDepartureTime());
 
             throw new BusinessRuleException(
-                    "Expected departure time must be after expected arrival time on the same visit date"
-            );
+                    "Expected departure time must be after expected arrival time on the same visit date");
         }
     }
 
     private String getSuccessMessage(RegistrationType registrationType) {
-
         return switch (registrationType) {
             case PRE_REGISTRATION ->
                     "Visitor pre-registered successfully";
@@ -427,34 +403,26 @@ public class VisitServiceImpl implements VisitService {
     }
 
     // VENDOR
-    // VENDOR
     private void createVendorIfRequired(
             Visitor visitor,
-            RegistrationRequest request
-    ) {
+            RegistrationRequest request) {
 
         if (request.visitorType() != VisitorType.VENDOR) {
             return;
         }
-
         Optional<Vendor> existingVendor =
                 vendorRepository.findByVisitorId(visitor.getId());
-
         if (existingVendor.isPresent()) {
 
             log.info(
                     "Vendor already exists for visitor. visitorId={}, vendorId={}",
                     visitor.getId(),
-                    existingVendor.get().getId()
-            );
-
+                    existingVendor.get().getId());
             return;
         }
 
         Vendor vendor = new Vendor();
-        vendor.setId(
-                idGeneratorService.generateId("VENDOR", "VND")
-        );
+        vendor.setId(idGeneratorService.generateId("VENDOR", "VND"));
         vendor.setVisitor(visitor);
         vendor.setFirstName(visitor.getFirstName());
         vendor.setLastName(visitor.getLastName());
@@ -463,158 +431,65 @@ public class VisitServiceImpl implements VisitService {
         vendor.setCompanyName(visitor.getCompanyName());
 
         vendorRepository.save(vendor);
-
         log.info(
                 "Vendor created successfully. vendorId={}, visitorId={}",
                 vendor.getId(),
-                visitor.getId()
-        );
+                visitor.getId());
     }
 
     // PROOF AND BLACKLIST VALIDATION
     private void validateProofAndBlacklist(RegistrationRequest request) {
-
         proofSecurityService.validate(
                 request.nationality(),
                 request.aadharNumber(),
                 request.panNumber(),
-                request.passportNumber()
-        );
+                request.passportNumber());
 
         switch (request.nationality()) {
-
             case DOMESTIC -> {
-
-                boolean aadhaarBlacklisted =
-                        blacklistService.isBlacklistedByProof(
-                                ProofType.AADHAAR,
-                                request.aadharNumber()
-                        );
+                boolean aadhaarBlacklisted = blacklistService.isBlacklistedByProof(
+                        ProofType.AADHAAR,
+                        request.aadharNumber());
 
                 if (aadhaarBlacklisted) {
-
                     throw new BusinessRuleException(
-                            "Person is in blacklist. Visit registration is not allowed"
-                    );
+                            "Person is in blacklist. Visit registration is not allowed");
                 }
 
-                boolean panBlacklisted =
-                        blacklistService.isBlacklistedByProof(
-                                ProofType.PAN,
-                                request.panNumber()
-                        );
+                boolean panBlacklisted = blacklistService.isBlacklistedByProof(
+                        ProofType.PAN,
+                        request.panNumber());
 
                 if (panBlacklisted) {
-
                     throw new BusinessRuleException(
-                            "Person is in blacklist. Visit registration is not allowed"
-                    );
+                            "Person is in blacklist. Visit registration is not allowed");
                 }
             }
 
             case INTERNATIONAL -> {
-
-                boolean passportBlacklisted =
-                        blacklistService.isBlacklistedByProof(
-                                ProofType.PASSPORT,
-                                request.passportNumber()
-                        );
+                boolean passportBlacklisted = blacklistService.isBlacklistedByProof(
+                        ProofType.PASSPORT,
+                        request.passportNumber());
 
                 if (passportBlacklisted) {
-
                     throw new BusinessRuleException(
-                            "Person is in blacklist. Visit registration is not allowed"
-                    );
+                            "Person is in blacklist. Visit registration is not allowed");
                 }
             }
         }
     }
-
-    // IDENTITY VERIFICATION
-    @Override
-    public void verifyIdentity(String visitId, CheckInRequest request) {
-        visitManagementService.verifyIdentity(visitId, request);
-    }
-
-    @Override
-    public List<VisitDashboardResponse> getDashboardVisits(
-            VisitView view,
-            String visitorId,
-            String visitorName,
-            String visitorEmail,
-            VisitStatus status,
-            LocalDate date,
-            LocalDate fromDate,
-            LocalDate toDate,
-            String sortDirection,
-            String sortBy) {
-
-        return visitManagementService.getDashboardVisits(
-                view, visitorId, visitorName, visitorEmail, status,
-                date, fromDate, toDate, sortDirection, sortBy);
-    }
-
-    @Override
-    public Page<VisitorLogResponse> getVisitorLog(
-            String search,
-            LocalDate fromDate,
-            LocalDate toDate,
-            VisitStatus status,
-            VisitorType visitorType,
-            String hostId,
-            int page,
-            int size,
-            String sortDirection) {
-
-        return visitManagementService.getVisitorLog(
-                search, fromDate, toDate, status, visitorType,
-                hostId, page, size, sortDirection);
-    }
-
-    @Override
-    public VisitDetailResponse getVisitDetails(String visitId) {
-        return visitManagementService.getVisitDetails(visitId);
-    }
-
-    @Override
-    public VisitDetailResponse cancelVisit(String visitId) {
-        return visitManagementService.cancelVisit(visitId);
-    }
-
-    @Override
-    public VisitDetailResponse checkIn(
-            String visitId,
-            CheckInRequest request,
-            MultipartFile photo) {
-
-        return visitManagementService.checkIn(visitId, request, photo);
-    }
-
-    @Override
-    public VisitDetailResponse checkOut(String visitId) {
-        return visitManagementService.checkOut(visitId);
-    }
-
-//    @Override
-//    public NdaStatusResponse getNdaStatus(String visitId) {
-//        return visitManagementService.getNdaStatus(visitId);
-//    }
 
     @Override
     @Transactional(readOnly = true)
     public String getVisitPhotoPath(String visitId) {
 
-        String photoPath =
-                documentService.getVisitPhoto(visitId).getDocumentPath();
-
+        String photoPath = documentService.getVisitPhoto(visitId).getDocumentPath();
         Path path = Path.of(photoPath);
 
         if (!Files.exists(path) || !Files.isReadable(path)) {
             throw new ResourceNotFoundException(
-                    "Visitor photo file not found for visit: " + visitId
-            );
+                    "Visitor photo file not found for visit: " + visitId);
         }
-
         return photoPath;
     }
 }

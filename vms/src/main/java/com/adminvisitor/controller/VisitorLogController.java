@@ -3,7 +3,7 @@ package com.adminvisitor.controller;
 import com.adminvisitor.dto.responsedto.VisitorLogResponse;
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.enums.VisitorType;
-import com.adminvisitor.service.impl.VisitServiceImpl;
+import com.adminvisitor.service.VisitManagementService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,7 +17,7 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 public class VisitorLogController {
 
-    private final VisitServiceImpl visitService;
+    private final VisitManagementService visitManagementService;
 
     @GetMapping
     public ResponseEntity<Page<VisitorLogResponse>> getVisitorLog(
@@ -53,7 +53,7 @@ public class VisitorLogController {
     ) {
 
         Page<VisitorLogResponse> response =
-                visitService.getVisitorLog(
+                visitManagementService.getVisitorLog(
                         search,
                         fromDate,
                         toDate,

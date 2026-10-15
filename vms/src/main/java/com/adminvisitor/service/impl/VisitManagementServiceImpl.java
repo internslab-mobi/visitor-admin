@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -29,7 +30,12 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class VisitManagementServiceImpl {
+public class VisitManagementServiceImpl implements VisitManagementService{
+    private static final List<VisitStatus> OPERATIONAL_STATUSES =
+            List.of(VisitStatus.REGISTERED,VisitStatus.CHECKED_IN);
+
+    private static final List<VisitStatus> HISTORICAL_STATUSES =
+            List.of(VisitStatus.CHECKED_OUT,VisitStatus.CANCELLED,VisitStatus.NO_SHOW);
 
     private static final DateTimeFormatter EMAIL_DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
@@ -68,9 +74,10 @@ private final NdaService ndaService;
             String sortDirection,
             String sortBy
     ) {
+
         Specification<Visit> specification =
                 (root, query, criteriaBuilder) ->
-                        criteriaBuilder.conjunction();
+                        root.get("status").in(OPERATIONAL_STATUSES);
 
         specification = addSpecification(
                 specification, VisitSpecification.hasView(view));
@@ -162,7 +169,7 @@ private final NdaService ndaService;
 
             Specification<Visit> specification =
                     (root, query, criteriaBuilder) ->
-                            criteriaBuilder.conjunction();
+                            root.get("status").in(HISTORICAL_STATUSES);
 
             specification = addSpecification(
                     specification, VisitSpecification.hasSearch(search));
@@ -274,7 +281,7 @@ private final NdaService ndaService;
             return null;
         }
 
-        return java.time.Duration.between(
+        return Duration.between(
                 visit.getCheckedInAt(),
                 visit.getCheckedOutAt()
         ).getSeconds();
@@ -566,9 +573,8 @@ private final NdaService ndaService;
             Visitor visitor,
             CheckInRequest request
     ) {
-        Document identityDocument =
-                documentService.getLatestIdentityDocument(visitor.getId());
 
+        Document identityDocument = documentService.getLatestIdentityDocument(visitor.getId());
         Nationality nationality = identityDocument.getNationality();
 
         proofSecurityService.validate(
@@ -577,44 +583,34 @@ private final NdaService ndaService;
                 request.panNumber(),
                 request.passportNumber()
         );
-
         boolean identityMatches;
 
         switch (nationality) {
             case DOMESTIC -> {
-                boolean aadhaarMatches =
-                        documentService.verifyIdentityProof(
+                boolean aadhaarMatches = documentService.verifyIdentityProof(
                                 visitor,
                                 ProofType.AADHAAR,
-                                request.aadharNumber()
-                        );
+                                request.aadharNumber());
 
-                boolean panMatches =
-                        documentService.verifyIdentityProof(
+                boolean panMatches = documentService.verifyIdentityProof(
                                 visitor,
                                 ProofType.PAN,
-                                request.panNumber()
-                        );
-
+                                request.panNumber());
                 identityMatches = aadhaarMatches && panMatches;
             }
 
             case INTERNATIONAL ->
-                    identityMatches =
-                            documentService.verifyIdentityProof(
+                    identityMatches = documentService.verifyIdentityProof(
                                     visitor,
                                     ProofType.PASSPORT,
-                                    request.passportNumber()
-                            );
+                                    request.passportNumber());
 
             default -> throw new BusinessRuleException(
                     "Unsupported nationality for identity verification");
         }
 
         if (!identityMatches) {
-            throw new BusinessRuleException(
-                    "Identity verification failed");
+            throw new BusinessRuleException("Identity verification failed");
         }
     }
 }
-
