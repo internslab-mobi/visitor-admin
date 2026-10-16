@@ -69,6 +69,8 @@ management:
     metrics:
       export:
         enabled: false
-
+qr:
+  service:
+    base-url: http://localhost:8062
 
 

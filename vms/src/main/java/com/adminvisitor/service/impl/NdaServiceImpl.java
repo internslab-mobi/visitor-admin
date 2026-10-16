@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -394,7 +395,7 @@ public class NdaServiceImpl implements NdaService {
         }
 
         // NDA is expired
-        return validUntil.isBefore(LocalDateTime.now());
+        return !validUntil.isAfter(LocalDateTime.now());
     }
 
     public Resource getNdaFile(String visitorId) {
@@ -413,5 +414,31 @@ public class NdaServiceImpl implements NdaService {
 
         return new FileSystemResource(filePath);
     }
+
+
+
+    @Scheduled(fixedRate = 300000)
+    @Transactional
+    public void updateExpiredNdaStatuses() {
+
+        LocalDateTime now = LocalDateTime.now();
+
+        List<DocumentMetadata> expiredNdas =
+                documentMetadataRepository
+                        .findByDocumentTypeAndStatusAndValidUntilLessThanEqual(
+                                DocumentType.NDA,
+                                NdaStatus.ACTIVE,
+                                now
+                        );
+
+        for (DocumentMetadata nda : expiredNdas) {
+            nda.setStatus(NdaStatus.EXPIRED);
+
+
+        }
+
+        documentMetadataRepository.saveAll(expiredNdas);
+    }
+
 }
 

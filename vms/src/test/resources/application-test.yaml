@@ -36,3 +36,7 @@ vms:
 
 server:
   port: 8060
+
+qr:
+  service:
+    base-url: http://localhost:8062

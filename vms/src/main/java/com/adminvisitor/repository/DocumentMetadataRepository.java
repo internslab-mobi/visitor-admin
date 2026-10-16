@@ -2,9 +2,11 @@ package com.adminvisitor.repository;
 
 import com.adminvisitor.entity.DocumentMetadata;
 import com.adminvisitor.enums.DocumentType;
+import com.adminvisitor.enums.NdaStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -67,5 +69,12 @@ public interface DocumentMetadataRepository
     findTopByDocument_Visitor_IdAndDocumentTypeAndOverwrittenByIsNullOrderByCreatedAtDesc(
             String visitorId,
             DocumentType documentType
+    );
+
+    List<DocumentMetadata>
+    findByDocumentTypeAndStatusAndValidUntilLessThanEqual(
+            DocumentType documentType,
+            NdaStatus status,
+            LocalDateTime now
     );
 }

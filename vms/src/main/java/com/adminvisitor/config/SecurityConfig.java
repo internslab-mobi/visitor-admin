@@ -279,6 +279,12 @@ public class SecurityConfig {
                         ).hasRole("ADMIN")
 
                         .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/qr-scan"
+                  ).hasAnyRole("ADMIN", "FRONT_DESK")
+
+
+                        .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/blacklist/*/remove"
                         ).hasRole("ADMIN")

@@ -40,6 +40,8 @@ public class VisitManagementServiceImpl implements VisitManagementService{
     private static final DateTimeFormatter EMAIL_DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
 
+    private final QrMicroserviceClient qrMicroserviceClient;
+
     private final VisitRepository visitRepository;
     private final VendorRepository vendorRepository;
     private final ProofSecurityService proofSecurityService;
@@ -423,13 +425,23 @@ private final NdaService ndaService;
 
             Visit checkedInVisit = visitRepository.save(visit);
 
-            VisitBadge badge =
-                    visitBadgeService.createBadge(checkedInVisit);
+//            VisitBadge badge =
+//                    visitBadgeService.createBadge(checkedInVisit);
+//
+//            String qrCode =
+//                    qrTokenService.generateQrCode(
+//                            badge.getQrContainingToken());
 
-            String qrCode =
-                    qrTokenService.generateQrCode(
-                            badge.getQrContainingToken());
+            String qrToken = qrMicroserviceClient.generateToken();
 
+            VisitBadge badge = visitBadgeService.createBadge(
+                    checkedInVisit,
+                    qrToken
+            );
+
+            String qrCode = qrMicroserviceClient.generateQrCode(
+                    badge.getQrContainingToken()
+            );
             log.info(
                     "QR code generated successfully. visitId={}, qrLength={}",
                     checkedInVisit.getId(),
