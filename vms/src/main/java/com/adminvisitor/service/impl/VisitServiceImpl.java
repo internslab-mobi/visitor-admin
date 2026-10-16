@@ -4,10 +4,7 @@ import com.adminvisitor.dto.requestdto.RegistrationRequest;
 import com.adminvisitor.dto.responsedto.*;
 import com.adminvisitor.entity.*;
 import com.adminvisitor.enums.*;
-import com.adminvisitor.exception.BusinessRuleException;
-import com.adminvisitor.exception.EmailAlreadyExistsException;
-import com.adminvisitor.exception.MobileNumberAlreadyExistsException;
-import com.adminvisitor.exception.ResourceNotFoundException;
+import com.adminvisitor.exception.*;
 import com.adminvisitor.repository.*;
 import com.adminvisitor.service.*;
 import com.adminvisitor.util.VisitReferenceUtil;
@@ -347,7 +344,7 @@ public class VisitServiceImpl implements VisitService {
             log.warn(
                     "Visitor registration rejected because the supplied email is already associated with another visitor");
 
-            throw new EmailAlreadyExistsException(
+            throw new ResourceAlreadyExistsException(
                     "This email is already associated with another visitor");
         }
 
@@ -355,7 +352,7 @@ public class VisitServiceImpl implements VisitService {
             log.warn(
                     "Visitor registration rejected because the supplied mobile number is already associated with another visitor");
 
-            throw new MobileNumberAlreadyExistsException(
+            throw new ResourceAlreadyExistsException(
                     "This mobile number is already associated with another visitor");
         }
 

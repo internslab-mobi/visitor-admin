@@ -5,9 +5,8 @@ import com.adminvisitor.dto.responsedto.VendorResponse;
 import com.adminvisitor.dto.responsedto.VisitorEditResponse;
 import com.adminvisitor.entity.DocumentMetadata;
 import com.adminvisitor.entity.Vendor;
-import com.adminvisitor.entity.Visitor;
 import com.adminvisitor.enums.DocumentType;
-import com.adminvisitor.exception.VisitorNotFoundException;
+import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.mapper.VendorMapper;
 import com.adminvisitor.repository.DocumentMetadataRepository;
 import com.adminvisitor.repository.VendorRepository;
@@ -42,7 +41,7 @@ public class VendorServiceImpl implements VendorService {
 
         Vendor vendor = vendorRepository.findById(id)
                 .orElseThrow(() ->
-                        new VisitorNotFoundException(
+                        new ResourceNotFoundException(
                                 "Vendor not found with id: " + id
                         )
                 );
@@ -73,7 +72,7 @@ public class VendorServiceImpl implements VendorService {
 
         Vendor vendor = vendorRepository.findById(vendorId)
                 .orElseThrow(() ->
-                        new VisitorNotFoundException(
+                        new ResourceNotFoundException(
                                 "Vendor not found with id: " + vendorId
                         )
                 );

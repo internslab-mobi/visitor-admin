@@ -1,4 +1,3 @@
-
 package com.adminvisitor.service.impl;
 
 import com.adminvisitor.dto.responsedto.BadgeEmailData;
@@ -6,6 +5,7 @@ import com.adminvisitor.dto.responsedto.CancellationEmailData;
 import com.adminvisitor.dto.responsedto.HostCheckInEmailData;
 import com.adminvisitor.dto.responsedto.HostDailyReminderEmailData;
 import com.adminvisitor.entity.Visit;
+import com.adminvisitor.exception.EmailDeliveryException;
 import com.adminvisitor.service.EmailService;
 import com.adminvisitor.util.DateTimeFormats;
 import jakarta.mail.MessagingException;
@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -36,16 +37,15 @@ public class EmailServiceImpl implements EmailService {
     private String fromEmail;
 
     @Async
+    @Override
     public void sendVisitConfirmationEmail(Visit visit) {
 
         String visitorName =
-                visit.getVisitor().getFirstName()
-                        + " "
+                visit.getVisitor().getFirstName() + " "
                         + visit.getVisitor().getLastName();
 
         String hostName =
-                visit.getHost().getFirstName()
-                        + " "
+                visit.getHost().getFirstName() + " "
                         + visit.getHost().getLastName();
 
         String hostEmail = visit.getHost().getEmail();
@@ -54,7 +54,6 @@ public class EmailServiceImpl implements EmailService {
                 visit.getHost().getDepartment().getDepartmentName();
 
         Context context = new Context();
-
         context.setVariable("visitorName", visitorName);
         context.setVariable("visitReference", visit.getVisitReference());
         context.setVariable("purpose", visit.getPurpose());
@@ -75,16 +74,24 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("departmentName", departmentName);
 
         long templateStart = System.currentTimeMillis();
+        final String htmlBody;
 
-        String htmlBody = templateEngine.process(
-                "emails/visit-confirmation",
-                context
-        );
-
-        log.debug(
-                "Timing: emailTemplateProcessing={} ms",
-                System.currentTimeMillis() - templateStart
-        );
+        try {
+            htmlBody = templateEngine.process(
+                    "emails/visit-confirmation",
+                    context
+            );
+        } catch (RuntimeException exception) {
+            throw new EmailDeliveryException(
+                    "Failed to prepare visit confirmation email content.",
+                    exception
+            );
+        } finally {
+            log.debug(
+                    "Timing: emailTemplateProcessing={} ms",
+                    System.currentTimeMillis() - templateStart
+            );
+        }
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -95,36 +102,43 @@ public class EmailServiceImpl implements EmailService {
             helper.setFrom(fromEmail);
             helper.setTo(visit.getVisitor().getEmail());
             helper.setCc(hostEmail);
-
             helper.setSubject(
                     "Visit Registration Confirmation - "
                             + visit.getVisitReference()
             );
-
             helper.setText(htmlBody, true);
 
             long smtpStart = System.currentTimeMillis();
 
-            mailSender.send(message);
+            try {
+                mailSender.send(message);
+            } finally {
+                log.debug(
+                        "Timing: smtpSend={} ms",
+                        System.currentTimeMillis() - smtpStart
+                );
+            }
 
-            log.debug(
-                    "Timing: smtpSend={} ms",
-                    System.currentTimeMillis() - smtpStart
+        }
+        catch (MessagingException exception) {
+            throw new EmailDeliveryException(
+                    "Failed to prepare visit confirmation email message.",
+                    exception
             );
-
-        } catch (MessagingException exception) {
-            throw new IllegalStateException(
-                    "Failed to prepare visit confirmation email",
+        } catch (MailException exception) {
+            throw new EmailDeliveryException(
+                    "Failed to deliver visit confirmation email.",
                     exception
             );
         }
+
     }
 
     @Async
+    @Override
     public void sendVisitBadgeEmail(BadgeEmailData data) {
 
         Context context = new Context();
-
         context.setVariable("visitorName", data.visitorName());
         context.setVariable("visitReference", data.visitReference());
         context.setVariable("hostName", data.hostName());
@@ -132,10 +146,39 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("validUntil", data.validUntil());
         context.setVariable("visitorPhoto", data.visitorPhoto());
 
-        String htmlBody = templateEngine.process(
-                "emails/visit-badge",
-                context
-        );
+        final String htmlBody;
+
+        try {
+            htmlBody = templateEngine.process(
+                    "emails/visit-badge",
+                    context
+            );
+        } catch (RuntimeException exception) {
+            throw new EmailDeliveryException(
+                    "Failed to prepare visitor badge email content.",
+                    exception
+            );
+        }
+
+        final byte[] qrImageBytes;
+
+        try {
+            qrImageBytes = Base64.getDecoder().decode(data.qrCode());
+        } catch (IllegalArgumentException exception) {
+            throw new EmailDeliveryException(
+                    "Failed to prepare visitor badge email because the QR code data is invalid.",
+                    exception
+            );
+        }
+
+        FileSystemResource visitorPhoto =
+                new FileSystemResource(data.visitorPhoto());
+
+        if (!visitorPhoto.exists() || !visitorPhoto.isReadable()) {
+            throw new EmailDeliveryException(
+                    "Failed to prepare visitor badge email because the visitor photo is unavailable."
+            );
+        }
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -146,15 +189,9 @@ public class EmailServiceImpl implements EmailService {
             helper.setFrom(fromEmail);
             helper.setTo(data.visitorEmail());
             helper.setCc(data.hostEmail());
-
             helper.setSubject(
-                    "Your Visitor Badge - "
-                            + data.visitReference()
+                    "Your Visitor Badge - " + data.visitReference()
             );
-
-            byte[] qrImageBytes =
-                    Base64.getDecoder().decode(data.qrCode());
-
             helper.setText(htmlBody, true);
 
             helper.addInline(
@@ -162,16 +199,6 @@ public class EmailServiceImpl implements EmailService {
                     new ByteArrayResource(qrImageBytes),
                     "image/png"
             );
-
-            FileSystemResource visitorPhoto =
-                    new FileSystemResource(data.visitorPhoto());
-
-            if (!visitorPhoto.exists() || !visitorPhoto.isReadable()) {
-                throw new IllegalStateException(
-                        "Visitor photo file not found: "
-                                + data.visitorPhoto()
-                );
-            }
 
             helper.addInline(
                     "visitorPhoto",
@@ -181,34 +208,26 @@ public class EmailServiceImpl implements EmailService {
 
             mailSender.send(message);
 
-            log.info(
-                    "Visitor badge email sent successfully. visitReference={}, recipient={}",
-                    data.visitReference(),
-                    data.visitorEmail()
-            );
-
         } catch (MessagingException exception) {
-            log.error(
-                    "Failed to send visitor badge email. visitReference={}, recipient={}",
-                    data.visitReference(),
-                    data.visitorEmail(),
+            throw new EmailDeliveryException(
+                    "Failed to prepare visitor badge email message.",
                     exception
             );
-
-            throw new IllegalStateException(
-                    "Failed to prepare visitor badge email",
+        } catch (MailException exception) {
+            throw new EmailDeliveryException(
+                    "Failed to deliver visitor badge email.",
                     exception
             );
         }
     }
 
     @Async
+    @Override
     public void sendHostCheckInNotification(
             HostCheckInEmailData data
     ) {
 
         Context context = new Context();
-
         context.setVariable("hostName", data.hostName());
         context.setVariable("visitorName", data.visitorName());
         context.setVariable("visitorType", data.visitorType());
@@ -217,10 +236,19 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("purpose", data.purpose());
         context.setVariable("checkedInAt", data.checkedInAt());
 
-        String htmlBody = templateEngine.process(
-                "emails/host-check-in",
-                context
-        );
+        final String htmlBody;
+
+        try {
+            htmlBody = templateEngine.process(
+                    "emails/host-check-in",
+                    context
+            );
+        } catch (RuntimeException exception) {
+            throw new EmailDeliveryException(
+                    "Failed to prepare host check-in notification content.",
+                    exception
+            );
+        }
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -230,42 +258,33 @@ public class EmailServiceImpl implements EmailService {
 
             helper.setFrom(fromEmail);
             helper.setTo(data.hostEmail());
-
             helper.setSubject(
-                    "Visitor Checked In - "
-                            + data.visitReference()
+                    "Visitor Checked In - " + data.visitReference()
             );
-
             helper.setText(htmlBody, true);
 
             mailSender.send(message);
 
-            log.info(
-                    "Host check-in notification sent successfully. visitReference={}, hostEmail={}",
-                    data.visitReference(),
-                    data.hostEmail()
-            );
-
         } catch (MessagingException exception) {
-            log.error(
-                    "Failed to send host check-in notification. visitReference={}, hostEmail={}",
-                    data.visitReference(),
-                    data.hostEmail(),
+            throw new EmailDeliveryException(
+                    "Failed to prepare host check-in notification message.",
                     exception
             );
-
-            throw new IllegalStateException(
-                    "Failed to send host check-in notification",
+        } catch (MailException exception) {
+            throw new EmailDeliveryException(
+                    "Failed to deliver host check-in notification.",
                     exception
             );
         }
     }
 
     @Async
-    public void sendVisitCancellationEmail(CancellationEmailData data) {
+    @Override
+    public void sendVisitCancellationEmail(
+            CancellationEmailData data
+    ) {
 
         Context context = new Context();
-
         context.setVariable("visitorName", data.visitorName());
         context.setVariable("visitReference", data.visitReference());
         context.setVariable("purpose", data.purpose());
@@ -273,10 +292,19 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("expectedDeparture", data.expectedDeparture());
         context.setVariable("hostName", data.hostName());
 
-        String htmlBody = templateEngine.process(
-                "emails/visit-cancellation",
-                context
-        );
+        final String htmlBody;
+
+        try {
+            htmlBody = templateEngine.process(
+                    "emails/visit-cancellation",
+                    context
+            );
+        } catch (RuntimeException exception) {
+            throw new EmailDeliveryException(
+                    "Failed to prepare visit cancellation email content.",
+                    exception
+            );
+        }
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -286,19 +314,21 @@ public class EmailServiceImpl implements EmailService {
 
             helper.setFrom(fromEmail);
             helper.setTo(data.visitorEmail());
-
             helper.setSubject(
-                    "Visit Cancellation - "
-                            + data.visitReference()
+                    "Visit Cancellation - " + data.visitReference()
             );
-
             helper.setText(htmlBody, true);
 
             mailSender.send(message);
 
         } catch (MessagingException exception) {
-            throw new IllegalStateException(
-                    "Failed to prepare visit cancellation email",
+            throw new EmailDeliveryException(
+                    "Failed to prepare visit cancellation email message.",
+                    exception
+            );
+        } catch (MailException exception) {
+            throw new EmailDeliveryException(
+                    "Failed to deliver visit cancellation email.",
                     exception
             );
         }
@@ -309,16 +339,25 @@ public class EmailServiceImpl implements EmailService {
     public void sendHostDailyReminderEmail(
             HostDailyReminderEmailData data
     ) {
-        Context context = new Context();
 
+        Context context = new Context();
         context.setVariable("hostName", data.hostName());
         context.setVariable("reminderDate", data.reminderDate());
         context.setVariable("visits", data.visits());
 
-        String htmlBody = templateEngine.process(
-                "emails/host-daily-reminder",
-                context
-        );
+        final String htmlBody;
+
+        try {
+            htmlBody = templateEngine.process(
+                    "emails/host-daily-reminder",
+                    context
+            );
+        } catch (RuntimeException exception) {
+            throw new EmailDeliveryException(
+                    "Failed to prepare host daily reminder email content.",
+                    exception
+            );
+        }
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -335,21 +374,14 @@ public class EmailServiceImpl implements EmailService {
 
             mailSender.send(message);
 
-            log.info(
-                    "Host daily reminder email sent successfully. hostEmail={}, visitCount={}",
-                    data.hostEmail(),
-                    data.visits().size()
-            );
-
         } catch (MessagingException exception) {
-            log.error(
-                    "Failed to send host daily reminder email. hostEmail={}",
-                    data.hostEmail(),
+            throw new EmailDeliveryException(
+                    "Failed to prepare host daily reminder email message.",
                     exception
             );
-
-            throw new IllegalStateException(
-                    "Failed to send host daily reminder email",
+        } catch (MailException exception) {
+            throw new EmailDeliveryException(
+                    "Failed to deliver host daily reminder email.",
                     exception
             );
         }

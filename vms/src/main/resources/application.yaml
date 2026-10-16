@@ -59,3 +59,16 @@ logging:
     root: INFO
     com.adminvisitor: DEBUG
 
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+
+  otlp:
+    metrics:
+      export:
+        enabled: false
+
+
+

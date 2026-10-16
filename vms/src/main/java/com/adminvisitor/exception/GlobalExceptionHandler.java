@@ -2,160 +2,145 @@ package com.adminvisitor.exception;
 
 import com.adminvisitor.enums.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 @Slf4j
-public class GlobalExceptionHandler {
+@RequiredArgsConstructor
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(
-            MethodArgumentNotValidException exception,
-            HttpServletRequest request) {
-
-        Map<String, String> fieldErrors = new LinkedHashMap<>();
-
-        exception.getBindingResult()
-                .getFieldErrors()
-                .forEach(error ->
-                        fieldErrors.put(
-                                error.getField(),
-                                error.getDefaultMessage()
-                        )
-                );
-
-        log.warn(
-                "Request validation failed. requestId={}, path={}, errorCount={}",
-                MDC.get("requestId"),
-                request.getRequestURI(),
-                fieldErrors.size()
-        );
-
-        ErrorCode errorCode = ErrorCode.VALIDATION_FAILED;
-
-        return buildErrorResponse(
-                errorCode.getHttpStatus(),
-                errorCode,
-                errorCode.getPublicMessage(),
-                request,
-                fieldErrors
-        );
-    }
-
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleMessageNotReadable(
-            HttpMessageNotReadableException exception,
-            HttpServletRequest request) {
-
-        log.warn(
-                "Invalid request body. requestId={}, path={}",
-                MDC.get("requestId"),
-                request.getRequestURI()
-        );
-
-        ErrorCode errorCode = ErrorCode.INVALID_REQUEST_BODY;
-
-        return buildErrorResponse(
-                errorCode.getHttpStatus(),
-                errorCode,
-                errorCode.getPublicMessage(),
-                request,
-                null
-        );
-    }
+    private final ErrorResponseFactory errorResponseFactory;
 
     @ExceptionHandler(VmsException.class)
     public ResponseEntity<ErrorResponse> handleVmsException(
-            VmsException exception,
-            HttpServletRequest request) {
+            VmsException exception, HttpServletRequest request) {
 
         ErrorCode errorCode = exception.getErrorCode();
-        HttpStatus status = errorCode.getHttpStatus();
+        String path = request.getRequestURI();
 
-        if (status.is5xxServerError()) {
-            log.error(
-                    "VMS application exception. code={}, requestId={}, path={}",
-                    errorCode,
-                    MDC.get("requestId"),
-                    request.getRequestURI(),
-                    exception
-            );
-        } else {
-            log.warn(
-                    "VMS application exception. code={}, status={}, requestId={}, path={}",
-                    errorCode,
-                    status.value(),
-                    MDC.get("requestId"),
-                    request.getRequestURI()
-            );
+        if (errorCode.getHttpStatus().is5xxServerError()) {
+            log.error("VMS application exception. code={}, path={}",
+                    errorCode, path, exception);
+            return respond(errorCode, path);
         }
 
-        return buildErrorResponse(
-                status,
-                errorCode,
-                errorCode.getPublicMessage(),
-                request,
-                null
-        );
+        if (errorCode == ErrorCode.RESOURCE_NOT_FOUND
+                || errorCode == ErrorCode.DUPLICATE_RESOURCE) {
+            log.warn("VMS application exception. code={}, path={}",
+                    errorCode, path);
+            return respond(errorCode, path);
+        }
+
+        log.warn("VMS application exception. code={}, path={}",
+                errorCode, path);
+
+        return respond(errorCode, exception.getMessage(), path);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(
+            DataIntegrityViolationException exception, HttpServletRequest request) {
+
+        log.warn("Data integrity violation. path={}", request.getRequestURI(), exception);
+        return respond(ErrorCode.DUPLICATE_RESOURCE, request.getRequestURI());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(
+            AccessDeniedException exception, HttpServletRequest request) {
+
+        log.warn("Authorization denied. method={}, path={}",
+                request.getMethod(), request.getRequestURI());
+        return respond(ErrorCode.FORBIDDEN, request.getRequestURI());
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(
+            AuthenticationException exception, HttpServletRequest request) {
+
+        log.warn("Authentication failed. method={}, path={}",
+                request.getMethod(), request.getRequestURI());
+        return respond(ErrorCode.UNAUTHORIZED, request.getRequestURI());
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpectedException(
-            Exception exception,
-            HttpServletRequest request) {
+            Exception exception, HttpServletRequest request) {
 
-        String requestId = MDC.get("requestId");
-
-        log.error(
-                "Unhandled exception. requestId={}, path={}",
-                requestId,
-                request.getRequestURI(),
-                exception
-        );
-
-        ErrorCode errorCode = ErrorCode.INTERNAL_ERROR;
-
-        return buildErrorResponse(
-                errorCode.getHttpStatus(),
-                errorCode,
-                errorCode.getPublicMessage(),
-                request,
-                null
-        );
+        log.error("Unhandled exception. path={}", request.getRequestURI(), exception);
+        return respond(ErrorCode.INTERNAL_ERROR, request.getRequestURI());
     }
 
-    private ResponseEntity<ErrorResponse> buildErrorResponse(
-            HttpStatus status,
-            ErrorCode errorCode,
-            String message,
-            HttpServletRequest request,
-            Map<String, String> fieldErrors) {
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException exception, HttpHeaders headers,
+            HttpStatusCode status, WebRequest request) {
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                status.value(),
-                status.getReasonPhrase(),
-                errorCode.name(),
-                message,
-                request.getRequestURI(),
-                MDC.get("requestId"),
-                fieldErrors
-        );
+        Map<String, String> fieldErrors = new LinkedHashMap<>();
+        exception.getBindingResult().getFieldErrors()
+                .forEach(e -> fieldErrors.putIfAbsent(e.getField(), e.getDefaultMessage()));
 
-        return ResponseEntity
-                .status(status)
-                .body(errorResponse);
+        String path = pathOf(request);
+        log.warn("Request validation failed. path={}, errorCount={}", path, fieldErrors.size());
+
+        ErrorCode code = ErrorCode.VALIDATION_FAILED;
+        return ResponseEntity.status(code.getHttpStatus()).body(
+                errorResponseFactory.create(code, code.getDefaultMessage(), path, fieldErrors));
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleExceptionInternal(
+            Exception exception, Object body, HttpHeaders headers,
+            HttpStatusCode statusCode, WebRequest request) {
+
+        HttpStatus status = HttpStatus.valueOf(statusCode.value());
+        String path = pathOf(request);
+
+        if (status.is5xxServerError()) {
+            log.error("Framework exception. status={}, path={}", status.value(), path, exception);
+        } else {
+            log.warn("Request rejected. status={}, path={}, reason={}",
+                    status.value(), path, exception.getClass().getSimpleName());
+        }
+
+        ErrorResponse errorResponse = switch (status) {
+            case BAD_REQUEST -> errorResponseFactory.create(ErrorCode.INVALID_REQUEST, path);
+            case NOT_FOUND -> errorResponseFactory.create(ErrorCode.RESOURCE_NOT_FOUND, path);
+            case INTERNAL_SERVER_ERROR -> errorResponseFactory.create(ErrorCode.INTERNAL_ERROR, path);
+            default -> errorResponseFactory.create(status, path);   // 405, 415, 406...
+        };
+
+        return ResponseEntity.status(statusCode).headers(headers).body(errorResponse);
+    }
+
+    // ---------- Helpers ----------
+    private ResponseEntity<ErrorResponse> respond(ErrorCode code, String path) {
+        return respond(code, code.getDefaultMessage(), path);
+    }
+
+    private ResponseEntity<ErrorResponse> respond(ErrorCode code, String message, String path) {
+        return ResponseEntity.status(code.getHttpStatus())
+                .body(errorResponseFactory.create(code, message, path, null));
+    }
+
+    private String pathOf(WebRequest request) {
+        return request instanceof ServletWebRequest swr ? swr.getRequest().getRequestURI() : "";
     }
 }
-

@@ -178,6 +178,11 @@ public class SecurityConfig {
                         ).hasAnyRole("ADMIN", "FRONT_DESK")
 
                         .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/visitors/*/edit"
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+
+                        .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/visitors/*"
                         ).hasAnyRole("ADMIN", "FRONT_DESK")
@@ -278,7 +283,7 @@ public class SecurityConfig {
                                 "/api/blacklist/*/remove"
                         ).hasRole("ADMIN")
 
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()
                 )
 
                 .oauth2ResourceServer(oauth2 -> oauth2
@@ -286,10 +291,12 @@ public class SecurityConfig {
                                 new DefaultBearerTokenResolver()
                         )
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
+                        .accessDeniedHandler(customAccessDeniedHandler)
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(
                                 jwtAuthenticationConverter()
                         ))
                 );
+
 
         return http.build();
     }

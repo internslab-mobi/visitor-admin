@@ -1,6 +1,7 @@
 package com.adminvisitor.service.impl;
 
 import com.adminvisitor.entity.IdSequence;
+import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.IdSequenceRepository;
 import com.adminvisitor.service.IdGeneratorService;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ private final IdSequenceRepository idSequenceRepository;
         IdSequence sequence =
                 idSequenceRepository.findBySequenceNameForUpdate(sequenceName)
                         .orElseThrow(() ->
-                                new IllegalStateException(
+                                new ResourceNotFoundException(
                                         "ID sequence not configured: " + sequenceName
                                 )
                         );

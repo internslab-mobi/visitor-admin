@@ -3,7 +3,7 @@ package com.adminvisitor.service.impl;
 import com.adminvisitor.entity.Visit;
 import com.adminvisitor.entity.VisitBadge;
 import com.adminvisitor.enums.BadgeStatus;
-import com.adminvisitor.exception.BadgeAlreadyExistsException;
+import com.adminvisitor.exception.ResourceAlreadyExistsException;
 import com.adminvisitor.repository.VisitBadgeRepository;
 import com.adminvisitor.service.QrTokenService;
 import com.adminvisitor.service.VisitBadgeService;
@@ -19,13 +19,13 @@ public class VisitBadgeServiceImpl implements VisitBadgeService {
 
     private final VisitBadgeRepository visitBadgeRepository;
     private final IdGeneratorServiceImpl idGeneratorService;
-    private final QrTokenServiceImpl qrTokenService;
+    private final QrTokenService qrTokenService;
 
     @Transactional
     public VisitBadge createBadge(Visit visit) {
 
         if (visitBadgeRepository.findByVisit_Id(visit.getId()).isPresent()) {
-            throw new BadgeAlreadyExistsException(
+            throw new ResourceAlreadyExistsException(
                     "A visitor badge already exists for visit: " + visit.getId()
             );
         }

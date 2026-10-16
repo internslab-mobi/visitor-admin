@@ -50,5 +50,4 @@ public interface VisitManagementService {
 
     VisitDetailResponse checkOut(String visitId);
 
-    NdaStatusResponse getNdaStatus(String visitId);
 }
