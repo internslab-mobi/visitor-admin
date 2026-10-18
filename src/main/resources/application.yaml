@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: QR
+server:
+  port: 8062
