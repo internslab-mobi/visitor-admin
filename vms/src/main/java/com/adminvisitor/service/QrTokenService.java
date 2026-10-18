@@ -1,9 +1,9 @@
-package com.adminvisitor.service;
-
-public interface QrTokenService {
-
-    String generateToken();
-
-
-    String generateQrCode(String qrToken);
-}
+//package com.adminvisitor.service;
+//
+//public interface QrTokenService {
+//
+//    String generateToken();
+//
+//
+//    String generateQrCode(String qrToken);
+//}

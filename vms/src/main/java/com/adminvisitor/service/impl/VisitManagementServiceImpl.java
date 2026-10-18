@@ -49,7 +49,7 @@ public class VisitManagementServiceImpl implements VisitManagementService{
     private final EmailService emailService;
     private final DocumentService documentService;
     private final VisitBadgeService visitBadgeService;
-    private final QrTokenService qrTokenService;
+    //private final QrTokenService qrTokenService;
 private final NdaService ndaService;
     private double elapsedMillis(long startNanos) {
         return (System.nanoTime() - startNanos) / 1_000_000.0;

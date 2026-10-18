@@ -5,6 +5,7 @@ import com.adminvisitor.entity.MetaTimeTracking;
 import com.adminvisitor.entity.Visit;
 import com.adminvisitor.entity.VisitBadge;
 import com.adminvisitor.enums.VisitStatus;
+import com.adminvisitor.exception.BusinessRuleException;
 import com.adminvisitor.repository.MetaTimeTrackingRepository;
 import com.adminvisitor.service.QrScanService;
 import com.adminvisitor.service.VisitBadgeService;
@@ -25,23 +26,51 @@ public class QrScanServiceImpl implements QrScanService {
     @Transactional
     public QrScanResponse processScan(String token) {
 
-        VisitBadge badge = visitBadgeService.validateQrToken(token);
+        //VisitBadge badge = visitBadgeService.validateQrToken(token);
+        VisitBadge badge = visitBadgeService.validateQrTokenForUpdate(token);
         Visit visit = badge.getVisit();
 
         if (visit.getStatus() != VisitStatus.CHECKED_IN) {
-            throw new IllegalStateException(
+            throw new BusinessRuleException(
                     "Only checked-in visits can be scanned"
             );
         }
 
         LocalDateTime scannedAt = LocalDateTime.now();
 
+        // Find the latest tracking session for this visit.
+        MetaTimeTracking latestSession = trackingRepository
+                .findTopByVisitIdOrderByInTimeDesc(visit.getId())
+                .orElse(null);
+
+        // Reject repeated scans within 60 seconds.
+        if (latestSession != null) {
+
+            LocalDateTime lastScanAt =
+                    latestSession.getOutTime() != null
+                            ? latestSession.getOutTime()
+                            : latestSession.getInTime();
+
+            if (lastScanAt != null &&
+                    scannedAt.isBefore(
+                            lastScanAt.plusSeconds(60)
+                    )) {
+
+                throw new BusinessRuleException(
+                        "Duplicate scan rejected. Please wait 60 seconds before scanning again."
+                );
+            }
+        }
+
+        // Find an active IN session.
         MetaTimeTracking openSession = trackingRepository
                 .findTopByVisitIdAndOutTimeIsNullOrderByInTimeDesc(
                         visit.getId()
                 )
                 .orElse(null);
 
+        // An active session means the visitor is currently IN.
+        // The next accepted scan records OUT.
         if (openSession != null) {
 
             openSession.setOutTime(scannedAt);
@@ -54,6 +83,7 @@ public class QrScanServiceImpl implements QrScanService {
             );
         }
 
+        // No open session means the next accepted scan records IN.
         MetaTimeTracking newSession = new MetaTimeTracking();
 
         newSession.setVisitorId(visit.getVisitor().getId());

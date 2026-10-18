@@ -283,6 +283,11 @@ public class SecurityConfig {
                                 "/api/qr-scan"
                   ).hasAnyRole("ADMIN", "FRONT_DESK")
 
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/vms/summary-export"
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+
 
                         .requestMatchers(
                                 HttpMethod.PUT,

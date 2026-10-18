@@ -17,4 +17,6 @@ public interface MetaTimeTrackingRepository
     List<MetaTimeTracking> findByVisitIdOrderByInTimeAsc(
             String visitId
     );
+    Optional<MetaTimeTracking>
+    findTopByVisitIdOrderByInTimeDesc(String visitId);
 }

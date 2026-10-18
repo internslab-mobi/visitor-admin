@@ -5,7 +5,7 @@ import com.adminvisitor.entity.VisitBadge;
 import com.adminvisitor.enums.BadgeStatus;
 import com.adminvisitor.exception.ResourceAlreadyExistsException;
 import com.adminvisitor.repository.VisitBadgeRepository;
-import com.adminvisitor.service.QrTokenService;
+//import com.adminvisitor.service.QrTokenService;
 import com.adminvisitor.service.VisitBadgeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -123,7 +123,7 @@ public class VisitBadgeServiceImpl implements VisitBadgeService {
 
     @Override
     @Transactional(readOnly = true)
-    public VisitBadge validateQrToken(String qrToken) {
+    public VisitBadge validateQrTokenForUpdate(String qrToken) {
 
         VisitBadge badge =
                 visitBadgeRepository
