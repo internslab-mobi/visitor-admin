@@ -433,6 +433,7 @@ private final NdaService ndaService;
 //                            badge.getQrContainingToken());
 
             String qrToken = qrMicroserviceClient.generateToken();
+            System.out.println(qrToken);
 
             VisitBadge badge = visitBadgeService.createBadge(
                     checkedInVisit,

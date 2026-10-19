@@ -28,6 +28,18 @@ public interface DocumentMetadataRepository
     );
 
     Optional<DocumentMetadata>
+    findFirstByDocument_Visitor_IdAndDocumentTypeInAndOverwrittenByIsNullOrderByCreatedAtDesc(
+            String visitorId,
+            Collection<DocumentType> documentTypes
+    );
+
+    List<DocumentMetadata>
+    findByDocument_Visitor_IdAndDocumentTypeInOrderByCreatedAtDesc(
+            String visitorId,
+            Collection<DocumentType> documentTypes
+    );
+
+    Optional<DocumentMetadata>
     findTopByVisit_IdAndDocumentTypeOrderByCreatedAtDesc(
             String visitId,
             DocumentType documentType

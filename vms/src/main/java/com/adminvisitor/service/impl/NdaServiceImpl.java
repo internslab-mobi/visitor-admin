@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,8 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import com.adminvisitor.service.DocumentStorageService;
+import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 @Service
 @RequiredArgsConstructor
 public class NdaServiceImpl implements NdaService {
@@ -51,6 +54,7 @@ public class NdaServiceImpl implements NdaService {
     private final DocumentMapper documentMapper;
     @Value("${vms.document.nda-upload-dir}")
     private String ndaUploadDir;
+
 
 
     @Transactional
@@ -153,7 +157,8 @@ public class NdaServiceImpl implements NdaService {
                     document,
                     filePath,
                     LocalDateTime.now(),
-                    validUntil
+                    validUntil,
+                    DocumentType.NDA
             );
 
             return documentMetadataRepository.save(metadata);
@@ -240,6 +245,29 @@ public class NdaServiceImpl implements NdaService {
             );
         }
 
+        // Determine document type based on the extension period
+        LocalDate existingExpiryDate = existingValidUntil.toLocalDate();
+
+        DocumentType extensionDocumentType;
+
+        if (newValidUntil.isBefore(existingExpiryDate.plusYears(1))) {
+
+            // Less than 1 year
+            extensionDocumentType = DocumentType.NDA_SUPPORTING;
+
+        } else if (newValidUntil.isBefore(existingExpiryDate.plusYears(5))) {
+
+            // 1 year or more, but less than 5 years
+            extensionDocumentType = DocumentType.NDA_RENEWAL;
+
+        } else {
+
+            // 5 years or more: extension is not allowed
+            throw new BusinessRuleException(
+                    "NDA cannot be extended for 5 years or more. "
+                            + "Please upload a new NDA instead."
+            );
+        }
 
 
         // Generate new metadata ID
@@ -265,7 +293,8 @@ public class NdaServiceImpl implements NdaService {
                     document,
                     filePath,
                     existingNda.getCreatedAt(),
-                    newValidUntil
+                    newValidUntil,
+                    extensionDocumentType
             );
 
 
@@ -300,10 +329,24 @@ public class NdaServiceImpl implements NdaService {
                                 "Visitor not found: " + visitorId
                         ));
 
+//        return documentMetadataRepository
+//                .findTopByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+//                        visitorId,
+//                        DocumentType.NDA
+//                )
+//                .orElseThrow(() ->
+//                        new ResourceNotFoundException(
+//                                "No NDA found for visitor: " + visitorId
+//                        ));
+
         return documentMetadataRepository
-                .findTopByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+                .findFirstByDocument_Visitor_IdAndDocumentTypeInAndOverwrittenByIsNullOrderByCreatedAtDesc(
                         visitorId,
-                        DocumentType.NDA
+                        List.of(
+                                DocumentType.NDA,
+                                DocumentType.NDA_SUPPORTING,
+                                DocumentType.NDA_RENEWAL
+                        )
                 )
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
@@ -324,9 +367,13 @@ public class NdaServiceImpl implements NdaService {
         // Fetch NDA history, newest first
         List<DocumentMetadata> ndaHistory =
                 documentMetadataRepository
-                        .findByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+                        .findByDocument_Visitor_IdAndDocumentTypeInOrderByCreatedAtDesc(
                                 visitorId,
-                                DocumentType.NDA
+                                List.of(
+                                        DocumentType.NDA,
+                                        DocumentType.NDA_SUPPORTING,
+                                        DocumentType.NDA_RENEWAL
+                                )
                         );
 
         // Map entity records to API response DTOs
@@ -355,13 +402,15 @@ public class NdaServiceImpl implements NdaService {
             Document document,
             Path filePath,
             LocalDateTime validFrom,
-            LocalDate validUntil
+            LocalDate validUntil,
+            DocumentType documentType
     ) {
         DocumentMetadata metadata = new DocumentMetadata();
 
         metadata.setId(metadataId);
         metadata.setDocument(document);
-        metadata.setDocumentType(DocumentType.NDA);
+//        metadata.setDocumentType(DocumentType.NDA);
+        metadata.setDocumentType(documentType);
         metadata.setDocumentPath(filePath.toString());
         metadata.setEffective_validity(validFrom);
         metadata.setValidUntil(validUntil.atTime(LocalTime.MAX));

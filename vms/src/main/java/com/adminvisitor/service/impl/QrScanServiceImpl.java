@@ -27,6 +27,7 @@ public class QrScanServiceImpl implements QrScanService {
     public QrScanResponse processScan(String token) {
 
         //VisitBadge badge = visitBadgeService.validateQrToken(token);
+
         VisitBadge badge = visitBadgeService.validateQrTokenForUpdate(token);
         Visit visit = badge.getVisit();
 
