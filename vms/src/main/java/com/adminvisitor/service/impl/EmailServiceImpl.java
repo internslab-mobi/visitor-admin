@@ -7,35 +7,42 @@ import com.adminvisitor.dto.responsedto.HostCheckInEmailData;
 import com.adminvisitor.dto.responsedto.HostDailyReminderEmailData;
 import com.adminvisitor.entity.Visit;
 import com.adminvisitor.service.EmailService;
+import com.adminvisitor.service.NotificationOutboxService;
 import com.adminvisitor.util.DateTimeFormats;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.context.Context;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.thymeleaf.spring6.SpringTemplateEngine;
+import com.adminvisitor.dto.requestdto.NotificationRequest;
+import com.adminvisitor.service.NotificationClientService;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 import java.util.Base64;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EmailServiceImpl implements EmailService {
+    private final NotificationOutboxService notificationOutboxService;
 
-    private final JavaMailSender mailSender;
-    private final SpringTemplateEngine templateEngine;
+    private static final long MAX_VISITOR_PHOTO_SIZE = 2 * 1024 * 1024; // 2 MB
 
     @Value("${spring.mail.username}")
     private String fromEmail;
 
     @Async
+    @Override
     public void sendVisitConfirmationEmail(Visit visit) {
 
         String visitorName =
@@ -53,252 +60,120 @@ public class EmailServiceImpl implements EmailService {
         String departmentName =
                 visit.getHost().getDepartment().getDepartmentName();
 
-        Context context = new Context();
-
-        context.setVariable("visitorName", visitorName);
-        context.setVariable("visitReference", visit.getVisitReference());
-        context.setVariable("purpose", visit.getPurpose());
-
-        context.setVariable(
-                "expectedArrival",
-                visit.getExpectedArrivalAt()
-                        .format(DateTimeFormats.DISPLAY_DATE_TIME)
+        NotificationRequest request = new NotificationRequest(
+                UUID.randomUUID().toString(),
+                "VISIT_CONFIRMATION",
+                visit.getVisitor().getEmail(),
+                hostEmail,
+                Map.of(
+                        "visitorName", visitorName,
+                        "visitReference", visit.getVisitReference(),
+                        "purpose", visit.getPurpose(),
+                        "expectedArrival",
+                        visit.getExpectedArrivalAt()
+                                .format(DateTimeFormats.DISPLAY_DATE_TIME),
+                        "expectedDeparture",
+                        visit.getExpectedDepartureAt()
+                                .format(DateTimeFormats.DISPLAY_DATE_TIME),
+                        "hostName", hostName,
+                        "departmentName", departmentName
+                )
         );
 
-        context.setVariable(
-                "expectedDeparture",
-                visit.getExpectedDepartureAt()
-                        .format(DateTimeFormats.DISPLAY_DATE_TIME)
-        );
+        Runnable sendNotification = () -> {
+            try {
+                notificationOutboxService.enqueue(request);
 
-        context.setVariable("hostName", hostName);
-        context.setVariable("departmentName", departmentName);
+                log.info(
+                        "Visit confirmation notification accepted. visitReference={}",
+                        visit.getVisitReference()
+                );
+            } catch (RuntimeException exception) {
+                log.error(
+                        "Visit confirmation notification failed. visitReference={}",
+                        visit.getVisitReference(),
+                        exception
+                );
+            }
+        };
 
-        long templateStart = System.currentTimeMillis();
+        if (TransactionSynchronizationManager.isSynchronizationActive()
+                && TransactionSynchronizationManager.isActualTransactionActive()) {
 
-        String htmlBody = templateEngine.process(
-                "emails/visit-confirmation",
-                context
-        );
-
-        log.debug(
-                "Timing: emailTemplateProcessing={} ms",
-                System.currentTimeMillis() - templateStart
-        );
-
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail);
-            helper.setTo(visit.getVisitor().getEmail());
-            helper.setCc(hostEmail);
-
-            helper.setSubject(
-                    "Visit Registration Confirmation - "
-                            + visit.getVisitReference()
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            sendNotification.run();
+                        }
+                    }
             );
 
-            helper.setText(htmlBody, true);
-
-            long smtpStart = System.currentTimeMillis();
-
-            mailSender.send(message);
-
-            log.debug(
-                    "Timing: smtpSend={} ms",
-                    System.currentTimeMillis() - smtpStart
-            );
-
-        } catch (MessagingException exception) {
-            throw new IllegalStateException(
-                    "Failed to prepare visit confirmation email",
-                    exception
-            );
+        } else {
+            sendNotification.run();
         }
     }
 
     @Async
+    @Override
     public void sendVisitBadgeEmail(BadgeEmailData data) {
-
-        Context context = new Context();
-
-        context.setVariable("visitorName", data.visitorName());
-        context.setVariable("visitReference", data.visitReference());
-        context.setVariable("hostName", data.hostName());
-        context.setVariable("issuedAt", data.issuedAt());
-        context.setVariable("validUntil", data.validUntil());
-        context.setVariable("visitorPhoto", data.visitorPhoto());
-
-        String htmlBody = templateEngine.process(
-                "emails/visit-badge",
-                context
-        );
-
         try {
-            MimeMessage message = mailSender.createMimeMessage();
+            Path photoPath = Path.of(data.visitorPhoto());
 
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail);
-            helper.setTo(data.visitorEmail());
-            helper.setCc(data.hostEmail());
-
-            helper.setSubject(
-                    "Your Visitor Badge - "
-                            + data.visitReference()
-            );
-
-            byte[] qrImageBytes =
-                    Base64.getDecoder().decode(data.qrCode());
-
-            helper.setText(htmlBody, true);
-
-            helper.addInline(
-                    "qrCode",
-                    new ByteArrayResource(qrImageBytes),
-                    "image/png"
-            );
-
-            FileSystemResource visitorPhoto =
-                    new FileSystemResource(data.visitorPhoto());
-
-            if (!visitorPhoto.exists() || !visitorPhoto.isReadable()) {
+            // Validate the photo before reading it into memory.
+            if (!Files.isRegularFile(photoPath) || !Files.isReadable(photoPath)) {
                 throw new IllegalStateException(
-                        "Visitor photo file not found: "
-                                + data.visitorPhoto()
+                        "Visitor photo is missing or unreadable"
                 );
             }
 
-            helper.addInline(
-                    "visitorPhoto",
-                    visitorPhoto,
-                    "image/jpeg"
+            long photoSize = Files.size(photoPath);
+
+            if (photoSize > MAX_VISITOR_PHOTO_SIZE) {
+                throw new IllegalArgumentException(
+                        "Visitor photo exceeds the maximum allowed size of 2 MB"
+                );
+            }
+
+            // Encode the visitor photo for transfer to the separate service.
+            String visitorPhotoBase64 = Base64.getEncoder()
+                    .encodeToString(Files.readAllBytes(photoPath));
+
+            Map<String, Object> emailData = new HashMap<>();
+            emailData.put("visitorName", data.visitorName());
+            emailData.put("visitReference", data.visitReference());
+            emailData.put("hostName", data.hostName());
+            emailData.put("issuedAt", data.issuedAt());
+            emailData.put("validUntil", data.validUntil());
+            emailData.put("qrCode", data.qrCode());
+            emailData.put("visitorPhotoBase64", visitorPhotoBase64);
+
+            NotificationRequest request = new NotificationRequest(
+                    UUID.randomUUID().toString(),
+                    "VISIT_BADGE",
+                    data.visitorEmail(),
+                    data.hostEmail(),
+                    emailData
             );
 
-            mailSender.send(message);
+            notificationOutboxService.enqueue(request);
 
             log.info(
-                    "Visitor badge email sent successfully. visitReference={}, recipient={}",
+                    "Visitor badge email request sent to Notification Service. visitReference={}, recipient={}",
                     data.visitReference(),
                     data.visitorEmail()
             );
 
-        } catch (MessagingException exception) {
+        } catch (IOException | RuntimeException exception) {
             log.error(
-                    "Failed to send visitor badge email. visitReference={}, recipient={}",
+                    "Failed to send visitor badge email request. visitReference={}, recipient={}",
                     data.visitReference(),
                     data.visitorEmail(),
                     exception
             );
 
             throw new IllegalStateException(
-                    "Failed to prepare visitor badge email",
-                    exception
-            );
-        }
-    }
-
-    @Async
-    public void sendHostCheckInNotification(
-            HostCheckInEmailData data
-    ) {
-
-        Context context = new Context();
-
-        context.setVariable("hostName", data.hostName());
-        context.setVariable("visitorName", data.visitorName());
-        context.setVariable("visitorType", data.visitorType());
-        context.setVariable("companyName", data.companyName());
-        context.setVariable("visitReference", data.visitReference());
-        context.setVariable("purpose", data.purpose());
-        context.setVariable("checkedInAt", data.checkedInAt());
-
-        String htmlBody = templateEngine.process(
-                "emails/host-check-in",
-                context
-        );
-
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail);
-            helper.setTo(data.hostEmail());
-
-            helper.setSubject(
-                    "Visitor Checked In - "
-                            + data.visitReference()
-            );
-
-            helper.setText(htmlBody, true);
-
-            mailSender.send(message);
-
-            log.info(
-                    "Host check-in notification sent successfully. visitReference={}, hostEmail={}",
-                    data.visitReference(),
-                    data.hostEmail()
-            );
-
-        } catch (MessagingException exception) {
-            log.error(
-                    "Failed to send host check-in notification. visitReference={}, hostEmail={}",
-                    data.visitReference(),
-                    data.hostEmail(),
-                    exception
-            );
-
-            throw new IllegalStateException(
-                    "Failed to send host check-in notification",
-                    exception
-            );
-        }
-    }
-
-    @Async
-    public void sendVisitCancellationEmail(CancellationEmailData data) {
-
-        Context context = new Context();
-
-        context.setVariable("visitorName", data.visitorName());
-        context.setVariable("visitReference", data.visitReference());
-        context.setVariable("purpose", data.purpose());
-        context.setVariable("expectedArrival", data.expectedArrival());
-        context.setVariable("expectedDeparture", data.expectedDeparture());
-        context.setVariable("hostName", data.hostName());
-
-        String htmlBody = templateEngine.process(
-                "emails/visit-cancellation",
-                context
-        );
-
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail);
-            helper.setTo(data.visitorEmail());
-
-            helper.setSubject(
-                    "Visit Cancellation - "
-                            + data.visitReference()
-            );
-
-            helper.setText(htmlBody, true);
-
-            mailSender.send(message);
-
-        } catch (MessagingException exception) {
-            throw new IllegalStateException(
-                    "Failed to prepare visit cancellation email",
+                    "Failed to send visitor badge email request",
                     exception
             );
         }
@@ -306,52 +181,133 @@ public class EmailServiceImpl implements EmailService {
 
     @Async
     @Override
-    public void sendHostDailyReminderEmail(
-            HostDailyReminderEmailData data
-    ) {
-        Context context = new Context();
-
-        context.setVariable("hostName", data.hostName());
-        context.setVariable("reminderDate", data.reminderDate());
-        context.setVariable("visits", data.visits());
-
-        String htmlBody = templateEngine.process(
-                "emails/host-daily-reminder",
-                context
-        );
-
+    public void sendHostCheckInNotification(HostCheckInEmailData data) {
         try {
-            MimeMessage message = mailSender.createMimeMessage();
+            Map<String, Object> emailData = new HashMap<>();
 
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(message, true, "UTF-8");
+            emailData.put("hostName", data.hostName());
+            emailData.put("visitorName", data.visitorName());
+            emailData.put("visitorType", data.visitorType());
+            emailData.put("companyName", data.companyName());
+            emailData.put("visitReference", data.visitReference());
+            emailData.put("purpose", data.purpose());
+            emailData.put("checkedInAt", data.checkedInAt());
 
-            helper.setFrom(fromEmail);
-            helper.setTo(data.hostEmail());
-            helper.setSubject(
-                    "Today's Expected Visitors - " + data.reminderDate()
+            NotificationRequest request = new NotificationRequest(
+                    UUID.randomUUID().toString(),
+                    "HOST_CHECK_IN",
+                    data.hostEmail(),
+                    null,
+                    emailData
             );
-            helper.setText(htmlBody, true);
 
-            mailSender.send(message);
+            notificationOutboxService.enqueue(request);
 
             log.info(
-                    "Host daily reminder email sent successfully. hostEmail={}, visitCount={}",
-                    data.hostEmail(),
-                    data.visits().size()
+                    "Host check-in notification request sent to Notification Service. visitReference={}, hostEmail={}",
+                    data.visitReference(),
+                    data.hostEmail()
             );
 
-        } catch (MessagingException exception) {
+        } catch (RuntimeException exception) {
             log.error(
-                    "Failed to send host daily reminder email. hostEmail={}",
+                    "Failed to send host check-in notification request. visitReference={}, hostEmail={}",
+                    data.visitReference(),
                     data.hostEmail(),
                     exception
             );
 
             throw new IllegalStateException(
-                    "Failed to send host daily reminder email",
+                    "Failed to send host check-in notification request",
                     exception
             );
         }
     }
+
+    @Async
+    @Override
+    public void sendVisitCancellationEmail(CancellationEmailData data) {
+        try {
+            Map<String, Object> emailData = new HashMap<>();
+
+            emailData.put("visitorName", data.visitorName());
+            emailData.put("visitReference", data.visitReference());
+            emailData.put("purpose", data.purpose());
+            emailData.put("expectedArrival", data.expectedArrival());
+            emailData.put("expectedDeparture", data.expectedDeparture());
+            emailData.put("hostName", data.hostName());
+
+            NotificationRequest request = new NotificationRequest(
+                    UUID.randomUUID().toString(),
+                    "VISIT_CANCELLATION",
+                    data.visitorEmail(),
+                    null,
+                    emailData
+            );
+
+            notificationOutboxService.enqueue(request);
+
+            log.info(
+                    "Visit cancellation notification request sent to Notification Service. visitReference={}, recipient={}",
+                    data.visitReference(),
+                    data.visitorEmail()
+            );
+
+        } catch (RuntimeException exception) {
+            log.error(
+                    "Failed to send visit cancellation notification request. visitReference={}, recipient={}",
+                    data.visitReference(),
+                    data.visitorEmail(),
+                    exception
+            );
+
+            throw new IllegalStateException(
+                    "Failed to send visit cancellation notification request",
+                    exception
+            );
+        }
+    }
+
+    @Async
+    @Override
+    public void sendHostDailyReminderEmail(HostDailyReminderEmailData data) {
+        try {
+            Map<String, Object> emailData = new HashMap<>();
+
+            emailData.put("hostName", data.hostName());
+            emailData.put("reminderDate", data.reminderDate());
+            emailData.put("visits", data.visits());
+
+            NotificationRequest request = new NotificationRequest(
+                    UUID.randomUUID().toString(),
+                    "HOST_DAILY_REMINDER",
+                    data.hostEmail(),
+                    null,
+                    emailData
+            );
+
+            notificationOutboxService.enqueue(request);
+
+            log.info(
+                    "Host daily reminder request sent to Notification Service. hostEmail={}, reminderDate={}, visitCount={}",
+                    data.hostEmail(),
+                    data.reminderDate(),
+                    data.visits().size()
+            );
+
+        } catch (RuntimeException exception) {
+            log.error(
+                    "Failed to send host daily reminder request. hostEmail={}, reminderDate={}",
+                    data.hostEmail(),
+                    data.reminderDate(),
+                    exception
+            );
+
+            throw new IllegalStateException(
+                    "Failed to send host daily reminder request",
+                    exception
+            );
+        }
+    }
+
 }

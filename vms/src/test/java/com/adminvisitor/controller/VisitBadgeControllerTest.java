@@ -7,7 +7,6 @@ import com.adminvisitor.exception.BadgeAlreadyExistsException;
 import com.adminvisitor.exception.GlobalExceptionHandler;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.service.EmailService;
-import com.adminvisitor.service.QrCodeService;
 import com.adminvisitor.service.QrTokenService;
 import com.adminvisitor.service.VisitBadgeService;
 import org.junit.jupiter.api.Test;
@@ -40,16 +39,13 @@ class VisitBadgeControllerTest {
     private VisitBadgeService visitBadgeService;
 
     @MockitoBean
-    private QrCodeService qrCodeService;
+    private QrTokenService qrCodeService;
 
     @MockitoBean
     private EmailService emailService;
 
 @MockitoBean
 private QrTokenService qrTokenService;
-
-    // CREATE BADGE - SUCCESS
-
 
     @Test
     void createBadge_shouldReturn200_whenBadgeCreatedSuccessfully()
@@ -125,11 +121,6 @@ private QrTokenService qrTokenService;
 
     }
 
-
-
-    // CREATE BADGE - VISIT NOT FOUND
-
-
     @Test
     void createBadge_shouldReturn404_whenVisitDoesNotExist()
             throws Exception {
@@ -159,11 +150,6 @@ private QrTokenService qrTokenService;
         verifyNoInteractions(qrCodeService);
         verifyNoInteractions(emailService);
     }
-
-
-
-    // CREATE BADGE - BADGE ALREADY EXISTS
-
 
     @Test
     void createBadge_shouldReturn409_whenBadgeAlreadyExists()
@@ -206,11 +192,6 @@ private QrTokenService qrTokenService;
         verifyNoInteractions(emailService);
     }
 
-
-
-    // CREATE BADGE - UNEXPECTED ERROR
-
-
     @Test
     void createBadge_shouldReturn500_whenUnexpectedErrorOccurs()
             throws Exception {
@@ -250,11 +231,6 @@ private QrTokenService qrTokenService;
         verifyNoInteractions(emailService);
     }
 
-
-
-    // VALIDATE QR - ACTIVE
-
-
     @Test
     void validateQr_shouldReturn200_whenQrIsActive()
             throws Exception {
@@ -279,11 +255,6 @@ private QrTokenService qrTokenService;
         verify(visitBadgeService)
                 .validateQrToken(token);
     }
-
-
-
-    // VALIDATE QR - INVALID
-
 
     @Test
     void validateQr_shouldReturn200_whenQrIsInvalid()

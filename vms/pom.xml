@@ -139,6 +139,13 @@
         </dependency>
 
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-json</artifactId>
+        </dependency>
+
+
+
         <!-- ==================== Testing ==================== -->
 
         <!-- General Spring testing: JUnit, Mockito, AssertJ, etc. -->

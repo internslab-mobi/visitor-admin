@@ -59,3 +59,9 @@ logging:
     root: INFO
     com.adminvisitor: DEBUG
 
+notification:
+  service:
+    base-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8094}
+  test-recipient: ${NOTIFICATION_TEST_EMAIL}
+
+
