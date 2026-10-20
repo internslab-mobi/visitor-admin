@@ -2,18 +2,22 @@ package com.adminvisitor.controller;
 
 import com.adminvisitor.dto.requestdto.CheckInRequest;
 import com.adminvisitor.dto.requestdto.RegistrationRequest;
-import com.adminvisitor.dto.responsedto.NdaStatusResponse;
+
 import com.adminvisitor.dto.responsedto.RegistrationResponse;
 import com.adminvisitor.dto.responsedto.VisitDashboardResponse;
 import com.adminvisitor.dto.responsedto.VisitDetailResponse;
+
 import com.adminvisitor.service.VisitManagementService;
 import com.adminvisitor.service.VisitService;
+
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.enums.VisitView;
+
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaTypeFactory;
+
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -176,14 +180,15 @@ public class VisitController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{visitId}/nda-status")
-    public ResponseEntity<NdaStatusResponse> getNdaStatus(
-            @PathVariable String visitId) {
+//    @GetMapping("/{visitId}/nda-status")
+//    public ResponseEntity<NdaStatusResponse> getNdaStatus(
+//            @PathVariable String visitId) {
+//
+//        return ResponseEntity.ok(
+//                visitService.getNdaStatus(visitId)
+//        );
+//    }
 
-        return ResponseEntity.ok(
-                visitManagementService.getNdaStatus(visitId)
-        );
-    }
 
     @GetMapping("/{visitId}/photo")
     public ResponseEntity<Resource> getVisitPhoto(

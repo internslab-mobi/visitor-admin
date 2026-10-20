@@ -163,6 +163,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/health",
                                 "/api/csrf",
+                                "/actuator/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
@@ -175,6 +176,11 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/visitors/*"
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/visitors/*/edit"
                         ).hasAnyRole("ADMIN", "FRONT_DESK")
 
                         .requestMatchers(
@@ -274,11 +280,22 @@ public class SecurityConfig {
                         ).hasRole("ADMIN")
 
                         .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/qr-scan"
+                  ).hasAnyRole("ADMIN", "FRONT_DESK")
+
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/vms/summary-export"
+                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+
+
+                        .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/blacklist/*/remove"
                         ).hasRole("ADMIN")
 
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()
                 )
 
                 .oauth2ResourceServer(oauth2 -> oauth2
@@ -286,10 +303,12 @@ public class SecurityConfig {
                                 new DefaultBearerTokenResolver()
                         )
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
+                        .accessDeniedHandler(customAccessDeniedHandler)
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(
                                 jwtAuthenticationConverter()
                         ))
                 );
+
 
         return http.build();
     }

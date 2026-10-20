@@ -4,7 +4,7 @@ import com.adminvisitor.dto.requestdto.EmployeeCreateRequest;
 import com.adminvisitor.dto.responsedto.EmployeeResponse;
 import com.adminvisitor.entity.Department;
 import com.adminvisitor.entity.Employee;
-import com.adminvisitor.exception.EmailAlreadyExistsException;
+import com.adminvisitor.exception.ResourceAlreadyExistsException;
 import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.DepartmentRepository;
 import com.adminvisitor.repository.EmployeeRepository;
@@ -23,7 +23,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
-    private final IdGeneratorServiceImpl idGeneratorService;
+    private final IdGeneratorService idGeneratorService;
 
     @Transactional
     public EmployeeResponse createEmployee(
@@ -33,7 +33,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         String email = request.getEmail().trim();
 
         if (employeeRepository.existsByEmail(email)) {
-            throw new EmailAlreadyExistsException(
+            throw new ResourceAlreadyExistsException(
                     "Employee email already exists"
             );
         }

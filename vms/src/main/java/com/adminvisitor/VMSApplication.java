@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 @EnableAsync
+@EnableScheduling
 public class VMSApplication {
 
 	public static void main(String[] args) {

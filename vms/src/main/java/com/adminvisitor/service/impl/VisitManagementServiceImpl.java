@@ -40,6 +40,8 @@ public class VisitManagementServiceImpl implements VisitManagementService{
     private static final DateTimeFormatter EMAIL_DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
 
+    private final QrMicroserviceClient qrMicroserviceClient;
+
     private final VisitRepository visitRepository;
     private final VendorRepository vendorRepository;
     private final ProofSecurityService proofSecurityService;
@@ -47,8 +49,8 @@ public class VisitManagementServiceImpl implements VisitManagementService{
     private final EmailService emailService;
     private final DocumentService documentService;
     private final VisitBadgeService visitBadgeService;
-    private final QrTokenService qrTokenService;
-
+    //private final QrTokenService qrTokenService;
+private final NdaService ndaService;
     private double elapsedMillis(long startNanos) {
         return (System.nanoTime() - startNanos) / 1_000_000.0;
     }
@@ -101,7 +103,6 @@ public class VisitManagementServiceImpl implements VisitManagementService{
                         ? Sort.Direction.DESC
                         : Sort.Direction.ASC;
 
-        // Only supported fields are accepted for sorting.
         String sortField = switch (
                 sortBy == null ? "" : sortBy.trim()
                 ) {
@@ -245,12 +246,12 @@ public class VisitManagementServiceImpl implements VisitManagementService{
                     .findByVisitorId(visit.getVisitor().getId())
                     .isPresent();
 
-            ndaAvailable = !documentService.isNdaRequired(
+            ndaAvailable = !ndaService.isNdaRequired(
                     visit.getVisitor());
 
             if (ndaAvailable) {
                 DocumentMetadata latestNda =
-                        documentService.getLatestNda(
+                        ndaService.getLatestNda(
                                 visit.getVisitor().getId());
 
                 ndaDocumentId = latestNda.getId();
@@ -289,39 +290,41 @@ public class VisitManagementServiceImpl implements VisitManagementService{
     }
 
     // NDA STATUS
-    @Transactional(readOnly = true)
-    public NdaStatusResponse getNdaStatus(String visitId) {
-
-        Visit visit = visitRepository.findById(visitId)
-                .orElseThrow(() ->
-                        new BusinessRuleException(
-                                "Visit not found with id: " + visitId));
-
-        Visitor visitor = visit.getVisitor();
-
-        boolean ndaRequired =
-                visit.getVisitorType() == VisitorType.VENDOR
-                        && documentService.isNdaRequired(visitor);
-
-        boolean ndaAvailable =
-                visit.getVisitorType() == VisitorType.VENDOR
-                        && !ndaRequired;
-
-        DocumentMetadata latestNda = null;
-
-        if (ndaAvailable) {
-            latestNda = documentService.getLatestNda(visitor.getId());
-        }
-
-        return NdaStatusResponse.builder()
-                .visitorId(visitor.getId())
-                .visitorType(visit.getVisitorType().name())
-                .ndaRequired(ndaRequired)
-                .ndaAvailable(ndaAvailable)
-                .validUntil(latestNda != null ? latestNda.getValidUntil() : null)
-                .documentId(latestNda != null ? latestNda.getId() : null)
-                .build();
-    }
+//    @Transactional(readOnly = true)
+//    public NdaStatusResponse getNdaStatus(String visitId) {
+//
+//        Visit visit = visitRepository.findById(visitId)
+//                .orElseThrow(() ->
+//                        new BusinessRuleException(
+//                                "Visit not found with id: " + visitId));
+//
+//        Visitor visitor = visit.getVisitor();
+//
+//        boolean ndaRequired =
+//                visit.getVisitorType() == VisitorType.VENDOR
+//                        && documentService.isNdaRequired(visitor);
+//
+//        boolean ndaAvailable =
+//                visit.getVisitorType() == VisitorType.VENDOR
+//                        && !ndaRequired;
+//
+//        DocumentMetadata latestNda = null;
+//
+//        if (ndaAvailable) {
+//            latestNda = ndaService.getLatestNda(visitor.getId());
+//        }
+//
+//        return NdaStatusResponse.builder()
+//                .visitorId(visitor.getId())
+//                .visitorType(visit.getVisitorType().name())
+//                .ndaRequired(ndaRequired)
+//                .ndaAvailable(ndaAvailable)
+//                .validUntil(latestNda != null
+//                        ? latestNda.getValidUntil() : null)
+//                .documentId(latestNda != null
+//                        ? latestNda.getId() : null)
+//                .build();
+//    }
 
     // CANCEL VISIT
     @Transactional
@@ -400,7 +403,7 @@ public class VisitManagementServiceImpl implements VisitManagementService{
 
             if (visit.getVisitorType() == VisitorType.VENDOR) {
                 boolean ndaRequired =
-                        documentService.isNdaRequired(visit.getVisitor());
+                        ndaService.isNdaRequired(visit.getVisitor());
 
                 if (ndaRequired) {
                     throw new BusinessRuleException(
@@ -422,13 +425,24 @@ public class VisitManagementServiceImpl implements VisitManagementService{
 
             Visit checkedInVisit = visitRepository.save(visit);
 
-            VisitBadge badge =
-                    visitBadgeService.createBadge(checkedInVisit);
+//            VisitBadge badge =
+//                    visitBadgeService.createBadge(checkedInVisit);
+//
+//            String qrCode =
+//                    qrTokenService.generateQrCode(
+//                            badge.getQrContainingToken());
 
-            String qrCode =
-                    qrTokenService.generateQrCode(
-                            badge.getQrContainingToken());
+            String qrToken = qrMicroserviceClient.generateToken();
+            System.out.println(qrToken);
 
+            VisitBadge badge = visitBadgeService.createBadge(
+                    checkedInVisit,
+                    qrToken
+            );
+
+            String qrCode = qrMicroserviceClient.generateQrCode(
+                    badge.getQrContainingToken()
+            );
             log.info(
                     "QR code generated successfully. visitId={}, qrLength={}",
                     checkedInVisit.getId(),

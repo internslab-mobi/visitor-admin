@@ -3,6 +3,7 @@ package com.adminvisitor.service.impl;
 import com.adminvisitor.dto.requestdto.DepartmentCreateRequest;
 import com.adminvisitor.dto.responsedto.DepartmentResponse;
 import com.adminvisitor.entity.Department;
+import com.adminvisitor.exception.ResourceAlreadyExistsException;
 import com.adminvisitor.repository.DepartmentRepository;
 import com.adminvisitor.service.DepartmentService;
 import com.adminvisitor.service.IdGeneratorService;
@@ -17,7 +18,7 @@ import java.util.List;
 public class DepartmentServiceImpl implements DepartmentService {
 
     private final DepartmentRepository departmentRepository;
-    private final IdGeneratorServiceImpl idGeneratorService;
+    private final IdGeneratorService idGeneratorService;
 
     @Transactional
     public DepartmentResponse createDepartment(
@@ -27,7 +28,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         if (departmentRepository.existsByDepartmentCode(
                 request.getDepartmentCode().trim()
         )) {
-            throw new IllegalArgumentException(
+            throw new ResourceAlreadyExistsException(
                     "Department code already exists"
             );
         }
@@ -35,7 +36,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         if (departmentRepository.existsByDepartmentName(
                 request.getDepartmentName().trim()
         )) {
-            throw new IllegalArgumentException(
+            throw new ResourceAlreadyExistsException(
                     "Department name already exists"
             );
         }

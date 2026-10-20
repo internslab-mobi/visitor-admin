@@ -4,10 +4,7 @@ import com.adminvisitor.dto.requestdto.RegistrationRequest;
 import com.adminvisitor.dto.responsedto.*;
 import com.adminvisitor.entity.*;
 import com.adminvisitor.enums.*;
-import com.adminvisitor.exception.BusinessRuleException;
-import com.adminvisitor.exception.EmailAlreadyExistsException;
-import com.adminvisitor.exception.MobileNumberAlreadyExistsException;
-import com.adminvisitor.exception.ResourceNotFoundException;
+import com.adminvisitor.exception.*;
 import com.adminvisitor.repository.*;
 import com.adminvisitor.service.*;
 import com.adminvisitor.util.VisitReferenceUtil;
@@ -256,7 +253,7 @@ public class VisitServiceImpl implements VisitService {
             // 8. Persist the visit.
             stageStart = System.nanoTime();
 
-        Visit savedVisit = visitRepository.save(visit);
+            Visit savedVisit = visitRepository.save(visit);
 
             log.debug(
                     "Timing: visitRepository.save={} ms",
@@ -273,14 +270,14 @@ public class VisitServiceImpl implements VisitService {
                     elapsedMillis(stageStart)
             );
 
-        log.info(
-                "Visit registered successfully. visitId={}, visitReference={}, visitorId={}, registrationType={}, status={}",
-                savedVisit.getId(),
-                savedVisit.getVisitReference(),
-                visitor.getId(),
-                savedVisit.getRegistrationType(),
-                savedVisit.getStatus()
-        );
+            log.info(
+                    "Visit registered successfully. visitId={}, visitReference={}, visitorId={}, registrationType={}, status={}",
+                    savedVisit.getId(),
+                    savedVisit.getVisitReference(),
+                    visitor.getId(),
+                    savedVisit.getRegistrationType(),
+                    savedVisit.getStatus()
+            );
 
             // 10. Return the existing registration response structure.
             return RegistrationResponse.builder()
@@ -347,7 +344,7 @@ public class VisitServiceImpl implements VisitService {
             log.warn(
                     "Visitor registration rejected because the supplied email is already associated with another visitor");
 
-            throw new EmailAlreadyExistsException(
+            throw new ResourceAlreadyExistsException(
                     "This email is already associated with another visitor");
         }
 
@@ -355,7 +352,7 @@ public class VisitServiceImpl implements VisitService {
             log.warn(
                     "Visitor registration rejected because the supplied mobile number is already associated with another visitor");
 
-            throw new MobileNumberAlreadyExistsException(
+            throw new ResourceAlreadyExistsException(
                     "This mobile number is already associated with another visitor");
         }
 
@@ -448,8 +445,8 @@ public class VisitServiceImpl implements VisitService {
         switch (request.nationality()) {
             case DOMESTIC -> {
                 boolean aadhaarBlacklisted = blacklistService.isBlacklistedByProof(
-                                ProofType.AADHAAR,
-                                request.aadharNumber());
+                        ProofType.AADHAAR,
+                        request.aadharNumber());
 
                 if (aadhaarBlacklisted) {
                     throw new BusinessRuleException(
@@ -457,8 +454,8 @@ public class VisitServiceImpl implements VisitService {
                 }
 
                 boolean panBlacklisted = blacklistService.isBlacklistedByProof(
-                                ProofType.PAN,
-                                request.panNumber());
+                        ProofType.PAN,
+                        request.panNumber());
 
                 if (panBlacklisted) {
                     throw new BusinessRuleException(
@@ -468,8 +465,8 @@ public class VisitServiceImpl implements VisitService {
 
             case INTERNATIONAL -> {
                 boolean passportBlacklisted = blacklistService.isBlacklistedByProof(
-                                ProofType.PASSPORT,
-                                request.passportNumber());
+                        ProofType.PASSPORT,
+                        request.passportNumber());
 
                 if (passportBlacklisted) {
                     throw new BusinessRuleException(

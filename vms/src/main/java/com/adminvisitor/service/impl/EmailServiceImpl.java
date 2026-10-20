@@ -6,12 +6,16 @@ import com.adminvisitor.dto.responsedto.CancellationEmailData;
 import com.adminvisitor.dto.responsedto.HostCheckInEmailData;
 import com.adminvisitor.dto.responsedto.HostDailyReminderEmailData;
 import com.adminvisitor.entity.Visit;
+import com.adminvisitor.exception.EmailDeliveryException;
 import com.adminvisitor.service.EmailService;
 import com.adminvisitor.service.NotificationOutboxService;
 import com.adminvisitor.util.DateTimeFormats;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -46,13 +50,11 @@ public class EmailServiceImpl implements EmailService {
     public void sendVisitConfirmationEmail(Visit visit) {
 
         String visitorName =
-                visit.getVisitor().getFirstName()
-                        + " "
+                visit.getVisitor().getFirstName() + " "
                         + visit.getVisitor().getLastName();
 
         String hostName =
-                visit.getHost().getFirstName()
-                        + " "
+                visit.getHost().getFirstName() + " "
                         + visit.getHost().getLastName();
 
         String hostEmail = visit.getHost().getEmail();
@@ -112,6 +114,7 @@ public class EmailServiceImpl implements EmailService {
         } else {
             sendNotification.run();
         }
+
     }
 
     @Async
@@ -309,5 +312,4 @@ public class EmailServiceImpl implements EmailService {
             );
         }
     }
-
 }

@@ -161,69 +161,45 @@ public class DocumentServiceImpl implements DocumentService {
         }
     }
 
-    public boolean isNdaRequired(Visitor visitor) {
 
-        Optional<DocumentMetadata> latestNda =
-                documentMetadataRepository
-                        .findTopByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
-                                visitor.getId(),
-                                DocumentType.NDA
-                        );
-
-        // No NDA exists
-        if (latestNda.isEmpty()) {
-            return true;
-        }
-
-        LocalDateTime validUntil =
-                latestNda.get().getValidUntil();
-
-        // NDA has no validity date
-        if (validUntil == null) {
-            return true;
-        }
-
-        // NDA is expired
-        return validUntil.isBefore(LocalDateTime.now());
-    }
-    @Transactional(readOnly = true)
-    public DocumentMetadata getLatestNda(String visitorId) {
-
-        // 1. Verify visitor exists
-        Visitor visitor = visitorRepository.findById(visitorId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Visitor not found: " + visitorId
-                        )
-                );
-
-        // 2. Check whether NDA is currently valid
-        if (isNdaRequired(visitor)) {
-            throw new ResourceNotFoundException(
-                    "No valid NDA found for visitor: " + visitorId
-            );
-        }
-
-        // 3. Find latest NDA only
-        Document document = documentRepository
-                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "No document found for visitor: " + visitorId
-                        )
-                );
-
-        return documentMetadataRepository
-                .findTopByDocumentIdAndDocumentTypeOrderByCreatedAtDesc(
-                        document.getId(),
-                        DocumentType.NDA
-                )
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "No valid NDA found for visitor: " + visitorId
-                        )
-                );
-    }
+//    @Transactional(readOnly = true)
+//    public DocumentMetadata getLatestNda(String visitorId) {
+//
+//        // 1. Verify visitor exists
+//        Visitor visitor = visitorRepository.findById(visitorId)
+//                .orElseThrow(() ->
+//                        new ResourceNotFoundException(
+//                                "Visitor not found: " + visitorId
+//                        )
+//                );
+//
+//        // 2. Check whether NDA is currently valid
+//        if (isNdaRequired(visitor)) {
+//            throw new ResourceNotFoundException(
+//                    "No valid NDA found for visitor: " + visitorId
+//            );
+//        }
+//
+//        // 3. Find latest NDA only
+//        Document document = documentRepository
+//                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
+//                .orElseThrow(() ->
+//                        new ResourceNotFoundException(
+//                                "No document found for visitor: " + visitorId
+//                        )
+//                );
+//
+//        return documentMetadataRepository
+//                .findTopByDocumentIdAndDocumentTypeOrderByCreatedAtDesc(
+//                        document.getId(),
+//                        DocumentType.NDA
+//                )
+//                .orElseThrow(() ->
+//                        new ResourceNotFoundException(
+//                                "No valid NDA found for visitor: " + visitorId
+//                        )
+//                );
+//    }
 
     @Transactional(readOnly = true)
     public DocumentMetadata getLatestVisitorPhoto(String visitorId) {
@@ -242,45 +218,45 @@ public class DocumentServiceImpl implements DocumentService {
 
 
 
-    public DocumentMetadata getValidNda(Visitor visitor) {
-
-        if (visitor == null || isNdaRequired(visitor)) {
-            return null;
-        }
-
-        Document document = documentRepository
-                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
-                .orElse(null);
-
-        if (document == null) {
-            return null;
-        }
-
-        return documentMetadataRepository
-                .findTopByDocumentIdAndDocumentTypeOrderByCreatedAtDesc(
-                        document.getId(),
-                        DocumentType.NDA
-                )
-                .orElse(null);
-    }
-
-    public Resource getNdaFile(String visitorId) {
-
-        DocumentMetadata metadata = getLatestNda(visitorId);
-
-        Path filePath = Paths.get(
-                metadata.getDocumentPath()
-        );
-
-        if (!Files.exists(filePath)) {
-            throw new IllegalArgumentException(
-                    "NDA file not found"
-            );
-        }
-
-        return new FileSystemResource(filePath);
-    }
-
+//    public DocumentMetadata getValidNda(Visitor visitor) {
+//
+//        if (visitor == null || isNdaRequired(visitor)) {
+//            return null;
+//        }
+//
+//        Document document = documentRepository
+//                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
+//                .orElse(null);
+//
+//        if (document == null) {
+//            return null;
+//        }
+//
+//        return documentMetadataRepository
+//                .findTopByDocumentIdAndDocumentTypeOrderByCreatedAtDesc(
+//                        document.getId(),
+//                        DocumentType.NDA
+//                )
+//                .orElse(null);
+//    }
+//
+//    public Resource getNdaFile(String visitorId) {
+//
+//        DocumentMetadata metadata = getLatestNda(visitorId);
+//
+//        Path filePath = Paths.get(
+//                metadata.getDocumentPath()
+//        );
+//
+//        if (!Files.exists(filePath)) {
+//            throw new IllegalArgumentException(
+//                    "NDA file not found"
+//            );
+//        }
+//
+//        return new FileSystemResource(filePath);
+//    }
+//
 
 
 

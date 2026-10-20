@@ -7,11 +7,15 @@ import java.time.LocalDateTime;
 
 public interface VisitBadgeService {
 
-    VisitBadge createBadge(Visit visit);
+    VisitBadge createBadge(Visit visit, String qrToken);
 
     void invalidateBadgeOnCheckout(
             String visitId,
             LocalDateTime checkoutTime);
 
-    BadgeStatus validateQrToken(String qrToken);
+     //VisitBadge validateQrToken(String qrToken);
+    VisitBadge validateQrTokenForUpdate(String qrToken);
+
+
+
 }

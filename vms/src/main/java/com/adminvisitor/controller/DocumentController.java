@@ -6,6 +6,7 @@ import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.mapper.DocumentMapper;
 import com.adminvisitor.service.DocumentService;
 import com.adminvisitor.service.DocumentService;
+import com.adminvisitor.service.NdaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -25,13 +26,13 @@ public class DocumentController {
 
     private final DocumentService documentService;
     private final DocumentMapper documentMapper;
-
+private final NdaService ndaService;
 
     @GetMapping("/{visitorId}/nda/download")
     public ResponseEntity<Resource> downloadNda(
             @PathVariable String visitorId) {
 
-        Resource resource = documentService.getNdaFile(visitorId);
+        Resource resource = ndaService.getNdaFile(visitorId);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)

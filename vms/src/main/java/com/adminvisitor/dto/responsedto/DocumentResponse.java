@@ -3,9 +3,11 @@ package com.adminvisitor.dto.responsedto;
 public record DocumentResponse(
         String documentId,
         String documentPath,
+        String documentType,
         String createdAt,
-        String validFrom,
+        String effective_validity,
         String validUntil,
-        String overwrittenBy
+        String overwrittenBy,
+        String status
 ) {
 }

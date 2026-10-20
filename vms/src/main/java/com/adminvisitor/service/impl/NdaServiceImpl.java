@@ -1,16 +1,17 @@
 package com.adminvisitor.service.impl;
 
 import com.adminvisitor.dto.responsedto.DocumentResponse;
-import com.adminvisitor.dto.responsedto.NdaExtensionResult;
-import com.adminvisitor.dto.responsedto.NdaLatestResult;
+
 import com.adminvisitor.entity.Document;
 import com.adminvisitor.entity.DocumentMetadata;
 import com.adminvisitor.entity.Visit;
 import com.adminvisitor.entity.Visitor;
 import com.adminvisitor.enums.DocumentType;
+import com.adminvisitor.enums.NdaStatus;
 import com.adminvisitor.enums.VisitorType;
 import com.adminvisitor.exception.BusinessRuleException;
 import com.adminvisitor.exception.ResourceNotFoundException;
+import com.adminvisitor.mapper.DocumentMapper;
 import com.adminvisitor.repository.DocumentMetadataRepository;
 import com.adminvisitor.repository.DocumentRepository;
 import com.adminvisitor.repository.VisitRepository;
@@ -18,20 +19,28 @@ import com.adminvisitor.repository.VisitorRepository;
 import com.adminvisitor.service.NdaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 //import java.nio.file.Files;
+import java.nio.file.Files;
 import java.nio.file.Path;
 //import java.nio.file.Paths;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import com.adminvisitor.service.DocumentStorageService;
+import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 @Service
 @RequiredArgsConstructor
 public class NdaServiceImpl implements NdaService {
@@ -42,8 +51,10 @@ public class NdaServiceImpl implements NdaService {
     private final VisitRepository visitRepository;
     private final com.adminvisitor.service.IdGeneratorService idGeneratorService;
     private final DocumentStorageService documentStorageService;
+    private final DocumentMapper documentMapper;
     @Value("${vms.document.nda-upload-dir}")
     private String ndaUploadDir;
+
 
 
     @Transactional
@@ -52,8 +63,6 @@ public class NdaServiceImpl implements NdaService {
             MultipartFile ndaFile,
             LocalDate validUntil
     ) {
-
-        // 1. Validate NDA file
         if (ndaFile == null || ndaFile.isEmpty()) {
             throw new IllegalArgumentException("NDA file is required");
         }
@@ -142,20 +151,16 @@ public class NdaServiceImpl implements NdaService {
             );
 
             // 9. Create NDA metadata
-            DocumentMetadata metadata = new DocumentMetadata();
 
-            metadata.setId(metadataId);
-            metadata.setDocument(document);
-            metadata.setDocumentType(DocumentType.NDA);
-            metadata.setDocumentPath(filePath.toString());
-
-            metadata.setValidUntil(
-                    validUntil.atTime(LocalTime.MAX)
+            DocumentMetadata metadata = createNdaMetadata(
+                    metadataId,
+                    document,
+                    filePath,
+                    LocalDateTime.now(),
+                    validUntil,
+                    DocumentType.NDA
             );
 
-            metadata.setOverwrittenBy(null);
-
-            // 10. Save metadata
             return documentMetadataRepository.save(metadata);
 
         } catch (IOException exception) {
@@ -168,8 +173,9 @@ public class NdaServiceImpl implements NdaService {
     }
 
 
+
     @Transactional
-    public NdaExtensionResult extendNdaValidity(
+    public  DocumentMetadata extendNdaValidity(
             String visitorId,
             MultipartFile supportingDocument,
             LocalDate newValidUntil
@@ -211,7 +217,7 @@ public class NdaServiceImpl implements NdaService {
 
         // Find existing NDA
         DocumentMetadata existingNda = documentMetadataRepository
-                .findTopByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+                .findTopByDocument_Visitor_IdAndDocumentTypeAndOverwrittenByIsNullOrderByCreatedAtDesc(
                         visitorId,
                         DocumentType.NDA
                 )
@@ -239,14 +245,30 @@ public class NdaServiceImpl implements NdaService {
             );
         }
 
-        // Find existing Document
-        Document document = documentRepository
-                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Document not found for visitor: " + visitorId
-                        )
-                );
+        // Determine document type based on the extension period
+        LocalDate existingExpiryDate = existingValidUntil.toLocalDate();
+
+        DocumentType extensionDocumentType;
+
+        if (newValidUntil.isBefore(existingExpiryDate.plusYears(1))) {
+
+            // Less than 1 year
+            extensionDocumentType = DocumentType.NDA_SUPPORTING;
+
+        } else if (newValidUntil.isBefore(existingExpiryDate.plusYears(5))) {
+
+            // 1 year or more, but less than 5 years
+            extensionDocumentType = DocumentType.NDA_RENEWAL;
+
+        } else {
+
+            // 5 years or more: extension is not allowed
+            throw new BusinessRuleException(
+                    "NDA cannot be extended for 5 years or more. "
+                            + "Please upload a new NDA instead."
+            );
+        }
+
 
         // Generate new metadata ID
         String newNdaMetadataId =
@@ -264,36 +286,29 @@ public class NdaServiceImpl implements NdaService {
                     visitorId,
                     newNdaMetadataId
             );
-
+            Document document = existingNda.getDocument();
             // Create new NDA metadata
-            DocumentMetadata newNdaMetadata =
-                    new DocumentMetadata();
-
-            newNdaMetadata.setId(newNdaMetadataId);
-            newNdaMetadata.setDocument(document);
-            newNdaMetadata.setDocumentType(DocumentType.NDA);
-            newNdaMetadata.setDocumentPath(filePath.toString());
-
-            newNdaMetadata.setValidUntil(
-                    newValidUntil.atTime(LocalTime.MAX)
+            DocumentMetadata newNdaMetadata = createNdaMetadata(
+                    newNdaMetadataId,
+                    document,
+                    filePath,
+                    existingNda.getCreatedAt(),
+                    newValidUntil,
+                    extensionDocumentType
             );
 
-            newNdaMetadata.setOverwrittenBy(null);
 
             // Mark old NDA as overwritten by the new NDA
             existingNda.setOverwrittenBy(
                     newNdaMetadata.getId()
             );
-
+            existingNda.setStatus(NdaStatus.SUPERSEDED);
             documentMetadataRepository.save(existingNda);
 
             DocumentMetadata savedNda =
                     documentMetadataRepository.save(newNdaMetadata);
 
-            return new NdaExtensionResult(
-                    savedNda,
-                    existingNda.getCreatedAt()
-            );
+            return savedNda;
 
 
         } catch (IOException exception) {
@@ -305,33 +320,39 @@ public class NdaServiceImpl implements NdaService {
         }
     }
 
-
-
     @Transactional(readOnly = true)
-    public NdaLatestResult getLatestNda(String visitorId) {
+    public DocumentMetadata getLatestNda(String visitorId) {
 
         visitorRepository.findById(visitorId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Visitor not found: " + visitorId));
+                                "Visitor not found: " + visitorId
+                        ));
 
-        List<DocumentMetadata> ndaHistory =documentMetadataRepository
-                        .findByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
-                                visitorId,
-                                DocumentType.NDA);
+//        return documentMetadataRepository
+//                .findTopByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+//                        visitorId,
+//                        DocumentType.NDA
+//                )
+//                .orElseThrow(() ->
+//                        new ResourceNotFoundException(
+//                                "No NDA found for visitor: " + visitorId
+//                        ));
 
-        DocumentMetadata latestNda = ndaHistory.stream()
-                .filter(nda -> nda.getOverwrittenBy() == null)
-                .findFirst()
+        return documentMetadataRepository
+                .findFirstByDocument_Visitor_IdAndDocumentTypeInAndOverwrittenByIsNullOrderByCreatedAtDesc(
+                        visitorId,
+                        List.of(
+                                DocumentType.NDA,
+                                DocumentType.NDA_SUPPORTING,
+                                DocumentType.NDA_RENEWAL
+                        )
+                )
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "No active NDA found for visitor: " + visitorId));
-
-        LocalDateTime validFrom =ndaHistory.get(ndaHistory.size() - 1).getCreatedAt();
-
-        return new NdaLatestResult(latestNda,validFrom);
+                                "No NDA found for visitor: " + visitorId
+                        ));
     }
-
 
     @Transactional(readOnly = true)
     public List<DocumentResponse> getNdaHistory(String visitorId) {
@@ -341,53 +362,27 @@ public class NdaServiceImpl implements NdaService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Visitor not found: " + visitorId
-                        )
-                );
+                        ));
 
-        List<DocumentMetadata> ndaHistory = documentMetadataRepository
-                        .findByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+        // Fetch NDA history, newest first
+        List<DocumentMetadata> ndaHistory =
+                documentMetadataRepository
+                        .findByDocument_Visitor_IdAndDocumentTypeInOrderByCreatedAtDesc(
                                 visitorId,
-                                DocumentType.NDA
+                                List.of(
+                                        DocumentType.NDA,
+                                        DocumentType.NDA_SUPPORTING,
+                                        DocumentType.NDA_RENEWAL
+                                )
                         );
 
-        if (ndaHistory.isEmpty()) {
-            return List.of();
-        }
-
-
-        LocalDateTime originalNdaCreatedAt =
-                ndaHistory.get(ndaHistory.size() - 1).getCreatedAt();
-
+        // Map entity records to API response DTOs
         return ndaHistory.stream()
-                .map(metadata -> {
-
-                    LocalDateTime validUntil = metadata.getValidUntil();
-
-                    return new DocumentResponse(
-                            metadata.getId(),
-                            metadata.getDocumentPath(),
-
-                            // Actual upload time of this document
-                            metadata.getCreatedAt() != null
-                                    ? metadata.getCreatedAt().toString()
-                                    : null,
-
-                            // Valid From = original NDA's createdAt
-                            originalNdaCreatedAt != null
-                                    ? originalNdaCreatedAt.toString()
-                                    : null,
-
-                            validUntil != null
-                                    ? validUntil.toString()
-                                    : null,
-
-                            metadata.getOverwrittenBy()
-                    );
-
-
-                })
+                .map(documentMapper::toResponse)
                 .toList();
     }
+
+
 
 
     private boolean isPdf(MultipartFile file) {
@@ -399,4 +394,100 @@ public class NdaServiceImpl implements NdaService {
 
         return validContentType && validExtension;
     }
+
+
+
+    private DocumentMetadata createNdaMetadata(
+            String metadataId,
+            Document document,
+            Path filePath,
+            LocalDateTime validFrom,
+            LocalDate validUntil,
+            DocumentType documentType
+    ) {
+        DocumentMetadata metadata = new DocumentMetadata();
+
+        metadata.setId(metadataId);
+        metadata.setDocument(document);
+//        metadata.setDocumentType(DocumentType.NDA);
+        metadata.setDocumentType(documentType);
+        metadata.setDocumentPath(filePath.toString());
+        metadata.setEffective_validity(validFrom);
+        metadata.setValidUntil(validUntil.atTime(LocalTime.MAX));
+        metadata.setOverwrittenBy(null);
+        metadata.setStatus(NdaStatus.ACTIVE);
+
+        return metadata;
+    }
+
+
+    public boolean isNdaRequired(Visitor visitor) {
+
+        Optional<DocumentMetadata> latestNda =
+                documentMetadataRepository
+                        .findTopByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+                                visitor.getId(),
+                                DocumentType.NDA
+                        );
+
+        // No NDA exists
+        if (latestNda.isEmpty()) {
+            return true;
+        }
+
+        LocalDateTime validUntil =
+                latestNda.get().getValidUntil();
+
+        // NDA has no validity date
+        if (validUntil == null) {
+            return true;
+        }
+
+        // NDA is expired
+        return !validUntil.isAfter(LocalDateTime.now());
+    }
+
+    public Resource getNdaFile(String visitorId) {
+
+        DocumentMetadata metadata = getLatestNda(visitorId);
+
+        Path filePath = Paths.get(
+                metadata.getDocumentPath()
+        );
+
+        if (!Files.exists(filePath)) {
+            throw new IllegalArgumentException(
+                    "NDA file not found"
+            );
+        }
+
+        return new FileSystemResource(filePath);
+    }
+
+
+
+    @Scheduled(fixedRate = 300000)
+    @Transactional
+    public void updateExpiredNdaStatuses() {
+
+        LocalDateTime now = LocalDateTime.now();
+
+        List<DocumentMetadata> expiredNdas =
+                documentMetadataRepository
+                        .findByDocumentTypeAndStatusAndValidUntilLessThanEqual(
+                                DocumentType.NDA,
+                                NdaStatus.ACTIVE,
+                                now
+                        );
+
+        for (DocumentMetadata nda : expiredNdas) {
+            nda.setStatus(NdaStatus.EXPIRED);
+
+
+        }
+
+        documentMetadataRepository.saveAll(expiredNdas);
+    }
+
 }
+

@@ -70,12 +70,12 @@ public class BlacklistServiceImpl implements BlacklistService {
 
         // 1. Find the existing visitor
         Visitor visitor = visitorRepository.findById(visitorId)
-                .orElseThrow(() ->new VisitorNotFoundException("Visitor not found"));
+                .orElseThrow(() ->new ResourceNotFoundException("Visitor not found"));
 
         // 2. Find the latest document of the visitor
         Document document = documentRepository
                 .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
-                .orElseThrow(() -> new DocumentNotFoundException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "No identity document found for visitor"
                 ));
 
@@ -83,7 +83,7 @@ public class BlacklistServiceImpl implements BlacklistService {
         boolean alreadyBlacklisted = blacklistRepository.findByVisitorIdAndStatus(visitorId, BlacklistStatus.ACTIVE).isPresent();
 
         if (alreadyBlacklisted) {
-            throw new BlacklistAlreadyExistsException("Visitor is already in blacklist");
+            throw new ResourceAlreadyExistsException("Visitor is already in blacklist");
         }
 
         // 4. Create the parent blacklist record
@@ -135,7 +135,7 @@ public class BlacklistServiceImpl implements BlacklistService {
 
         // 6. Required proof must exist
         if (blacklist.getProofs().isEmpty()) {
-            throw new IllegalArgumentException( "No valid identity proof found for visitor");
+            throw new BusinessRuleException( "No valid identity proof found for visitor");
         }
 
         // 7. Save parent + child proofs
@@ -155,7 +155,7 @@ public class BlacklistServiceImpl implements BlacklistService {
                         ).isPresent();
 
         if (alreadyBlacklisted) {
-            throw new BlacklistAlreadyExistsException(
+            throw new ResourceAlreadyExistsException(
                     "Person with " + proofType + " proof is already in blacklist");
         }
 
@@ -173,7 +173,7 @@ public class BlacklistServiceImpl implements BlacklistService {
     public BlacklistResponse removeFromBlacklist(String blacklistId, String removedBy) {
 
         Blacklist blacklist = blacklistRepository.findById(blacklistId)
-                .orElseThrow(() ->new BlacklistNotFoundException("Blacklist record not found"));
+                .orElseThrow(() ->new ResourceNotFoundException("Blacklist record not found"));
 
         if (blacklist.getStatus() == BlacklistStatus.REMOVED) {
             throw new BlacklistAlreadyRemovedException("Person is already removed from blacklist");
@@ -241,7 +241,7 @@ public class BlacklistServiceImpl implements BlacklistService {
     @Transactional(readOnly = true)
     public BlacklistResponse getBlacklistById(String id) {
         Blacklist blacklist = blacklistRepository.findById(id)
-                .orElseThrow(() ->new BlacklistNotFoundException("Blacklist record not found"));
+                .orElseThrow(() ->new ResourceNotFoundException("Blacklist record not found"));
 
         return toResponse(blacklist);
     }

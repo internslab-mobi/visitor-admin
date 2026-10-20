@@ -8,9 +8,7 @@ import com.adminvisitor.enums.BlacklistStatus;
 import com.adminvisitor.enums.DocumentType;
 import com.adminvisitor.enums.Nationality;
 import com.adminvisitor.enums.VisitorType;
-import com.adminvisitor.exception.EmailAlreadyExistsException;
-import com.adminvisitor.exception.MobileNumberAlreadyExistsException;
-import com.adminvisitor.exception.VisitorNotFoundException;
+import com.adminvisitor.exception.*;
 import com.adminvisitor.repository.*;
 import com.adminvisitor.service.VisitService;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +41,7 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
 
         Visitor visitor = visitorRepository.findById(visitorId)
                 .orElseThrow(() ->
-                        new VisitorNotFoundException(
+                        new ResourceNotFoundException(
                                 "Visitor not found with id: " + visitorId));
 
         return toVisitorResponse(visitor);
@@ -103,7 +101,7 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
 
         Visitor visitor = visitorRepository.findById(visitorId)
                 .orElseThrow(() ->
-                        new VisitorNotFoundException(
+                        new ResourceNotFoundException(
                                 "Visitor not found with id: " + visitorId));
 
         // Check whether email belongs to another visitor
@@ -111,7 +109,7 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
                 .ifPresent(existingVisitor -> {
 
                     if (!existingVisitor.getId().equals(visitorId)) {
-                        throw new EmailAlreadyExistsException(
+                        throw new ResourceAlreadyExistsException(
                                 "This email is already associated with another visitor");
                     }
                 });
@@ -121,7 +119,7 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
                 .ifPresent(existingVisitor -> {
 
                     if (!existingVisitor.getId().equals(visitorId)) {
-                        throw new MobileNumberAlreadyExistsException(
+                        throw new ResourceAlreadyExistsException(
                                 "This mobile number is already associated with another visitor");
                     }
                 });
@@ -204,7 +202,7 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
         Visitor visitor =
                 visitorRepository.findById(visitorId)
                         .orElseThrow(() ->
-                                new VisitorNotFoundException(
+                                new ResourceNotFoundException(
                                         "Visitor not found with id: "
                                                 + visitorId
                                 )

@@ -24,21 +24,16 @@ public class ApiLoggingAspect {
 
         long startTime = System.nanoTime();
 
-        String httpMethod =
-                request.getMethod();
-
-        String path =
-                request.getRequestURI();
+        String httpMethod = request.getMethod();
+        String path = request.getRequestURI();
 
         try {
-
             Object result = joinPoint.proceed();
 
             double durationMs =
                     (System.nanoTime() - startTime) / 1_000_000.0;
 
-            int status =
-                    response.getStatus();
+            int status = response.getStatus();
 
             log.info(
                     "API_COMPLETED method={} path={} status={} durationMs={}",
@@ -51,19 +46,17 @@ public class ApiLoggingAspect {
             return result;
 
         } catch (Throwable ex) {
+            double durationMs =
+                    (System.nanoTime() - startTime) / 1_000_000.0;
 
-        double durationMs =
-                (System.nanoTime() - startTime) / 1_000_000.0;
+            log.debug(
+                    "API_EXECUTION_INTERRUPTED method={} path={} durationMs={}",
+                    httpMethod,
+                    path,
+                    String.format("%.2f", durationMs)
+            );
 
-        log.warn(
-                "API_FAILED method={} path={} durationMs={} exception={}",
-                httpMethod,
-                path,
-                String.format("%.2f", durationMs),
-                ex.getClass().getSimpleName()
-        );
-
-        throw ex;
-    }
+            throw ex;
+        }
     }
 }

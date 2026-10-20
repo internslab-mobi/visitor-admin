@@ -1,8 +1,7 @@
+
 package com.adminvisitor.controller;
 
 import com.adminvisitor.dto.responsedto.DocumentResponse;
-import com.adminvisitor.dto.responsedto.NdaExtensionResult;
-import com.adminvisitor.dto.responsedto.NdaLatestResult;
 import com.adminvisitor.entity.DocumentMetadata;
 import com.adminvisitor.service.NdaService;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import com.adminvisitor.mapper.DocumentMapper;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -21,8 +20,7 @@ import java.util.List;
 public class NdaController {
 
     private final NdaService ndaService;
-
-
+    private final DocumentMapper documentMapper;
     @PostMapping(
             value = "/{visitorId}/upload-new",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
@@ -30,43 +28,19 @@ public class NdaController {
     public ResponseEntity<DocumentResponse> uploadNewNda(
             @PathVariable String visitorId,
             @RequestParam("ndaFile") MultipartFile ndaFile,
-            @RequestParam("validUntil") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            @RequestParam("validUntil")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate validUntil
     ) {
+
         DocumentMetadata metadata = ndaService.uploadNewNda(
                 visitorId,
                 ndaFile,
-
                 validUntil
         );
 
-
-        DocumentResponse response = new DocumentResponse(
-                metadata.getId(),
-                metadata.getDocumentPath(),
-
-                // Actual upload/creation time
-                metadata.getCreatedAt() != null
-                        ? metadata.getCreatedAt().toString()
-                        : null,
-
-                // New NDA: Valid From = Created At
-                metadata.getCreatedAt() != null
-                        ? metadata.getCreatedAt().toString()
-                        : null,
-
-                // Valid Until
-                metadata.getValidUntil() != null
-                        ? metadata.getValidUntil().toString()
-                        : null,
-
-                // New NDA is not overriding another NDA
-                null
-        );
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(documentMapper.toResponse(metadata));
     }
-
 
     @PostMapping(
             value = "/{visitorId}/extend",
@@ -80,39 +54,13 @@ public class NdaController {
             LocalDate newValidUntil
     ) {
 
-        NdaExtensionResult result =
-                ndaService.extendNdaValidity(
-                        visitorId,
-                        supportingDocument,
-                        newValidUntil
-                );
-
-        DocumentMetadata metadata = result.metadata();
-
-        DocumentResponse response = new DocumentResponse(
-                metadata.getId(),
-                metadata.getDocumentPath(),
-
-                // Actual upload/creation time of supporting document
-                metadata.getCreatedAt() != null
-                        ? metadata.getCreatedAt().toString()
-                        : null,
-
-                // Valid From = original NDA's createdAt
-                result.validFrom() != null
-                        ? result.validFrom().toString()
-                        : null,
-
-                // New extended expiry
-                metadata.getValidUntil() != null
-                        ? metadata.getValidUntil().toString()
-                        : null,
-
-                // This newly created document is not overridden
-                null
+        DocumentMetadata metadata = ndaService.extendNdaValidity(
+                visitorId,
+                supportingDocument,
+                newValidUntil
         );
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(documentMapper.toResponse(metadata));
     }
 
     @GetMapping("/{visitorId}/latest")
@@ -120,37 +68,10 @@ public class NdaController {
             @PathVariable String visitorId
     ) {
 
-        NdaLatestResult result =
-                ndaService.getLatestNda(visitorId);
+        DocumentMetadata metadata = ndaService.getLatestNda(visitorId);
 
-        DocumentMetadata metadata = result.metadata();
-
-        DocumentResponse response = new DocumentResponse(
-                metadata.getId(),
-                metadata.getDocumentPath(),
-
-                // Actual creation/upload time
-                metadata.getCreatedAt() != null
-                        ? metadata.getCreatedAt().toString()
-                        : null,
-
-                // Valid From = original NDA's createdAt
-                result.validFrom() != null
-                        ? result.validFrom().toString()
-                        : null,
-
-                // Valid Until
-                metadata.getValidUntil() != null
-                        ? metadata.getValidUntil().toString()
-                        : null,
-
-                // Latest active NDA should normally be null
-                metadata.getOverwrittenBy()
-        );
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(documentMapper.toResponse(metadata));
     }
-
 
     @GetMapping("/{visitorId}/history")
     public ResponseEntity<List<DocumentResponse>> getNdaHistory(

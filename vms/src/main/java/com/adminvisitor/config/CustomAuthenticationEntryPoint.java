@@ -1,34 +1,23 @@
 package com.adminvisitor.config;
 
 import com.adminvisitor.enums.ErrorCode;
-import com.adminvisitor.exception.ErrorResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import tools.jackson.databind.json.JsonMapper;
+import com.adminvisitor.exception.ErrorResponseWriter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.MDC;
-import org.springframework.http.MediaType;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 
 @Component
+@RequiredArgsConstructor
+@Slf4j
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(CustomAuthenticationEntryPoint.class);
-
-    private final JsonMapper jsonMapper;
-
-    public CustomAuthenticationEntryPoint(JsonMapper jsonMapper) {
-        this.jsonMapper = jsonMapper;
-    }
-
+    private final ErrorResponseWriter errorResponseWriter;
 
     @Override
     public void commence(
@@ -37,33 +26,17 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             AuthenticationException authException
     ) throws IOException {
 
-        ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
-        var status = errorCode.getHttpStatus();
-
         log.warn(
-                "SECURITY_AUTHENTICATION_FAILED method={} path={} requestId={} exception={}",
+                "SECURITY_AUTHENTICATION_FAILED method={} path={} exception={}",
                 request.getMethod(),
                 request.getRequestURI(),
-                MDC.get("requestId"),
                 authException.getClass().getSimpleName()
         );
 
-        response.setStatus(status.value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                LocalDateTime.now(),
-                status.value(),
-                status.getReasonPhrase(),
-                errorCode.name(),
-                errorCode.getPublicMessage(),
-                request.getRequestURI(),
-                MDC.get("requestId"),
-                null
+        errorResponseWriter.write(
+                request,
+                response,
+                ErrorCode.UNAUTHORIZED
         );
-
-        jsonMapper.writeValue(response.getOutputStream(), errorResponse);
     }
 }
-

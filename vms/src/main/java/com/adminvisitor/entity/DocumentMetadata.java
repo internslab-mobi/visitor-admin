@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import com.adminvisitor.enums.NdaStatus;
 
 @Entity
 @Table(name = "vms_document_metadata")
@@ -44,4 +45,10 @@ public class DocumentMetadata extends BaseEntity {
     @Column(name = "overwritten_by", length = 20)
     private String overwrittenBy;
 
+    @Column (name="effective_validity")
+    private LocalDateTime effective_validity;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20)
+    private NdaStatus status;
 }
