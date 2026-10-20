@@ -3,3 +3,16 @@ spring:
     name: QR
 server:
   port: 8062
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+qr:
+  security:
+    api-key: ${QR_SERVICE_API_KEY}
