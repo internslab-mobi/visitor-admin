@@ -1,0 +1,63 @@
+
+server:
+  port: 8094
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          globalcors:
+            add-to-simple-url-handler-mapping: true
+            cors-configurations:
+              '[/**]':
+                allowedOrigins:
+                  - "http://localhost:4200"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - PATCH
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders:
+                  - "*"
+                allowCredentials: true
+                maxAge: 3600
+
+          routes:
+            - id: auth-service
+              uri: ${services.auth-service.url}
+              predicates:
+                - Path=/api/auth/**
+
+            - id: vms-service
+              uri: ${services.vms-service.url}
+              predicates:
+                - Path=/api/vms/**
+              filters:
+                - RewritePath=/api/vms/(?<segment>.*), /api/${segment}
+
+services:
+  auth-service:
+    url: ${AUTH_SERVICE_URL:http://localhost:8093}
+  vms-service:
+    url: ${VMS_SERVICE_URL:http://localhost:8092}
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/traces
+
+  otlp:
+    metrics:
+      export:
+        enabled: false
