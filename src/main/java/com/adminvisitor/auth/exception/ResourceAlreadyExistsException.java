@@ -1,8 +1,10 @@
 package com.adminvisitor.auth.exception;
 
-public class ResourceAlreadyExistsException extends RuntimeException {
+import com.adminvisitor.auth.enums.AuthErrorCode;
+
+public class ResourceAlreadyExistsException extends AuthException {
 
     public ResourceAlreadyExistsException(String message) {
-        super(message);
+        super(AuthErrorCode.RESOURCE_ALREADY_EXISTS, message);
     }
 }

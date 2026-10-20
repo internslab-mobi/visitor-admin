@@ -7,12 +7,9 @@ import com.adminvisitor.auth.dto.requestdto.RefreshTokenRequest;
 import com.adminvisitor.auth.dto.responsedto.AuthResult;
 import com.adminvisitor.auth.dto.responsedto.UserResponse;
 import com.adminvisitor.auth.enums.UserRole;
-import com.adminvisitor.auth.exception.GlobalExceptionHandler;
-import com.adminvisitor.auth.exception.InvalidTokenException;
-import com.adminvisitor.auth.exception.PasswordValidationException;
-import com.adminvisitor.auth.exception.ResourceAlreadyExistsException;
-import com.adminvisitor.auth.exception.ResourceNotFoundException;
+import com.adminvisitor.auth.exception.*;
 import com.adminvisitor.auth.service.AuthService;
+import com.adminvisitor.auth.util.TraceIdProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,10 +27,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -51,14 +45,23 @@ class AuthControllerTest {
 
     @BeforeEach
     void setUp() {
-        AuthController controller = new AuthController(
+        authController = new AuthController(
                 authService,
                 900000L,
                 28800000L,
                 false
         );
+
+        TraceIdProvider traceIdProvider = mock(TraceIdProvider.class);
+        when(traceIdProvider.getCurrentTraceId()).thenReturn("test-trace-id");
+
+        ErrorResponseFactory errorResponseFactory =
+                new ErrorResponseFactory(traceIdProvider);
+
         mockMvc = MockMvcBuilders.standaloneSetup(authController)
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(
+                        new GlobalExceptionHandler(errorResponseFactory)
+                )
                 .build();
     }
 
@@ -71,7 +74,8 @@ class AuthControllerTest {
                 false,
                 UserRole.ADMIN,
                 "USR001",
-                "Authentication successful."
+                "Authentication successful.",
+                null
         );
         when(authService.login(any(LoginRequest.class))).thenReturn(response);
 
@@ -87,14 +91,19 @@ class AuthControllerTest {
 
     @Test
     void testLoginFirstTimeUser() throws Exception {
-        LoginRequest request = new LoginRequest("user@example.com", "TempPass123!");
+        LoginRequest request = new LoginRequest(
+                "user@example.com",
+                "TempPass123!"
+        );
+
         AuthResult response = new AuthResult(
                 "restrictedToken123",
                 null,
                 true,
                 UserRole.FRONT_DESK,
                 "USR002",
-                "First login password change is required."
+                "First login password change is required.",
+                null
         );
 
         when(authService.login(any(LoginRequest.class))).thenReturn(response);
@@ -200,17 +209,17 @@ class AuthControllerTest {
 
     @Test
     void testRefreshSuccess() throws Exception {
-        AuthResult result = new AuthResult(
-                "newAccessToken123",
-                "newRefreshToken123",
+        AuthResult response = new AuthResult(
+                "accessToken123",
+                "refreshToken123",
                 false,
                 UserRole.ADMIN,
                 "USR001",
-                "Authentication successful."
+                "Authentication successful.",
+                null
         );
 
-        when(authService.refresh("refreshToken123")).thenReturn(result);
-
+        when(authService.refresh("refreshToken123")).thenReturn(response);
         mockMvc.perform(post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new RefreshTokenRequest("refreshToken123"))))
@@ -229,9 +238,12 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new RefreshTokenRequest("revokedRefreshToken123"))))
+                        .content(objectMapper.writeValueAsString(
+                                new RefreshTokenRequest("revokedRefreshToken123")
+                        )))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status", is(401)))
-                .andExpect(jsonPath("$.message", is("Invalid or expired token")));
+                .andExpect(jsonPath("$.message", is("Invalid or expired token")))
+                .andExpect(jsonPath("$.traceId", is("test-trace-id")));
     }
 }

@@ -1,3 +1,4 @@
+
 package com.adminvisitor.auth.service.Impl;
 
 import com.adminvisitor.auth.event.UserCreatedEvent;
@@ -5,8 +6,7 @@ import com.adminvisitor.auth.exception.EmailSendException;
 import com.adminvisitor.auth.service.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -17,10 +17,8 @@ import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.Context;
 
 @Service
+@Slf4j
 public class EmailServiceImpl implements EmailService {
-
-    private static final Logger log =
-            LoggerFactory.getLogger(EmailServiceImpl.class);
 
     private final JavaMailSender mailSender;
     private final ITemplateEngine templateEngine;
@@ -43,20 +41,9 @@ public class EmailServiceImpl implements EmailService {
         try {
             Context context = new Context();
 
-            context.setVariable(
-                    "recipientName",
-                    data.recipientName()
-            );
-
-            context.setVariable(
-                    "recipientEmail",
-                    data.recipientEmail()
-            );
-
-            context.setVariable(
-                    "temporaryPassword",
-                    data.temporaryPassword()
-            );
+            context.setVariable("recipientName", data.recipientName());
+            context.setVariable("recipientEmail", data.recipientEmail());
+            context.setVariable("temporaryPassword", data.temporaryPassword());
 
             String htmlContent = templateEngine.process(
                     "email/onboarding-email",
@@ -80,22 +67,14 @@ public class EmailServiceImpl implements EmailService {
 
             mailSender.send(message);
 
-            log.info(
-                    "ONBOARDING_EMAIL_SENT recipient={}",
-                    data.recipientEmail()
-            );
+            log.info("ONBOARDING_EMAIL_SENT");
 
         } catch (MessagingException | MailException exception) {
 
-            log.error(
-                    "ONBOARDING_EMAIL_FAILED recipient={}",
-                    data.recipientEmail(),
-                    exception
-            );
+            log.error("ONBOARDING_EMAIL_FAILED", exception);
 
             throw new EmailSendException(
-                    "Failed to send onboarding email to "
-                            + data.recipientEmail(),
+                    "Failed to send onboarding email",
                     exception
             );
         }
@@ -113,20 +92,9 @@ public class EmailServiceImpl implements EmailService {
         try {
             Context context = new Context();
 
-            context.setVariable(
-                    "recipientName",
-                    recipientName
-            );
-
-            context.setVariable(
-                    "otp",
-                    otp
-            );
-
-            context.setVariable(
-                    "expirationMinutes",
-                    expirationMinutes
-            );
+            context.setVariable("recipientName", recipientName);
+            context.setVariable("otp", otp);
+            context.setVariable("expirationMinutes", expirationMinutes);
 
             String htmlContent = templateEngine.process(
                     "email/password-reset-email",
@@ -150,22 +118,14 @@ public class EmailServiceImpl implements EmailService {
 
             mailSender.send(message);
 
-            log.info(
-                    "PASSWORD_RESET_OTP_EMAIL_SENT recipient={}",
-                    recipientEmail
-            );
+            log.info("PASSWORD_RESET_OTP_EMAIL_SENT");
 
         } catch (MessagingException | MailException exception) {
 
-            log.error(
-                    "PASSWORD_RESET_OTP_EMAIL_FAILED recipient={}",
-                    recipientEmail,
-                    exception
-            );
+            log.error("PASSWORD_RESET_OTP_EMAIL_FAILED", exception);
 
             throw new EmailSendException(
-                    "Failed to send verification code email to "
-                            + recipientEmail,
+                    "Failed to send verification code email",
                     exception
             );
         }

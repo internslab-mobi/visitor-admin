@@ -1,4 +1,4 @@
-package com.adminvisitor.auth.service.impl;
+package com.adminvisitor.auth.service.Impl;
 
 import com.adminvisitor.auth.entity.IdSequence;
 import com.adminvisitor.auth.repository.IdSequenceRepository;

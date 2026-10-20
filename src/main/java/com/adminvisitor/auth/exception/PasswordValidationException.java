@@ -1,8 +1,10 @@
 package com.adminvisitor.auth.exception;
 
-public class PasswordValidationException extends RuntimeException {
+import com.adminvisitor.auth.enums.AuthErrorCode;
+
+public class PasswordValidationException extends AuthException {
 
     public PasswordValidationException(String message) {
-        super(message);
+        super(AuthErrorCode.INVALID_REQUEST, message);
     }
 }

@@ -1,8 +1,10 @@
 package com.adminvisitor.auth.exception;
 
-public class InvalidOtpException extends RuntimeException {
+import com.adminvisitor.auth.enums.AuthErrorCode;
+
+public class InvalidOtpException extends AuthException {
 
     public InvalidOtpException(String message) {
-        super(message);
+        super(AuthErrorCode.INVALID_OTP, message);
     }
 }

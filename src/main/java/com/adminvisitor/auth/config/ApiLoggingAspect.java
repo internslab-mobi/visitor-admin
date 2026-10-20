@@ -1,15 +1,13 @@
+
 package com.adminvisitor.auth.config;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.TimeUnit;
 
 @Aspect
 @Component
@@ -18,11 +16,10 @@ import java.util.concurrent.TimeUnit;
 public class ApiLoggingAspect {
 
     private final HttpServletRequest request;
-    private final HttpServletResponse response;
 
     @Around("@within(org.springframework.web.bind.annotation.RestController)")
-    public Object logApiExecutionTime(ProceedingJoinPoint joinPoint)
-            throws Throwable {
+    public Object logApiExecutionTime(
+            ProceedingJoinPoint joinPoint) throws Throwable {
 
         long startTime = System.nanoTime();
 
@@ -32,32 +29,27 @@ public class ApiLoggingAspect {
         try {
             Object result = joinPoint.proceed();
 
-            long durationMs = TimeUnit.NANOSECONDS.toMillis(
-                    System.nanoTime() - startTime
-            );
+            double durationMs =
+                    (System.nanoTime() - startTime) / 1_000_000.0;
 
             log.info(
-                    "API_COMPLETED method={} path={} status={} durationMs={}",
+                    "API_COMPLETED method={} path={} durationMs={}",
                     httpMethod,
                     path,
-                    response.getStatus(),
-                    durationMs
+                    String.format("%.2f", durationMs)
             );
 
             return result;
 
         } catch (Throwable ex) {
-            long durationMs = TimeUnit.NANOSECONDS.toMillis(
-                    System.nanoTime() - startTime
-            );
+            double durationMs =
+                    (System.nanoTime() - startTime) / 1_000_000.0;
 
             log.warn(
-                    "API_FAILED method={} path={} status={} durationMs={} exception={}",
+                    "API_EXECUTION_INTERRUPTED method={} path={} durationMs={}",
                     httpMethod,
                     path,
-                    response.getStatus(),
-                    durationMs,
-                    ex.getClass().getSimpleName()
+                    String.format("%.2f", durationMs)
             );
 
             throw ex;

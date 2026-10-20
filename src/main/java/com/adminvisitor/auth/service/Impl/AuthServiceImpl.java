@@ -21,8 +21,7 @@ import com.adminvisitor.auth.service.IdGeneratorService;
 import com.adminvisitor.auth.util.PasswordGenerator;
 import com.adminvisitor.auth.util.TokenUtils;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,10 +34,10 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final UserRepository userRepository;
@@ -55,14 +54,31 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public UserResponse createUser(CreateUserRequest request) {
 
-        Employee employee = employeeRepository.findById(request.employeeId()).orElseThrow(() -> new ResourceNotFoundException("Employee not found with ID: " + request.employeeId()));
+        Employee employee = employeeRepository.findById(request.employeeId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Employee not found with ID: " + request.employeeId()
+                ));
 
         if (userRepository.findByEmployeeEmail(employee.getEmail()).isPresent()) {
-            throw new ResourceAlreadyExistsException("Employee already has a user account: " + request.employeeId());
+            log.warn(
+                    "USER_CREATION_REJECTED reason=ACCOUNT_ALREADY_EXISTS employeeId={}",
+                    employee.getId()
+            );
+
+            throw new ResourceAlreadyExistsException(
+                    "Employee already has a user account: " + request.employeeId()
+            );
         }
 
         if (!"ACTIVE".equalsIgnoreCase(employee.getStatus())) {
-            throw new IllegalArgumentException("Employee is not active: " + request.employeeId());
+            log.warn(
+                    "USER_CREATION_REJECTED reason=INACTIVE_EMPLOYEE employeeId={}",
+                    employee.getId()
+            );
+
+            throw new IllegalArgumentException(
+                    "Employee is not active: " + request.employeeId()
+            );
         }
 
         String newUserId = idGeneratorService.generateId("USER", "USR-");
@@ -82,13 +98,28 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
-        log.info("USER_CREATED userId={} employeeId={} role={}", user.getId(), employee.getId(), user.getRole());
+        log.info(
+                "USER_CREATED userId={} employeeId={} role={}",
+                user.getId(),
+                employee.getId(),
+                user.getRole()
+        );
 
         String fullName = employee.getFirstName() + " " + employee.getLastName();
 
-        emailService.sendOnboardingEmail(new UserCreatedEvent(employee.getEmail(), fullName, tempPassword));
+        emailService.sendOnboardingEmail(
+                new UserCreatedEvent(employee.getEmail(), fullName, tempPassword)
+        );
 
-        return new UserResponse(user.getId(), employee.getId(), employee.getEmail(), fullName, user.getRole(), user.getStatus(), user.isMustChangePassword());
+        return new UserResponse(
+                user.getId(),
+                employee.getId(),
+                employee.getEmail(),
+                fullName,
+                user.getRole(),
+                user.getStatus(),
+                user.isMustChangePassword()
+        );
     }
 
     @Override
@@ -109,12 +140,14 @@ public class AuthServiceImpl implements AuthService {
                 });
 
         if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
-            log.warn("LOGIN_FAILED reason=INACTIVE_ACCOUNT userId={}", user.getId());
+            log.warn(
+                    "LOGIN_FAILED reason=INACTIVE_ACCOUNT userId={}",
+                    user.getId()
+            );
             throw new BadCredentialsException("User account is inactive");
         }
 
         Employee employee = user.getEmployee();
-
         String fullName = employee.getFirstName() + " " + employee.getLastName();
 
         UserResponse userResponse = new UserResponse(
@@ -172,7 +205,11 @@ public class AuthServiceImpl implements AuthService {
 
         refreshTokenRepository.save(refreshToken);
 
-        log.info("LOGIN_SUCCESS userId={} role={}", user.getId(), user.getRole());
+        log.info(
+                "LOGIN_SUCCESS userId={} role={}",
+                user.getId(),
+                user.getRole()
+        );
 
         return new AuthResult(
                 accessToken,
@@ -222,25 +259,41 @@ public class AuthServiceImpl implements AuthService {
     public void changePassword(String userId, ChangePasswordRequest request) {
 
         User user = userRepository.findById(userId).orElseThrow(() -> {
-            log.warn("PASSWORD_CHANGE_FAILED reason=USER_NOT_FOUND userId={}", userId);
-
+            log.warn(
+                    "PASSWORD_CHANGE_FAILED reason=USER_NOT_FOUND userId={}",
+                    userId
+            );
             return new ResourceNotFoundException("User not found with ID: " + userId);
         });
 
-        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
-            log.warn("PASSWORD_CHANGE_FAILED reason=INVALID_CURRENT_PASSWORD userId={}", userId);
-
+        if (!passwordEncoder.matches(
+                request.currentPassword(),
+                user.getPasswordHash()
+        )) {
+            log.warn(
+                    "PASSWORD_CHANGE_FAILED reason=INVALID_CURRENT_PASSWORD userId={}",
+                    userId
+            );
             throw new PasswordValidationException("Current password is incorrect");
         }
 
-        if (request.confirmNewPassword() == null || !request.newPassword().equals(request.confirmNewPassword())) {
+        if (request.confirmNewPassword() == null
+                || !request.newPassword().equals(request.confirmNewPassword())) {
 
-            log.warn("PASSWORD_CHANGE_FAILED reason=PASSWORD_CONFIRMATION_MISMATCH userId={}", userId);
+            log.warn(
+                    "PASSWORD_CHANGE_FAILED reason=PASSWORD_CONFIRMATION_MISMATCH userId={}",
+                    userId
+            );
 
-            throw new PasswordValidationException("New password and confirmation password do not match");
+            throw new PasswordValidationException(
+                    "New password and confirmation password do not match"
+            );
         }
 
-        validateNewPasswordPolicy(request.newPassword(), request.currentPassword());
+        validateNewPasswordPolicy(
+                request.newPassword(),
+                request.currentPassword()
+        );
 
         refreshTokenRepository.revokeAllByUserId(userId, LocalDateTime.now());
 
@@ -251,7 +304,6 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("PASSWORD_CHANGED userId={}", userId);
     }
-
 
     @Override
     @Transactional
@@ -302,13 +354,9 @@ public class AuthServiceImpl implements AuthService {
 
         String newRawRefreshToken = TokenUtils.generateOpaqueToken();
 
-        refreshToken.setTokenHash(
-                TokenUtils.hashToken(newRawRefreshToken)
-        );
+        refreshToken.setTokenHash(TokenUtils.hashToken(newRawRefreshToken));
         refreshToken.setExpiresAt(
-                now.plusSeconds(
-                        jwtService.getRefreshExpiration() / 1000
-                )
+                now.plusSeconds(jwtService.getRefreshExpiration() / 1000)
         );
 
         refreshTokenRepository.save(refreshToken);
@@ -325,7 +373,6 @@ public class AuthServiceImpl implements AuthService {
         );
 
         Employee employee = user.getEmployee();
-
         String fullName = employee.getFirstName() + " " + employee.getLastName();
 
         UserResponse userResponse = new UserResponse(
@@ -353,38 +400,57 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public boolean forgotPassword(ForgotPasswordRequest request) {
 
-        Optional<User> userOpt = userRepository.findByEmployeeEmail(request.email());
+        Optional<User> userOpt =
+                userRepository.findByEmployeeEmail(request.email());
 
-        if (userOpt.isEmpty() ||
-                !"ACTIVE".equalsIgnoreCase(userOpt.get().getStatus())) {
+        if (userOpt.isEmpty()
+                || !"ACTIVE".equalsIgnoreCase(userOpt.get().getStatus())) {
 
-            log.info("FORGOT_PASSWORD_PROCESSED reason=ACCOUNT_NOT_FOUND_OR_INACTIVE");
-
+            log.info(
+                    "FORGOT_PASSWORD_PROCESSED reason=ACCOUNT_NOT_FOUND_OR_INACTIVE"
+            );
             return false;
         }
 
         User user = userOpt.get();
         LocalDateTime now = LocalDateTime.now();
 
-        Optional<PasswordResetToken> latestTokenOpt = passwordResetTokenRepository.findTopByUserIdAndInvalidatedFalseOrderByCreatedAtDesc(user.getId());
+        Optional<PasswordResetToken> latestTokenOpt =
+                passwordResetTokenRepository
+                        .findTopByUserIdAndInvalidatedFalseOrderByCreatedAtDesc(
+                                user.getId()
+                        );
 
         if (latestTokenOpt.isPresent()) {
             PasswordResetToken latest = latestTokenOpt.get();
 
             if (latest.getLastSentAt().plusSeconds(60).isAfter(now)) {
+                log.warn(
+                        "FORGOT_PASSWORD_REJECTED reason=COOLDOWN_ACTIVE userId={}",
+                        user.getId()
+                );
 
-                log.warn("FORGOT_PASSWORD_REJECTED reason=COOLDOWN_ACTIVE userId={}", user.getId());
-
-                throw new OtpRateLimitException("Please wait 60 seconds before requesting another verification code.");
+                throw new OtpRateLimitException(
+                        "Please wait 60 seconds before requesting another verification code."
+                );
             }
         }
 
-        int sendsInWindow = passwordResetTokenRepository.countByUserIdAndCreatedAtAfter(user.getId(), now.minusMinutes(15));
+        int sendsInWindow =
+                passwordResetTokenRepository.countByUserIdAndCreatedAtAfter(
+                        user.getId(),
+                        now.minusMinutes(15)
+                );
 
         if (sendsInWindow >= 3) {
-            log.warn("FORGOT_PASSWORD_REJECTED reason=MAX_SENDS_EXCEEDED userId={}", user.getId());
+            log.warn(
+                    "FORGOT_PASSWORD_REJECTED reason=MAX_SENDS_EXCEEDED userId={}",
+                    user.getId()
+            );
 
-            throw new OtpRateLimitException("Maximum verification code requests reached. Please try again after 15 minutes.");
+            throw new OtpRateLimitException(
+                    "Maximum verification code requests reached. Please try again after 15 minutes."
+            );
         }
 
         passwordResetTokenRepository.invalidateAllByUserId(user.getId());
@@ -410,20 +476,31 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("FORGOT_PASSWORD_OTP_GENERATED userId={}", user.getId());
 
-        String fullName = user.getEmployee().getFirstName() + " " + user.getEmployee().getLastName();
+        String fullName = user.getEmployee().getFirstName()
+                + " " + user.getEmployee().getLastName();
 
-        emailService.sendPasswordResetOtpEmail(user.getEmployee().getEmail(), fullName, rawOtp, 5);
+        emailService.sendPasswordResetOtpEmail(
+                user.getEmployee().getEmail(),
+                fullName,
+                rawOtp,
+                5
+        );
 
         return true;
     }
 
     @Override
-    @Transactional(noRollbackFor = {InvalidOtpException.class, OtpRateLimitException.class})
+    @Transactional(noRollbackFor = {
+            InvalidOtpException.class,
+            OtpRateLimitException.class
+    })
     public VerifyOtpResponse verifyResetOtp(VerifyOtpRequest request) {
 
-        Optional<User> userOpt = userRepository.findByEmployeeEmail(request.email());
+        Optional<User> userOpt =
+                userRepository.findByEmployeeEmail(request.email());
 
-        if (userOpt.isEmpty() || !"ACTIVE".equalsIgnoreCase(userOpt.get().getStatus())) {
+        if (userOpt.isEmpty()
+                || !"ACTIVE".equalsIgnoreCase(userOpt.get().getStatus())) {
 
             log.warn("VERIFY_OTP_FAILED reason=USER_NOT_FOUND_OR_INACTIVE");
 
@@ -433,21 +510,31 @@ public class AuthServiceImpl implements AuthService {
         User user = userOpt.get();
         LocalDateTime now = LocalDateTime.now();
 
-        PasswordResetToken resetToken = passwordResetTokenRepository.findTopByUserIdAndInvalidatedFalseOrderByCreatedAtDesc(user.getId()).orElseThrow(() -> {
-            log.warn("VERIFY_OTP_FAILED reason=NO_ACTIVE_OTP userId={}", user.getId());
-
-            return new InvalidOtpException("Invalid verification code or email");
-        });
+        PasswordResetToken resetToken = passwordResetTokenRepository
+                .findTopByUserIdAndInvalidatedFalseOrderByCreatedAtDesc(user.getId())
+                .orElseThrow(() -> {
+                    log.warn(
+                            "VERIFY_OTP_FAILED reason=NO_ACTIVE_OTP userId={}",
+                            user.getId()
+                    );
+                    return new InvalidOtpException(
+                            "Invalid verification code or email"
+                    );
+                });
 
         if (resetToken.isInvalidated()) {
-            log.warn("VERIFY_OTP_FAILED reason=INVALIDATED_OTP userId={}", user.getId());
-
+            log.warn(
+                    "VERIFY_OTP_FAILED reason=INVALIDATED_OTP userId={}",
+                    user.getId()
+            );
             throw new InvalidOtpException("Invalid verification code or email");
         }
 
         if (resetToken.getOtpVerifiedAt() != null) {
-            log.warn("VERIFY_OTP_FAILED reason=OTP_ALREADY_VERIFIED userId={}", user.getId());
-
+            log.warn(
+                    "VERIFY_OTP_FAILED reason=OTP_ALREADY_VERIFIED userId={}",
+                    user.getId()
+            );
             throw new InvalidOtpException("Invalid verification code or email");
         }
 
@@ -455,19 +542,30 @@ public class AuthServiceImpl implements AuthService {
             resetToken.setInvalidated(true);
             passwordResetTokenRepository.save(resetToken);
 
-            log.warn("VERIFY_OTP_FAILED reason=MAX_ATTEMPTS_EXCEEDED userId={}", user.getId());
+            log.warn(
+                    "VERIFY_OTP_FAILED reason=MAX_ATTEMPTS_EXCEEDED userId={}",
+                    user.getId()
+            );
 
-            throw new OtpRateLimitException("Maximum verification attempts exceeded. Please request a new verification code.");
+            throw new OtpRateLimitException(
+                    "Maximum verification attempts exceeded. Please request a new verification code."
+            );
         }
 
-        if (resetToken.getOtpExpiresAt() != null && resetToken.getOtpExpiresAt().isBefore(now)) {
+        if (resetToken.getOtpExpiresAt() != null
+                && resetToken.getOtpExpiresAt().isBefore(now)) {
 
             resetToken.setInvalidated(true);
             passwordResetTokenRepository.save(resetToken);
 
-            log.warn("VERIFY_OTP_FAILED reason=EXPIRED_OTP userId={}", user.getId());
+            log.warn(
+                    "VERIFY_OTP_FAILED reason=EXPIRED_OTP userId={}",
+                    user.getId()
+            );
 
-            throw new InvalidOtpException("Verification code has expired. Please request a new code.");
+            throw new InvalidOtpException(
+                    "Verification code has expired. Please request a new code."
+            );
         }
 
         String inputOtpHash = TokenUtils.hashToken(request.otp());
@@ -475,7 +573,6 @@ public class AuthServiceImpl implements AuthService {
         if (!inputOtpHash.equals(resetToken.getOtpHash())) {
 
             int newCount = resetToken.getOtpAttemptCount() + 1;
-
             resetToken.setOtpAttemptCount(newCount);
 
             if (newCount >= 5) {
@@ -484,10 +581,16 @@ public class AuthServiceImpl implements AuthService {
 
             passwordResetTokenRepository.save(resetToken);
 
-            log.warn("VERIFY_OTP_FAILED reason=WRONG_OTP attemptCount={} userId={}", newCount, user.getId());
+            log.warn(
+                    "VERIFY_OTP_FAILED reason=WRONG_OTP attemptCount={} userId={}",
+                    newCount,
+                    user.getId()
+            );
 
             if (newCount >= 5) {
-                throw new OtpRateLimitException("Maximum verification attempts exceeded. Please request a new verification code.");
+                throw new OtpRateLimitException(
+                        "Maximum verification attempts exceeded. Please request a new verification code."
+                );
             }
 
             throw new InvalidOtpException("Invalid verification code");
@@ -504,54 +607,72 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("VERIFY_OTP_SUCCESS userId={}", user.getId());
 
-        return new VerifyOtpResponse(rawResetToken, "Verification code verified successfully. You may now reset your password.");
+        return new VerifyOtpResponse(
+                rawResetToken,
+                "Verification code verified successfully. You may now reset your password."
+        );
     }
 
     @Override
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
 
-        if (request.confirmNewPassword() == null || !request.newPassword().equals(request.confirmNewPassword())) {
+        if (request.confirmNewPassword() == null
+                || !request.newPassword().equals(request.confirmNewPassword())) {
 
             log.warn("RESET_PASSWORD_FAILED reason=CONFIRMATION_MISMATCH");
 
-            throw new PasswordValidationException("New password and confirmation password do not match");
+            throw new PasswordValidationException(
+                    "New password and confirmation password do not match"
+            );
         }
 
         if (request.resetToken() == null || request.resetToken().isBlank()) {
-
             log.warn("RESET_PASSWORD_FAILED reason=MISSING_RESET_TOKEN");
-
             throw new InvalidTokenException("Reset token is required");
         }
 
         String resetTokenHash = TokenUtils.hashToken(request.resetToken());
 
-        PasswordResetToken resetTokenEntity = passwordResetTokenRepository.findByResetTokenHashAndInvalidatedFalse(resetTokenHash).orElseThrow(() -> {
-            log.warn("RESET_PASSWORD_FAILED reason=INVALID_RESET_TOKEN");
-
-            return new InvalidTokenException("Invalid or unrecognized reset authorization");
-        });
+        PasswordResetToken resetTokenEntity = passwordResetTokenRepository
+                .findByResetTokenHashAndInvalidatedFalse(resetTokenHash)
+                .orElseThrow(() -> {
+                    log.warn("RESET_PASSWORD_FAILED reason=INVALID_RESET_TOKEN");
+                    return new InvalidTokenException(
+                            "Invalid or unrecognized reset authorization"
+                    );
+                });
 
         if (resetTokenEntity.getResetTokenUsedAt() != null) {
-            log.warn("RESET_PASSWORD_FAILED reason=ALREADY_USED_RESET_TOKEN userId={}", resetTokenEntity.getUser().getId());
-
-            throw new InvalidTokenException("Reset authorization has already been used");
+            log.warn(
+                    "RESET_PASSWORD_FAILED reason=ALREADY_USED_RESET_TOKEN userId={}",
+                    resetTokenEntity.getUser().getId()
+            );
+            throw new InvalidTokenException(
+                    "Reset authorization has already been used"
+            );
         }
 
-        if (resetTokenEntity.getResetTokenExpiresAt() != null && resetTokenEntity.getResetTokenExpiresAt().isBefore(LocalDateTime.now())) {
+        if (resetTokenEntity.getResetTokenExpiresAt() != null
+                && resetTokenEntity.getResetTokenExpiresAt()
+                .isBefore(LocalDateTime.now())) {
 
             resetTokenEntity.setInvalidated(true);
             passwordResetTokenRepository.save(resetTokenEntity);
 
-            log.warn("RESET_PASSWORD_FAILED reason=EXPIRED_RESET_TOKEN userId={}", resetTokenEntity.getUser().getId());
+            log.warn(
+                    "RESET_PASSWORD_FAILED reason=EXPIRED_RESET_TOKEN userId={}",
+                    resetTokenEntity.getUser().getId()
+            );
 
             throw new InvalidTokenException("Reset authorization has expired");
         }
 
         if (resetTokenEntity.getOtpVerifiedAt() == null) {
-            log.warn("RESET_PASSWORD_FAILED reason=OTP_NOT_VERIFIED userId={}", resetTokenEntity.getUser().getId());
-
+            log.warn(
+                    "RESET_PASSWORD_FAILED reason=OTP_NOT_VERIFIED userId={}",
+                    resetTokenEntity.getUser().getId()
+            );
             throw new InvalidTokenException("OTP verification was not completed");
         }
 
@@ -560,9 +681,13 @@ public class AuthServiceImpl implements AuthService {
         User user = resetTokenEntity.getUser();
 
         if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
-            log.warn("RESET_PASSWORD_FAILED reason=INACTIVE_USER userId={}", user.getId());
-
-            throw new InvalidTokenException("Associated user account is inactive");
+            log.warn(
+                    "RESET_PASSWORD_FAILED reason=INACTIVE_USER userId={}",
+                    user.getId()
+            );
+            throw new InvalidTokenException(
+                    "Associated user account is inactive"
+            );
         }
 
         resetTokenEntity.setResetTokenUsedAt(LocalDateTime.now());
@@ -575,36 +700,49 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
-        refreshTokenRepository.revokeAllByUserId(user.getId(), LocalDateTime.now());
+        refreshTokenRepository.revokeAllByUserId(
+                user.getId(),
+                LocalDateTime.now()
+        );
 
         log.info("RESET_PASSWORD_SUCCESS userId={}", user.getId());
     }
 
-
-
-    private void validateNewPasswordPolicy(String newPassword, String currentPassword) {
+    private void validateNewPasswordPolicy(
+            String newPassword,
+            String currentPassword) {
 
         if (newPassword == null || newPassword.length() < 8) {
-
-            throw new PasswordValidationException("New password must be at least 8 characters long");
+            throw new PasswordValidationException(
+                    "New password must be at least 8 characters long"
+            );
         }
 
         if (newPassword.equals(currentPassword)) {
-
-            throw new PasswordValidationException("New password cannot be the same as the current password");
+            throw new PasswordValidationException(
+                    "New password cannot be the same as the current password"
+            );
         }
 
-        boolean hasUpper = newPassword.chars().anyMatch(Character::isUpperCase);
+        boolean hasUpper = newPassword.chars()
+                .anyMatch(Character::isUpperCase);
 
-        boolean hasLower = newPassword.chars().anyMatch(Character::isLowerCase);
+        boolean hasLower = newPassword.chars()
+                .anyMatch(Character::isLowerCase);
 
-        boolean hasDigit = newPassword.chars().anyMatch(Character::isDigit);
+        boolean hasDigit = newPassword.chars()
+                .anyMatch(Character::isDigit);
 
-        boolean hasSpecial = newPassword.chars().anyMatch(ch -> "!@#$%^&*()_+-=[]{}|;:,.<>?".indexOf(ch) >= 0);
+        boolean hasSpecial = newPassword.chars()
+                .anyMatch(ch ->
+                        "!@#$%^&*()_+-=[]{}|;:,.<>?".indexOf(ch) >= 0
+                );
 
         if (!hasUpper || !hasLower || !hasDigit || !hasSpecial) {
-
-            throw new PasswordValidationException("New password must contain at least one uppercase letter, " + "one lowercase letter, one digit, and one special character");
+            throw new PasswordValidationException(
+                    "New password must contain at least one uppercase letter, "
+                            + "one lowercase letter, one digit, and one special character"
+            );
         }
     }
 }

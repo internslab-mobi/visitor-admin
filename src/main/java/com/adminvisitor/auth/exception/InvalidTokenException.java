@@ -1,8 +1,10 @@
 package com.adminvisitor.auth.exception;
 
-public class InvalidTokenException extends RuntimeException {
+import com.adminvisitor.auth.enums.AuthErrorCode;
+
+public class InvalidTokenException extends AuthException {
 
     public InvalidTokenException(String message) {
-        super(message);
+        super(AuthErrorCode.INVALID_TOKEN, message);
     }
 }

@@ -1,8 +1,10 @@
 package com.adminvisitor.auth.exception;
 
-public class OtpRateLimitException extends RuntimeException {
+import com.adminvisitor.auth.enums.AuthErrorCode;
+
+public class OtpRateLimitException extends AuthException {
 
     public OtpRateLimitException(String message) {
-        super(message);
+        super(AuthErrorCode.OTP_RATE_LIMIT_EXCEEDED, message);
     }
 }

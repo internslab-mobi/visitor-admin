@@ -1,109 +1,310 @@
+
 package com.adminvisitor.auth.exception;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.adminvisitor.auth.enums.AuthErrorCode;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+@Slf4j
+@RequiredArgsConstructor
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private final ErrorResponseFactory errorResponseFactory;
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleNotFound(ResourceNotFoundException ex) {
-        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
-    }
+    @ExceptionHandler(AuthException.class)
+    public ResponseEntity<ErrorResponse> handleAuthException(
+            AuthException exception,
+            HttpServletRequest request) {
 
-    @ExceptionHandler(ResourceAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleConflict(ResourceAlreadyExistsException ex) {
-        return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
-    }
+        AuthErrorCode errorCode = exception.getErrorCode();
+        String path = request.getRequestURI();
+        HttpStatus status = errorCode.getHttpStatus();
 
-    @ExceptionHandler(PasswordValidationException.class)
-    public ResponseEntity<Map<String, Object>> handleBadRequest(PasswordValidationException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+        if (status.is5xxServerError()) {
+            log.error(
+                    "Auth application exception. method={} path={} code={}",
+                    request.getMethod(),
+                    path,
+                    errorCode,
+                    exception
+            );
+        } else {
+            log.warn(
+                    "Auth application exception. method={} path={} code={}",
+                    request.getMethod(),
+                    path,
+                    errorCode
+            );
+        }
+
+        return respond(
+                status,
+                errorCode.name(),
+                errorCode.getDefaultMessage(),
+                path,
+                null
+        );
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
-    }
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(
+            IllegalArgumentException exception,
+            HttpServletRequest request) {
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
-        String errorMessage = ex.getBindingResult().getFieldErrors().stream()
-                .findFirst()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .orElse("Validation failed");
-        return buildResponse(HttpStatus.BAD_REQUEST, errorMessage);
+        log.warn(
+                "Invalid argument. method={} path={} exceptionType={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                exception.getClass().getSimpleName()
+        );
+
+        return respond(
+                HttpStatus.BAD_REQUEST,
+                AuthErrorCode.INVALID_REQUEST.name(),
+                AuthErrorCode.INVALID_REQUEST.getDefaultMessage(),
+                request.getRequestURI(),
+                null
+        );
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Map<String, Object>> handleBadCredentials(BadCredentialsException ex) {
-        return buildResponse(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+    public ResponseEntity<ErrorResponse> handleBadCredentials(
+            BadCredentialsException exception,
+            HttpServletRequest request) {
+
+        log.warn(
+                "Authentication failed. method={} path={} exceptionType={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                exception.getClass().getSimpleName()
+        );
+
+        return respond(
+                HttpStatus.UNAUTHORIZED,
+                AuthErrorCode.INVALID_CREDENTIALS.name(),
+                AuthErrorCode.INVALID_CREDENTIALS.getDefaultMessage(),
+                request.getRequestURI(),
+                null
+        );
     }
 
-    @ExceptionHandler(InvalidTokenException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidToken(InvalidTokenException ex) {
-        return buildResponse(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
-    }
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(
+            AuthenticationException exception,
+            HttpServletRequest request) {
 
-    @ExceptionHandler(InvalidOtpException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidOtp(InvalidOtpException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
-    }
+        log.warn(
+                "Authentication failed. method={} path={} exceptionType={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                exception.getClass().getSimpleName()
+        );
 
-    @ExceptionHandler(OtpRateLimitException.class)
-    public ResponseEntity<Map<String, Object>> handleOtpRateLimit(OtpRateLimitException ex) {
-        return buildResponse(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
+        return respond(
+                HttpStatus.UNAUTHORIZED,
+                AuthErrorCode.INVALID_CREDENTIALS.name(),
+                AuthErrorCode.INVALID_CREDENTIALS.getDefaultMessage(),
+                request.getRequestURI(),
+                null
+        );
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
-        return buildResponse(HttpStatus.FORBIDDEN, "Access denied");
-    }
+    public ResponseEntity<ErrorResponse> handleAccessDenied(
+            AccessDeniedException exception,
+            HttpServletRequest request) {
 
-    @ExceptionHandler(EmailSendException.class)
-    public ResponseEntity<Map<String, Object>> handleEmailSendException(
-            EmailSendException ex
-    ) {
-        return buildResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "Unable to send email. Please try again later."
+        log.warn(
+                "Authorization denied. method={} path={} exceptionType={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                exception.getClass().getSimpleName()
+        );
+
+        return respond(
+                HttpStatus.FORBIDDEN,
+                AuthErrorCode.FORBIDDEN.name(),
+                AuthErrorCode.FORBIDDEN.getDefaultMessage(),
+                request.getRequestURI(),
+                null
         );
     }
-
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+    public ResponseEntity<ErrorResponse> handleUnexpectedException(
+            Exception exception,
+            HttpServletRequest request) {
 
-        log.error("Unhandled exception while processing request", ex);
+        log.error(
+                "Unhandled exception. method={} path={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                exception
+        );
 
-        return buildResponse(
+        return respond(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected error occurred. Please try again later."
+                AuthErrorCode.INTERNAL_ERROR.name(),
+                AuthErrorCode.INTERNAL_ERROR.getDefaultMessage(),
+                request.getRequestURI(),
+                null
         );
     }
 
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException exception,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request) {
 
+        Map<String, String> fieldErrors = new LinkedHashMap<>();
 
-    private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", status.value());
-        body.put("error", status.getReasonPhrase());
-        body.put("message", message);
-        return new ResponseEntity<>(body, status);
+        exception.getBindingResult().getFieldErrors()
+                .forEach(error ->
+                        fieldErrors.putIfAbsent(
+                                error.getField(),
+                                error.getDefaultMessage()
+                        )
+                );
+
+        String path = pathOf(request);
+        String method = methodOf(request);
+
+        log.warn(
+                "Request validation failed. method={} path={} errorCount={}",
+                method,
+                path,
+                fieldErrors.size()
+        );
+
+        AuthErrorCode errorCode = AuthErrorCode.VALIDATION_FAILED;
+
+        ErrorResponse errorResponse = errorResponseFactory.create(
+                errorCode.getHttpStatus(),
+                errorCode.name(),
+                errorCode.getDefaultMessage(),
+                path,
+                fieldErrors
+        );
+
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .headers(headers)
+                .body(errorResponse);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleExceptionInternal(
+            Exception exception,
+            Object body,
+            HttpHeaders headers,
+            HttpStatusCode statusCode,
+            WebRequest request) {
+
+        HttpStatus status = HttpStatus.valueOf(statusCode.value());
+        String path = pathOf(request);
+        String method = methodOf(request);
+
+        if (status.is5xxServerError()) {
+            log.error(
+                    "Framework exception. method={} status={} path={}",
+                    method,
+                    status.value(),
+                    path,
+                    exception
+            );
+        } else {
+            log.warn(
+                    "Request rejected. method={} status={} path={} exceptionType={}",
+                    method,
+                    status.value(),
+                    path,
+                    exception.getClass().getSimpleName()
+            );
+        }
+
+        AuthErrorCode errorCode = switch (status) {
+            case BAD_REQUEST -> AuthErrorCode.INVALID_REQUEST;
+            case UNAUTHORIZED -> AuthErrorCode.INVALID_CREDENTIALS;
+            case FORBIDDEN -> AuthErrorCode.FORBIDDEN;
+            case INTERNAL_SERVER_ERROR -> AuthErrorCode.INTERNAL_ERROR;
+            default -> null;
+        };
+
+        ErrorResponse errorResponse;
+
+        if (errorCode != null) {
+            errorResponse = errorResponseFactory.create(
+                    status,
+                    errorCode.name(),
+                    errorCode.getDefaultMessage(),
+                    path,
+                    null
+            );
+        } else {
+            errorResponse = errorResponseFactory.create(
+                    status,
+                    status.name(),
+                    status.getReasonPhrase(),
+                    path,
+                    null
+            );
+        }
+
+        return ResponseEntity
+                .status(statusCode)
+                .headers(headers)
+                .body(errorResponse);
+    }
+
+    // ---------- Helpers ----------
+
+    private ResponseEntity<ErrorResponse> respond(
+            HttpStatus status,
+            String code,
+            String message,
+            String path,
+            Map<String, String> fieldErrors) {
+
+        ErrorResponse response = errorResponseFactory.create(
+                status,
+                code,
+                message,
+                path,
+                fieldErrors
+        );
+
+        return ResponseEntity.status(status).body(response);
+    }
+
+    private String pathOf(WebRequest request) {
+        return request instanceof ServletWebRequest servletWebRequest
+                ? servletWebRequest.getRequest().getRequestURI()
+                : "";
+    }
+
+    private String methodOf(WebRequest request) {
+        return request instanceof ServletWebRequest servletWebRequest
+                ? servletWebRequest.getRequest().getMethod()
+                : "UNKNOWN";
     }
 }
