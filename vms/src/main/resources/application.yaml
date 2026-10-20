@@ -58,9 +58,17 @@ logging:
   level:
     root: INFO
     com.adminvisitor: DEBUG
-
+    logging:
+      level:
+        root: INFO
+        com.adminvisitor: DEBUG
 
 management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+
   tracing:
     sampling:
       probability: 1.0
@@ -84,5 +92,11 @@ springdoc:
       enabled: true
       cookie-name: VMS-XSRF-TOKEN
       header-name: X-VMS-XSRF-TOKEN
+
+
+notification:
+  service:
+    base-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8094}
+  test-recipient: ${NOTIFICATION_TEST_EMAIL}
 
 

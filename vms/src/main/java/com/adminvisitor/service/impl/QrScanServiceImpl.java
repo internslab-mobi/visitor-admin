@@ -10,6 +10,7 @@ import com.adminvisitor.repository.MetaTimeTrackingRepository;
 import com.adminvisitor.service.QrScanService;
 import com.adminvisitor.service.VisitBadgeService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class QrScanServiceImpl implements QrScanService {
 
     private final VisitBadgeService visitBadgeService;
@@ -25,8 +27,6 @@ public class QrScanServiceImpl implements QrScanService {
     @Override
     @Transactional
     public QrScanResponse processScan(String token) {
-
-        //VisitBadge badge = visitBadgeService.validateQrToken(token);
 
         VisitBadge badge = visitBadgeService.validateQrTokenForUpdate(token);
         Visit visit = badge.getVisit();
@@ -53,9 +53,7 @@ public class QrScanServiceImpl implements QrScanService {
                             : latestSession.getInTime();
 
             if (lastScanAt != null &&
-                    scannedAt.isBefore(
-                            lastScanAt.plusSeconds(60)
-                    )) {
+                    scannedAt.isBefore(lastScanAt.plusSeconds(60))) {
 
                 throw new BusinessRuleException(
                         "Duplicate scan rejected. Please wait 60 seconds before scanning again."
@@ -77,6 +75,12 @@ public class QrScanServiceImpl implements QrScanService {
             openSession.setOutTime(scannedAt);
             trackingRepository.save(openSession);
 
+            log.info(
+                    "QR_SCAN_RECORDED action=OUT visitId={} trackingId={}",
+                    visit.getId(),
+                    openSession.getId()
+            );
+
             return new QrScanResponse(
                     "Visitor temporarily checked out",
                     "OUT",
@@ -93,6 +97,12 @@ public class QrScanServiceImpl implements QrScanService {
         newSession.setInTime(scannedAt);
 
         trackingRepository.save(newSession);
+
+        log.info(
+                "QR_SCAN_RECORDED action=IN visitId={} trackingId={}",
+                visit.getId(),
+                newSession.getId()
+        );
 
         return new QrScanResponse(
                 "Visitor checked in again",

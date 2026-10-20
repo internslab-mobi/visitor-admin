@@ -1,6 +1,7 @@
 package com.adminvisitor.service.impl;
 
 import com.adminvisitor.service.DocumentStorageService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -10,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Service
+@Slf4j
 public class DocumentStorageServiceImpl
         implements DocumentStorageService {
 
@@ -52,6 +54,13 @@ public class DocumentStorageServiceImpl
         );
 
         Files.write(filePath, file.getBytes());
+
+        log.debug(
+                "DOCUMENT_FILE_STORED metadataId={} visitorId={} fileSizeBytes={}",
+                metadataId,
+                visitorId,
+                file.getSize()
+        );
 
         return filePath;
     }

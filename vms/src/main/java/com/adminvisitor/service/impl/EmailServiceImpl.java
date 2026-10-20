@@ -1,40 +1,38 @@
+
 package com.adminvisitor.service.impl;
 
+import com.adminvisitor.dto.requestdto.NotificationRequest;
 import com.adminvisitor.dto.responsedto.BadgeEmailData;
 import com.adminvisitor.dto.responsedto.CancellationEmailData;
 import com.adminvisitor.dto.responsedto.HostCheckInEmailData;
 import com.adminvisitor.dto.responsedto.HostDailyReminderEmailData;
 import com.adminvisitor.entity.Visit;
-import com.adminvisitor.exception.EmailDeliveryException;
 import com.adminvisitor.service.EmailService;
+import com.adminvisitor.service.NotificationOutboxService;
 import com.adminvisitor.util.DateTimeFormats;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.mail.MailException;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.context.Context;
-import org.thymeleaf.spring6.SpringTemplateEngine;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EmailServiceImpl implements EmailService {
 
-    private final JavaMailSender mailSender;
-    private final SpringTemplateEngine templateEngine;
+    private static final long MAX_VISITOR_PHOTO_SIZE = 2 * 1024 * 1024;
 
-    @Value("${spring.mail.username}")
-    private String fromEmail;
+    private final NotificationOutboxService notificationOutboxService;
 
     @Async
     @Override
@@ -53,169 +51,125 @@ public class EmailServiceImpl implements EmailService {
         String departmentName =
                 visit.getHost().getDepartment().getDepartmentName();
 
-        Context context = new Context();
-        context.setVariable("visitorName", visitorName);
-        context.setVariable("visitReference", visit.getVisitReference());
-        context.setVariable("purpose", visit.getPurpose());
-
-        context.setVariable(
-                "expectedArrival",
-                visit.getExpectedArrivalAt()
-                        .format(DateTimeFormats.DISPLAY_DATE_TIME)
+        NotificationRequest request = new NotificationRequest(
+                UUID.randomUUID().toString(),
+                "VISIT_CONFIRMATION",
+                visit.getVisitor().getEmail(),
+                hostEmail,
+                Map.of(
+                        "visitorName", visitorName,
+                        "visitReference", visit.getVisitReference(),
+                        "purpose", visit.getPurpose(),
+                        "expectedArrival",
+                        visit.getExpectedArrivalAt()
+                                .format(DateTimeFormats.DISPLAY_DATE_TIME),
+                        "expectedDeparture",
+                        visit.getExpectedDepartureAt()
+                                .format(DateTimeFormats.DISPLAY_DATE_TIME),
+                        "hostName", hostName,
+                        "departmentName", departmentName
+                )
         );
 
-        context.setVariable(
-                "expectedDeparture",
-                visit.getExpectedDepartureAt()
-                        .format(DateTimeFormats.DISPLAY_DATE_TIME)
-        );
-
-        context.setVariable("hostName", hostName);
-        context.setVariable("departmentName", departmentName);
-
-        long templateStart = System.currentTimeMillis();
-        final String htmlBody;
-
-        try {
-            htmlBody = templateEngine.process(
-                    "emails/visit-confirmation",
-                    context
-            );
-        } catch (RuntimeException exception) {
-            throw new EmailDeliveryException(
-                    "Failed to prepare visit confirmation email content.",
-                    exception
-            );
-        } finally {
-            log.debug(
-                    "Timing: emailTemplateProcessing={} ms",
-                    System.currentTimeMillis() - templateStart
-            );
-        }
-
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail);
-            helper.setTo(visit.getVisitor().getEmail());
-            helper.setCc(hostEmail);
-            helper.setSubject(
-                    "Visit Registration Confirmation - "
-                            + visit.getVisitReference()
-            );
-            helper.setText(htmlBody, true);
-
-            long smtpStart = System.currentTimeMillis();
-
+        Runnable enqueueNotification = () -> {
             try {
-                mailSender.send(message);
-            } finally {
-                log.debug(
-                        "Timing: smtpSend={} ms",
-                        System.currentTimeMillis() - smtpStart
+                notificationOutboxService.enqueue(request);
+
+                log.info(
+                        "NOTIFICATION_ENQUEUE_REQUESTED scenario=VISIT_CONFIRMATION visitReference={}",
+                        visit.getVisitReference()
+                );
+
+            } catch (RuntimeException exception) {
+                log.error(
+                        "NOTIFICATION_ENQUEUE_FAILED scenario=VISIT_CONFIRMATION visitReference={}",
+                        visit.getVisitReference(),
+                        exception
                 );
             }
+        };
 
-        }
-        catch (MessagingException exception) {
-            throw new EmailDeliveryException(
-                    "Failed to prepare visit confirmation email message.",
-                    exception
-            );
-        } catch (MailException exception) {
-            throw new EmailDeliveryException(
-                    "Failed to deliver visit confirmation email.",
-                    exception
-            );
-        }
+        if (TransactionSynchronizationManager.isSynchronizationActive()
+                && TransactionSynchronizationManager.isActualTransactionActive()) {
 
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            enqueueNotification.run();
+                        }
+                    }
+            );
+
+            log.debug(
+                    "NOTIFICATION_ENQUEUE_DEFERRED scenario=VISIT_CONFIRMATION visitReference={}",
+                    visit.getVisitReference()
+            );
+
+        } else {
+            enqueueNotification.run();
+        }
     }
 
     @Async
     @Override
     public void sendVisitBadgeEmail(BadgeEmailData data) {
 
-        Context context = new Context();
-        context.setVariable("visitorName", data.visitorName());
-        context.setVariable("visitReference", data.visitReference());
-        context.setVariable("hostName", data.hostName());
-        context.setVariable("issuedAt", data.issuedAt());
-        context.setVariable("validUntil", data.validUntil());
-        context.setVariable("visitorPhoto", data.visitorPhoto());
-
-        final String htmlBody;
-
         try {
-            htmlBody = templateEngine.process(
-                    "emails/visit-badge",
-                    context
+            Path photoPath = Path.of(data.visitorPhoto());
+
+            if (!Files.isRegularFile(photoPath)
+                    || !Files.isReadable(photoPath)) {
+                throw new IllegalStateException(
+                        "Visitor photo is missing or unreadable"
+                );
+            }
+
+            long photoSize = Files.size(photoPath);
+
+            if (photoSize > MAX_VISITOR_PHOTO_SIZE) {
+                throw new IllegalArgumentException(
+                        "Visitor photo exceeds the maximum allowed size of 2 MB"
+                );
+            }
+
+            String visitorPhotoBase64 = Base64.getEncoder()
+                    .encodeToString(Files.readAllBytes(photoPath));
+
+            Map<String, Object> emailData = new HashMap<>();
+            emailData.put("visitorName", data.visitorName());
+            emailData.put("visitReference", data.visitReference());
+            emailData.put("hostName", data.hostName());
+            emailData.put("issuedAt", data.issuedAt());
+            emailData.put("validUntil", data.validUntil());
+            emailData.put("qrCode", data.qrCode());
+            emailData.put("visitorPhotoBase64", visitorPhotoBase64);
+
+            NotificationRequest request = new NotificationRequest(
+                    UUID.randomUUID().toString(),
+                    "VISIT_BADGE",
+                    data.visitorEmail(),
+                    data.hostEmail(),
+                    emailData
             );
-        } catch (RuntimeException exception) {
-            throw new EmailDeliveryException(
-                    "Failed to prepare visitor badge email content.",
+
+            notificationOutboxService.enqueue(request);
+
+            log.info(
+                    "NOTIFICATION_ENQUEUED scenario=VISIT_BADGE visitReference={} photoSizeBytes={}",
+                    data.visitReference(),
+                    photoSize
+            );
+
+        } catch (IOException | RuntimeException exception) {
+            log.error(
+                    "NOTIFICATION_ENQUEUE_FAILED scenario=VISIT_BADGE visitReference={}",
+                    data.visitReference(),
                     exception
             );
-        }
 
-        final byte[] qrImageBytes;
-
-        try {
-            qrImageBytes = Base64.getDecoder().decode(data.qrCode());
-        } catch (IllegalArgumentException exception) {
-            throw new EmailDeliveryException(
-                    "Failed to prepare visitor badge email because the QR code data is invalid.",
-                    exception
-            );
-        }
-
-        FileSystemResource visitorPhoto =
-                new FileSystemResource(data.visitorPhoto());
-
-        if (!visitorPhoto.exists() || !visitorPhoto.isReadable()) {
-            throw new EmailDeliveryException(
-                    "Failed to prepare visitor badge email because the visitor photo is unavailable."
-            );
-        }
-
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail);
-            helper.setTo(data.visitorEmail());
-            helper.setCc(data.hostEmail());
-            helper.setSubject(
-                    "Your Visitor Badge - " + data.visitReference()
-            );
-            helper.setText(htmlBody, true);
-
-            helper.addInline(
-                    "qrCode",
-                    new ByteArrayResource(qrImageBytes),
-                    "image/png"
-            );
-
-            helper.addInline(
-                    "visitorPhoto",
-                    visitorPhoto,
-                    "image/jpeg"
-            );
-
-            mailSender.send(message);
-
-        } catch (MessagingException exception) {
-            throw new EmailDeliveryException(
-                    "Failed to prepare visitor badge email message.",
-                    exception
-            );
-        } catch (MailException exception) {
-            throw new EmailDeliveryException(
-                    "Failed to deliver visitor badge email.",
+            throw new IllegalStateException(
+                    "Failed to enqueue visitor badge notification",
                     exception
             );
         }
@@ -223,56 +177,43 @@ public class EmailServiceImpl implements EmailService {
 
     @Async
     @Override
-    public void sendHostCheckInNotification(
-            HostCheckInEmailData data
-    ) {
-
-        Context context = new Context();
-        context.setVariable("hostName", data.hostName());
-        context.setVariable("visitorName", data.visitorName());
-        context.setVariable("visitorType", data.visitorType());
-        context.setVariable("companyName", data.companyName());
-        context.setVariable("visitReference", data.visitReference());
-        context.setVariable("purpose", data.purpose());
-        context.setVariable("checkedInAt", data.checkedInAt());
-
-        final String htmlBody;
+    public void sendHostCheckInNotification(HostCheckInEmailData data) {
 
         try {
-            htmlBody = templateEngine.process(
-                    "emails/host-check-in",
-                    context
+            Map<String, Object> emailData = new HashMap<>();
+
+            emailData.put("hostName", data.hostName());
+            emailData.put("visitorName", data.visitorName());
+            emailData.put("visitorType", data.visitorType());
+            emailData.put("companyName", data.companyName());
+            emailData.put("visitReference", data.visitReference());
+            emailData.put("purpose", data.purpose());
+            emailData.put("checkedInAt", data.checkedInAt());
+
+            NotificationRequest request = new NotificationRequest(
+                    UUID.randomUUID().toString(),
+                    "HOST_CHECK_IN",
+                    data.hostEmail(),
+                    null,
+                    emailData
             );
+
+            notificationOutboxService.enqueue(request);
+
+            log.info(
+                    "NOTIFICATION_ENQUEUED scenario=HOST_CHECK_IN visitReference={}",
+                    data.visitReference()
+            );
+
         } catch (RuntimeException exception) {
-            throw new EmailDeliveryException(
-                    "Failed to prepare host check-in notification content.",
+            log.error(
+                    "NOTIFICATION_ENQUEUE_FAILED scenario=HOST_CHECK_IN visitReference={}",
+                    data.visitReference(),
                     exception
             );
-        }
 
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail);
-            helper.setTo(data.hostEmail());
-            helper.setSubject(
-                    "Visitor Checked In - " + data.visitReference()
-            );
-            helper.setText(htmlBody, true);
-
-            mailSender.send(message);
-
-        } catch (MessagingException exception) {
-            throw new EmailDeliveryException(
-                    "Failed to prepare host check-in notification message.",
-                    exception
-            );
-        } catch (MailException exception) {
-            throw new EmailDeliveryException(
-                    "Failed to deliver host check-in notification.",
+            throw new IllegalStateException(
+                    "Failed to enqueue host check-in notification",
                     exception
             );
         }
@@ -280,55 +221,42 @@ public class EmailServiceImpl implements EmailService {
 
     @Async
     @Override
-    public void sendVisitCancellationEmail(
-            CancellationEmailData data
-    ) {
-
-        Context context = new Context();
-        context.setVariable("visitorName", data.visitorName());
-        context.setVariable("visitReference", data.visitReference());
-        context.setVariable("purpose", data.purpose());
-        context.setVariable("expectedArrival", data.expectedArrival());
-        context.setVariable("expectedDeparture", data.expectedDeparture());
-        context.setVariable("hostName", data.hostName());
-
-        final String htmlBody;
+    public void sendVisitCancellationEmail(CancellationEmailData data) {
 
         try {
-            htmlBody = templateEngine.process(
-                    "emails/visit-cancellation",
-                    context
+            Map<String, Object> emailData = new HashMap<>();
+
+            emailData.put("visitorName", data.visitorName());
+            emailData.put("visitReference", data.visitReference());
+            emailData.put("purpose", data.purpose());
+            emailData.put("expectedArrival", data.expectedArrival());
+            emailData.put("expectedDeparture", data.expectedDeparture());
+            emailData.put("hostName", data.hostName());
+
+            NotificationRequest request = new NotificationRequest(
+                    UUID.randomUUID().toString(),
+                    "VISIT_CANCELLATION",
+                    data.visitorEmail(),
+                    null,
+                    emailData
             );
+
+            notificationOutboxService.enqueue(request);
+
+            log.info(
+                    "NOTIFICATION_ENQUEUED scenario=VISIT_CANCELLATION visitReference={}",
+                    data.visitReference()
+            );
+
         } catch (RuntimeException exception) {
-            throw new EmailDeliveryException(
-                    "Failed to prepare visit cancellation email content.",
+            log.error(
+                    "NOTIFICATION_ENQUEUE_FAILED scenario=VISIT_CANCELLATION visitReference={}",
+                    data.visitReference(),
                     exception
             );
-        }
 
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail);
-            helper.setTo(data.visitorEmail());
-            helper.setSubject(
-                    "Visit Cancellation - " + data.visitReference()
-            );
-            helper.setText(htmlBody, true);
-
-            mailSender.send(message);
-
-        } catch (MessagingException exception) {
-            throw new EmailDeliveryException(
-                    "Failed to prepare visit cancellation email message.",
-                    exception
-            );
-        } catch (MailException exception) {
-            throw new EmailDeliveryException(
-                    "Failed to deliver visit cancellation email.",
+            throw new IllegalStateException(
+                    "Failed to enqueue visit cancellation notification",
                     exception
             );
         }
@@ -340,48 +268,38 @@ public class EmailServiceImpl implements EmailService {
             HostDailyReminderEmailData data
     ) {
 
-        Context context = new Context();
-        context.setVariable("hostName", data.hostName());
-        context.setVariable("reminderDate", data.reminderDate());
-        context.setVariable("visits", data.visits());
-
-        final String htmlBody;
-
         try {
-            htmlBody = templateEngine.process(
-                    "emails/host-daily-reminder",
-                    context
+            Map<String, Object> emailData = new HashMap<>();
+
+            emailData.put("hostName", data.hostName());
+            emailData.put("reminderDate", data.reminderDate());
+            emailData.put("visits", data.visits());
+
+            NotificationRequest request = new NotificationRequest(
+                    UUID.randomUUID().toString(),
+                    "HOST_DAILY_REMINDER",
+                    data.hostEmail(),
+                    null,
+                    emailData
             );
+
+            notificationOutboxService.enqueue(request);
+
+            log.info(
+                    "NOTIFICATION_ENQUEUED scenario=HOST_DAILY_REMINDER reminderDate={} visitCount={}",
+                    data.reminderDate(),
+                    data.visits().size()
+            );
+
         } catch (RuntimeException exception) {
-            throw new EmailDeliveryException(
-                    "Failed to prepare host daily reminder email content.",
+            log.error(
+                    "NOTIFICATION_ENQUEUE_FAILED scenario=HOST_DAILY_REMINDER reminderDate={}",
+                    data.reminderDate(),
                     exception
             );
-        }
 
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail);
-            helper.setTo(data.hostEmail());
-            helper.setSubject(
-                    "Today's Expected Visitors - " + data.reminderDate()
-            );
-            helper.setText(htmlBody, true);
-
-            mailSender.send(message);
-
-        } catch (MessagingException exception) {
-            throw new EmailDeliveryException(
-                    "Failed to prepare host daily reminder email message.",
-                    exception
-            );
-        } catch (MailException exception) {
-            throw new EmailDeliveryException(
-                    "Failed to deliver host daily reminder email.",
+            throw new IllegalStateException(
+                    "Failed to enqueue host daily reminder notification",
                     exception
             );
         }
