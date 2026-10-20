@@ -1,0 +1,178 @@
+spring:
+  application:
+    name: notification
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: 8094
+
+
+notification:
+  templates:
+    scenarios:
+      VISIT_CONFIRMATION:
+        subject: "Visit Registration Confirmation - {visitReference}"
+        heading: "Visit Confirmed"
+        subtitle: "Your visit has been successfully registered"
+        header-color: "#1976d2"
+        header-icon: "✓"
+        icon-color: "#FFFFFF"
+
+        greeting-type: "visitor"
+
+        message: "Thank you for registering your visit. Please keep the reference below available when you arrive at the front desk."
+
+        highlight-label: "Visit Reference"
+        highlight-caption: "Please present this reference during check-in."
+
+        details-heading: "Visit Details"
+        details:
+          - label: "Purpose"
+            field: "purpose"
+          - label: "Expected Arrival"
+            field: "expectedArrival"
+          - label: "Expected Departure"
+            field: "expectedDeparture"
+          - label: "Host"
+            field: "hostName"
+          - label: "Department"
+            field: "departmentName"
+
+        notice-heading: "Before you arrive"
+        notice-message: "Please carry a valid ID proof and present your visit reference at the front desk for verification."
+        notice-color: "#1976d2"
+        notice-background: "#eaf3fc"
+
+        closing-message: "We look forward to welcoming you."
+
+      VISIT_BADGE:
+        subject: "Your Visitor Badge - {visitReference}"
+        heading: "Visitor Badge Generated"
+        subtitle: "Your visitor badge and QR code are ready"
+        header-color: "#1976d2"
+        header-icon: "✓"
+        icon-color: "#FFFFFF"
+        message: "Your visitor badge has been generated successfully. Please keep this email available during your visit."
+        highlight-label: "Visit Reference"
+        highlight-caption: "Use this reference if reception needs to verify your visit."
+        details-heading: "Badge Details"
+        notice-heading: "Important"
+        notice-message: "Please keep this QR code available during your visit. The QR code becomes invalid when your visit ends or when the badge is invalidated during checkout."
+        notice-color: "#1976d2"
+        notice-background: "#eaf3fc"
+        closing-message: "We look forward to welcoming you."
+        image-placeholder: "Visitor photo will be available after check-in"
+
+
+      HOST_CHECK_IN:
+        subject: "Visitor Checked In - {visitReference}"
+        heading: "Visitor Checked In"
+        subtitle: "Your visitor has arrived at the reception"
+        header-color: "#1976d2"
+        header-icon: "✓"
+        icon-color: "#1976d2"
+        greeting-type: "host"
+        message: "Your visitor has successfully checked in at the reception. Please proceed to receive your visitor."
+
+        highlight-label: "Visit Reference"
+        highlight-caption: "Keep this reference for visit-related queries"
+
+        details-heading: "Visitor Details"
+        details:
+          - label: "Visitor Name"
+            field: "visitorName"
+          - label: "Visitor Type"
+            field: "visitorType"
+          - label: "Company"
+            field: "companyName"
+          - label: "Visit Reference"
+            field: "visitReference"
+          - label: "Purpose"
+            field: "purpose"
+          - label: "Checked In At"
+            field: "checkedInAt"
+
+        notice-heading: "Visitor Waiting"
+        notice-message: "Your visitor has completed the check-in process and is waiting at the reception."
+        notice-color: "#2e7d32"
+        notice-background: "#e8f5e9"
+
+        closing-message: "Please proceed to reception to meet your visitor."
+
+
+      VISIT_CANCELLATION:
+        subject: "Visit Cancellation - {visitReference}"
+        heading: "Visit Cancelled"
+        subtitle: "Your scheduled visit has been cancelled"
+        header-color: "#c62828"
+        header-icon: "!"
+        icon-color: "#FFFFFF"
+        greeting-type: "visitor"
+        message: "Your scheduled visit has been cancelled. Please review the visit details below."
+
+        highlight-label: "Visit Reference"
+
+        details-heading: "Cancelled Visit Details"
+        details:
+          - label: "Visit Reference"
+            field: "visitReference"
+          - label: "Purpose"
+            field: "purpose"
+          - label: "Expected Arrival"
+            field: "expectedArrival"
+          - label: "Expected Departure"
+            field: "expectedDeparture"
+          - label: "Host"
+            field: "hostName"
+
+        notice-heading: "Cancellation Notice"
+        notice-message: "This visit is no longer scheduled. Please contact your host if you need further information."
+        notice-color: "#c62828"
+        notice-background: "#ffebee"
+
+        closing-message: "Thank you for your understanding."
+
+
+      HOST_DAILY_REMINDER:
+        subject: "Today's Expected Visitors - {reminderDate}"
+        heading: "Today's Expected Visitors"
+        subtitle: "{reminderDate}"
+        header-color: "#17365d"
+        header-icon: ""
+        icon-color: "#FFFFFF"
+        greeting-type: "host"
+        message: "Here is your summary of visitors scheduled to meet you today."
+
+        items-heading: "Expected Visitors"
+        item-details:
+          - label: "Visit Reference"
+            field: "visitReference"
+          - label: "Visitor Type"
+            field: "visitorType"
+          - label: "Company"
+            field: "companyName"
+          - label: "Purpose"
+            field: "purpose"
+          - label: "Expected Arrival"
+            field: "expectedArrival"
+          - label: "Expected Departure"
+            field: "expectedDeparture"
+
+        notice-heading: "Reminder"
+        notice-message: "This is an automated reminder. Visit details may change if a visit is rescheduled or cancelled."
+        notice-color: "#17365d"
+        notice-background: "#eaf3fc"
+
+        closing-message: "Thank you for using the Visitor Management System."
+

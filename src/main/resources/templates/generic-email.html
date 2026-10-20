@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${heading}">Notification</title>
+</head>
+
+<body style="margin:0; padding:0; background-color:#f4f6f9;
+             font-family:Arial,Helvetica,sans-serif; color:#333333;">
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+       style="background-color:#f4f6f9; padding:24px 8px;">
+    <tr>
+        <td align="center">
+
+            <table role="presentation" width="600" cellspacing="0" cellpadding="0"
+                   style="width:100%; max-width:600px; background-color:#ffffff;
+                          border:1px solid #e5e7eb; border-radius:8px;
+                          overflow:hidden;">
+
+                <!-- Dynamic header -->
+                <tr>
+                    <td align="center"
+                        th:style="|background-color:${headerColor}; padding:28px 20px;|">
+
+                        <div th:style="|color:${iconColor}; font-size:28px;
+                                      font-weight:bold; margin-bottom:10px;|"
+                             th:text="${headerIcon}">
+                            ✓
+                        </div>
+
+                        <h1 style="margin:0; color:#ffffff; font-size:24px;
+                                   line-height:1.4;"
+                            th:text="${heading}">
+                            Notification
+                        </h1>
+
+                        <p style="margin:8px 0 0; color:#ffffff;
+                                  font-size:14px; line-height:1.6;"
+                           th:text="${subtitle}">
+                            Notification details
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- Main content -->
+                <tr>
+                    <td style="padding:28px 26px;">
+
+                        <p style="margin:0 0 16px; font-size:15px;
+                                  line-height:1.6;"
+                           th:if="${greeting != null and !#strings.isEmpty(greeting)}"
+                           th:text="${greeting}">
+                            Dear Visitor,
+                        </p>
+
+                        <p style="margin:0 0 22px; font-size:14px;
+                                  line-height:1.8; color:#4b5563;"
+                           th:text="${message}">
+                            Notification message
+                        </p>
+
+                        <!-- Optional highlighted reference -->
+                        <table role="presentation" width="100%"
+                               cellspacing="0" cellpadding="0"
+                               th:if="${highlightValue != null
+                                       and !#strings.isEmpty(highlightValue)}"
+                               style="margin:0 0 24px; background-color:#eff6ff;
+                                      border:1px solid #bfdbfe; border-radius:6px;">
+                            <tr>
+                                <td align="center" style="padding:18px;">
+                                    <p style="margin:0 0 6px; font-size:12px;
+                                              color:#4b5563;"
+                                       th:text="${highlightLabel}">
+                                        Reference
+                                    </p>
+
+                                    <p style="margin:0; font-size:22px;
+                                              font-weight:bold; color:#1d4ed8;
+                                              overflow-wrap:anywhere;"
+                                       th:text="${highlightValue}">
+                                        VIS-001
+                                    </p>
+
+                                    <p style="margin:8px 0 0; font-size:12px;
+                                              color:#6b7280;"
+                                       th:if="${highlightCaption != null
+                                               and !#strings.isEmpty(highlightCaption)}"
+                                       th:text="${highlightCaption}">
+                                        Keep this reference available
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Optional details table -->
+                        <div th:if="${details != null and !details.isEmpty()}">
+                            <h2 style="margin:0 0 12px; font-size:17px;
+                                       color:#1f2937;"
+                                th:text="${detailsHeading}">
+                                Visit Details
+                            </h2>
+
+                            <table role="presentation" width="100%"
+                                   cellspacing="0" cellpadding="0"
+                                   style="border-collapse:collapse;
+                                          margin-bottom:24px;">
+
+                                <tr th:each="detail : ${details}">
+                                    <td style="width:40%; padding:11px 10px;
+                                               border-bottom:1px solid #e5e7eb;
+                                               font-size:13px; color:#6b7280;
+                                               vertical-align:top;"
+                                        th:text="${detail.label}">
+                                        Field
+                                    </td>
+
+                                    <td style="padding:11px 10px;
+                                               border-bottom:1px solid #e5e7eb;
+                                               font-size:13px; color:#1f2937;
+                                               overflow-wrap:anywhere;
+                                               vertical-align:top;"
+                                        th:text="${detail.value}">
+                                        Value
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Optional repeated items, such as daily visitors -->
+                        <div th:if="${items != null and !items.isEmpty()}">
+                            <h2 style="margin:0 0 14px; font-size:17px;
+                                       color:#1f2937;"
+                                th:text="${itemsHeading}">
+                                Scheduled Visitors
+                            </h2>
+
+                            <table role="presentation" width="100%"
+                                   cellspacing="0" cellpadding="0"
+                                   th:each="item : ${items}"
+                                   style="margin-bottom:14px; border:1px solid #e5e7eb;
+                                          border-radius:6px;">
+
+                                <tr>
+                                    <td style="padding:14px;">
+                                        <h3 style="margin:0 0 10px; font-size:15px;
+                                                   color:#1d4ed8;"
+                                            th:text="${item.title}">
+                                            Visitor Name
+                                        </h3>
+
+                                        <table role="presentation" width="100%"
+                                               cellspacing="0" cellpadding="0">
+                                            <tr th:each="detail : ${item.details}">
+                                                <td style="padding:6px 4px;
+                                                           width:40%; font-size:12px;
+                                                           color:#6b7280;
+                                                           vertical-align:top;"
+                                                    th:text="${detail.label}">
+                                                    Field
+                                                </td>
+
+                                                <td style="padding:6px 4px;
+                                                           font-size:12px;
+                                                           color:#374151;
+                                                           overflow-wrap:anywhere;
+                                                           vertical-align:top;"
+                                                    th:text="${detail.value}">
+                                                    Value
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Optional inline images -->
+                        <div th:if="${inlineImages != null and !inlineImages.isEmpty()}"
+                             style="margin:24px 0;">
+
+                            <div th:each="image : ${inlineImages}"
+                                 style="margin-bottom:20px; text-align:center;">
+
+                                <p style="margin:0 0 10px; font-size:14px;
+                                          font-weight:bold; color:#374151;"
+                                   th:text="${image.label}">
+                                    Image
+                                </p>
+
+                                <img th:src="|cid:${image.contentId}|"
+                                     th:alt="${image.altText}"
+                                     th:width="${image.width}"
+                                     th:height="${image.height}"
+                                     style="display:block; max-width:100%;
+                                            height:auto; margin:0 auto;
+                                            border:0;">
+                            </div>
+                        </div>
+
+                        <!-- Optional image placeholder -->
+                        <div th:if="${hasVisitorPhoto != null and !hasVisitorPhoto
+                                    and imagePlaceholder != null
+                                    and !#strings.isEmpty(imagePlaceholder)}"
+                             style="margin:20px 0; padding:20px;
+                                    background-color:#f9fafb;
+                                    border:1px dashed #d1d5db;
+                                    border-radius:6px; text-align:center;">
+
+                            <p style="margin:0; color:#6b7280; font-size:13px;"
+                               th:text="${imagePlaceholder}">
+                                Visitor photo unavailable
+                            </p>
+                        </div>
+
+                        <!-- Optional notice -->
+                        <table role="presentation" width="100%"
+                               cellspacing="0" cellpadding="0"
+                               th:if="${noticeHeading != null
+                                       and !#strings.isEmpty(noticeHeading)}"
+                               th:style="|margin:20px 0;
+                                         background-color:${noticeBackground};
+                                         border-left:4px solid ${noticeColor};|">
+                            <tr>
+                                <td style="padding:16px;">
+                                    <p style="margin:0 0 8px; font-size:14px;
+                                              font-weight:bold;"
+                                       th:style="|color:${noticeColor}; margin:0 0 8px;
+                                                 font-size:14px; font-weight:bold;|"
+                                       th:text="${noticeHeading}">
+                                        Important
+                                    </p>
+
+                                    <p style="margin:0; font-size:13px;
+                                              line-height:1.7; color:#4b5563;"
+                                       th:text="${noticeMessage}">
+                                        Notice message
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Optional closing -->
+                        <p style="margin:24px 0 0; font-size:14px;
+                                  line-height:1.7; color:#4b5563;"
+                           th:if="${closingMessage != null
+                                   and !#strings.isEmpty(closingMessage)}"
+                           th:text="${closingMessage}">
+                            Thank you.
+                        </p>
+
+                    </td>
+                </tr>
+
+                <!-- Shared footer -->
+                <tr>
+                    <td align="center"
+                        style="padding:20px; background-color:#f9fafb;
+                               border-top:1px solid #e5e7eb;">
+
+                        <p style="margin:0 0 6px; font-size:13px;
+                                  font-weight:bold; color:#374151;">
+                            Visitor Management System
+                        </p>
+
+                        <p style="margin:0 0 4px; font-size:11px;
+                                  color:#6b7280;">
+                            This is an automated email.
+                        </p>
+
+                        <p style="margin:0; font-size:11px; color:#6b7280;">
+                            Please do not reply directly to this message.
+                        </p>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>
