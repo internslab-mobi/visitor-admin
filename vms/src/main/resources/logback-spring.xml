@@ -14,9 +14,8 @@
     <property name="LOG_PATH" value="D:/VMS/logs"/>
     <property name="LOG_FILE" value="${LOG_PATH}/${appName}.log"/>
 
-    <!-- Console colors: only the color styling differs from the template -->
     <property name="CONSOLE_LOG_PATTERN"
-              value="%cyan(%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}) %highlight(%-5level) %magenta(${PID:- }) %gray(---) %blue([${appName}]) %gray([%thread]) %yellow([traced=%X{traceI:-N/A}]) %yellow([spanId=%X{spanId:-N/A}]) %cyan(%-40.40logger{39}) : %msg%n"/>
+              value="%cyan(%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}) %highlight(%-5level) %magenta(${PID:- }) %gray(---) %blue([${appName}]) %gray([%thread]) %yellow([traceId=%X{traceId:-N/A}]) %yellow([spanId=%X{spanId:-N/A}]) %cyan(%-40.40logger{39}) : %msg%n"/>
 
     <property name="FILE_LOG_PATTERN"
               value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level ${PID:- } --- [${appName}] [%thread] [traceId=%X{traceId:-N/A}] [spanId=%X{spanId:-N/A}] %-40.40logger{39} : %msg%n"/>

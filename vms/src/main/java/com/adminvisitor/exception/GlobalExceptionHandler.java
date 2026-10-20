@@ -28,6 +28,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private final ErrorResponseFactory errorResponseFactory;
 
+
     @ExceptionHandler(VmsException.class)
     public ResponseEntity<ErrorResponse> handleVmsException(
             VmsException exception, HttpServletRequest request) {
@@ -38,13 +39,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         if (errorCode.getHttpStatus().is5xxServerError()) {
             log.error("VMS application exception. code={}, path={}",
                     errorCode, path, exception);
-            return respond(errorCode, path);
-        }
 
-        if (errorCode == ErrorCode.RESOURCE_NOT_FOUND
-                || errorCode == ErrorCode.DUPLICATE_RESOURCE) {
-            log.warn("VMS application exception. code={}, path={}",
-                    errorCode, path);
             return respond(errorCode, path);
         }
 
@@ -53,6 +48,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         return respond(errorCode, exception.getMessage(), path);
     }
+
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrity(
