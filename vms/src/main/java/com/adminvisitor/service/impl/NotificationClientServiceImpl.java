@@ -6,8 +6,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+
+import java.net.http.HttpClient;
+import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
@@ -19,20 +23,17 @@ public class NotificationClientServiceImpl implements NotificationClientService 
     @Value("${notification.service.base-url}")
     private String notificationServiceUrl;
 
-
     @Override
     public void sendEmail(NotificationRequest request) {
-        java.net.http.HttpClient httpClient =
-                java.net.http.HttpClient.newBuilder()
-                        .connectTimeout(java.time.Duration.ofSeconds(5))
-                        .build();
 
-        org.springframework.http.client.JdkClientHttpRequestFactory requestFactory =
-                new org.springframework.http.client.JdkClientHttpRequestFactory(
-                        httpClient
-                );
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(5))
+                .build();
 
-        requestFactory.setReadTimeout(java.time.Duration.ofSeconds(60));
+        JdkClientHttpRequestFactory requestFactory =
+                new JdkClientHttpRequestFactory(httpClient);
+
+        requestFactory.setReadTimeout(Duration.ofSeconds(60));
 
         RestClient client = restClientBuilder
                 .baseUrl(notificationServiceUrl)
@@ -47,9 +48,8 @@ public class NotificationClientServiceImpl implements NotificationClientService 
                 .toBodilessEntity();
 
         log.info(
-                "Notification request accepted. scenario={}",
+                "NOTIFICATION_REQUEST_ACCEPTED scenario={}",
                 request.scenario()
         );
     }
-
 }

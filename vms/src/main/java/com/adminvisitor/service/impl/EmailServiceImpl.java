@@ -1,49 +1,38 @@
 
 package com.adminvisitor.service.impl;
 
+import com.adminvisitor.dto.requestdto.NotificationRequest;
 import com.adminvisitor.dto.responsedto.BadgeEmailData;
 import com.adminvisitor.dto.responsedto.CancellationEmailData;
 import com.adminvisitor.dto.responsedto.HostCheckInEmailData;
 import com.adminvisitor.dto.responsedto.HostDailyReminderEmailData;
 import com.adminvisitor.entity.Visit;
-import com.adminvisitor.exception.EmailDeliveryException;
 import com.adminvisitor.service.EmailService;
 import com.adminvisitor.service.NotificationOutboxService;
 import com.adminvisitor.util.DateTimeFormats;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.mail.MailException;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.thymeleaf.spring6.SpringTemplateEngine;
-import com.adminvisitor.dto.requestdto.NotificationRequest;
-import com.adminvisitor.service.NotificationClientService;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-
-import java.util.Base64;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EmailServiceImpl implements EmailService {
+
+    private static final long MAX_VISITOR_PHOTO_SIZE = 2 * 1024 * 1024;
+
     private final NotificationOutboxService notificationOutboxService;
-
-    private static final long MAX_VISITOR_PHOTO_SIZE = 2 * 1024 * 1024; // 2 MB
-
-    @Value("${spring.mail.username}")
-    private String fromEmail;
 
     @Async
     @Override
@@ -82,17 +71,18 @@ public class EmailServiceImpl implements EmailService {
                 )
         );
 
-        Runnable sendNotification = () -> {
+        Runnable enqueueNotification = () -> {
             try {
                 notificationOutboxService.enqueue(request);
 
                 log.info(
-                        "Visit confirmation notification accepted. visitReference={}",
+                        "NOTIFICATION_ENQUEUE_REQUESTED scenario=VISIT_CONFIRMATION visitReference={}",
                         visit.getVisitReference()
                 );
+
             } catch (RuntimeException exception) {
                 log.error(
-                        "Visit confirmation notification failed. visitReference={}",
+                        "NOTIFICATION_ENQUEUE_FAILED scenario=VISIT_CONFIRMATION visitReference={}",
                         visit.getVisitReference(),
                         exception
                 );
@@ -106,25 +96,30 @@ public class EmailServiceImpl implements EmailService {
                     new TransactionSynchronization() {
                         @Override
                         public void afterCommit() {
-                            sendNotification.run();
+                            enqueueNotification.run();
                         }
                     }
             );
 
-        } else {
-            sendNotification.run();
-        }
+            log.debug(
+                    "NOTIFICATION_ENQUEUE_DEFERRED scenario=VISIT_CONFIRMATION visitReference={}",
+                    visit.getVisitReference()
+            );
 
+        } else {
+            enqueueNotification.run();
+        }
     }
 
     @Async
     @Override
     public void sendVisitBadgeEmail(BadgeEmailData data) {
+
         try {
             Path photoPath = Path.of(data.visitorPhoto());
 
-            // Validate the photo before reading it into memory.
-            if (!Files.isRegularFile(photoPath) || !Files.isReadable(photoPath)) {
+            if (!Files.isRegularFile(photoPath)
+                    || !Files.isReadable(photoPath)) {
                 throw new IllegalStateException(
                         "Visitor photo is missing or unreadable"
                 );
@@ -138,7 +133,6 @@ public class EmailServiceImpl implements EmailService {
                 );
             }
 
-            // Encode the visitor photo for transfer to the separate service.
             String visitorPhotoBase64 = Base64.getEncoder()
                     .encodeToString(Files.readAllBytes(photoPath));
 
@@ -162,21 +156,20 @@ public class EmailServiceImpl implements EmailService {
             notificationOutboxService.enqueue(request);
 
             log.info(
-                    "Visitor badge email request sent to Notification Service. visitReference={}, recipient={}",
+                    "NOTIFICATION_ENQUEUED scenario=VISIT_BADGE visitReference={} photoSizeBytes={}",
                     data.visitReference(),
-                    data.visitorEmail()
+                    photoSize
             );
 
         } catch (IOException | RuntimeException exception) {
             log.error(
-                    "Failed to send visitor badge email request. visitReference={}, recipient={}",
+                    "NOTIFICATION_ENQUEUE_FAILED scenario=VISIT_BADGE visitReference={}",
                     data.visitReference(),
-                    data.visitorEmail(),
                     exception
             );
 
             throw new IllegalStateException(
-                    "Failed to send visitor badge email request",
+                    "Failed to enqueue visitor badge notification",
                     exception
             );
         }
@@ -185,6 +178,7 @@ public class EmailServiceImpl implements EmailService {
     @Async
     @Override
     public void sendHostCheckInNotification(HostCheckInEmailData data) {
+
         try {
             Map<String, Object> emailData = new HashMap<>();
 
@@ -207,21 +201,19 @@ public class EmailServiceImpl implements EmailService {
             notificationOutboxService.enqueue(request);
 
             log.info(
-                    "Host check-in notification request sent to Notification Service. visitReference={}, hostEmail={}",
-                    data.visitReference(),
-                    data.hostEmail()
+                    "NOTIFICATION_ENQUEUED scenario=HOST_CHECK_IN visitReference={}",
+                    data.visitReference()
             );
 
         } catch (RuntimeException exception) {
             log.error(
-                    "Failed to send host check-in notification request. visitReference={}, hostEmail={}",
+                    "NOTIFICATION_ENQUEUE_FAILED scenario=HOST_CHECK_IN visitReference={}",
                     data.visitReference(),
-                    data.hostEmail(),
                     exception
             );
 
             throw new IllegalStateException(
-                    "Failed to send host check-in notification request",
+                    "Failed to enqueue host check-in notification",
                     exception
             );
         }
@@ -230,6 +222,7 @@ public class EmailServiceImpl implements EmailService {
     @Async
     @Override
     public void sendVisitCancellationEmail(CancellationEmailData data) {
+
         try {
             Map<String, Object> emailData = new HashMap<>();
 
@@ -251,21 +244,19 @@ public class EmailServiceImpl implements EmailService {
             notificationOutboxService.enqueue(request);
 
             log.info(
-                    "Visit cancellation notification request sent to Notification Service. visitReference={}, recipient={}",
-                    data.visitReference(),
-                    data.visitorEmail()
+                    "NOTIFICATION_ENQUEUED scenario=VISIT_CANCELLATION visitReference={}",
+                    data.visitReference()
             );
 
         } catch (RuntimeException exception) {
             log.error(
-                    "Failed to send visit cancellation notification request. visitReference={}, recipient={}",
+                    "NOTIFICATION_ENQUEUE_FAILED scenario=VISIT_CANCELLATION visitReference={}",
                     data.visitReference(),
-                    data.visitorEmail(),
                     exception
             );
 
             throw new IllegalStateException(
-                    "Failed to send visit cancellation notification request",
+                    "Failed to enqueue visit cancellation notification",
                     exception
             );
         }
@@ -273,7 +264,10 @@ public class EmailServiceImpl implements EmailService {
 
     @Async
     @Override
-    public void sendHostDailyReminderEmail(HostDailyReminderEmailData data) {
+    public void sendHostDailyReminderEmail(
+            HostDailyReminderEmailData data
+    ) {
+
         try {
             Map<String, Object> emailData = new HashMap<>();
 
@@ -292,22 +286,20 @@ public class EmailServiceImpl implements EmailService {
             notificationOutboxService.enqueue(request);
 
             log.info(
-                    "Host daily reminder request sent to Notification Service. hostEmail={}, reminderDate={}, visitCount={}",
-                    data.hostEmail(),
+                    "NOTIFICATION_ENQUEUED scenario=HOST_DAILY_REMINDER reminderDate={} visitCount={}",
                     data.reminderDate(),
                     data.visits().size()
             );
 
         } catch (RuntimeException exception) {
             log.error(
-                    "Failed to send host daily reminder request. hostEmail={}, reminderDate={}",
-                    data.hostEmail(),
+                    "NOTIFICATION_ENQUEUE_FAILED scenario=HOST_DAILY_REMINDER reminderDate={}",
                     data.reminderDate(),
                     exception
             );
 
             throw new IllegalStateException(
-                    "Failed to send host daily reminder request",
+                    "Failed to enqueue host daily reminder notification",
                     exception
             );
         }

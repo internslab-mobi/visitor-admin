@@ -11,15 +11,16 @@ import com.adminvisitor.repository.EmployeeRepository;
 import com.adminvisitor.service.EmployeeService;
 import com.adminvisitor.service.IdGeneratorService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class EmployeeServiceImpl implements EmployeeService {
-
 
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
@@ -81,6 +82,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee savedEmployee =
                 employeeRepository.save(employee);
 
+        log.info(
+                "EMPLOYEE_CREATED employeeId={} departmentId={} status={}",
+                savedEmployee.getId(),
+                savedEmployee.getDepartment().getId(),
+                savedEmployee.getStatus()
+        );
+
         return new EmployeeResponse(
                 savedEmployee.getId(),
                 savedEmployee.getFirstName(),
@@ -96,19 +104,28 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Transactional(readOnly = true)
     public List<EmployeeResponse> getEmployees() {
-        return employeeRepository.findAll()
-                .stream()
-                .map(employee -> new EmployeeResponse(
-                        employee.getId(),
-                        employee.getFirstName(),
-                        employee.getLastName(),
-                        employee.getEmail(),
-                        employee.getMobileNumber(),
-                        employee.getDepartment().getId(),
-                        employee.getDepartment().getDepartmentName(),
-                        employee.getDesignation(),
-                        employee.getStatus()
-                ))
-                .toList();
+
+        List<EmployeeResponse> employees =
+                employeeRepository.findAll()
+                        .stream()
+                        .map(employee -> new EmployeeResponse(
+                                employee.getId(),
+                                employee.getFirstName(),
+                                employee.getLastName(),
+                                employee.getEmail(),
+                                employee.getMobileNumber(),
+                                employee.getDepartment().getId(),
+                                employee.getDepartment().getDepartmentName(),
+                                employee.getDesignation(),
+                                employee.getStatus()
+                        ))
+                        .toList();
+
+        log.debug(
+                "EMPLOYEES_RETRIEVED count={}",
+                employees.size()
+        );
+
+        return employees;
     }
 }

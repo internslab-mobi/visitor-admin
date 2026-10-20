@@ -1,3 +1,4 @@
+
 package com.adminvisitor.config;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,7 +8,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
-import jakarta.servlet.http.HttpServletResponse;
 
 @Aspect
 @Component
@@ -16,7 +16,6 @@ import jakarta.servlet.http.HttpServletResponse;
 public class ApiLoggingAspect {
 
     private final HttpServletRequest request;
-    private final HttpServletResponse response;
 
     @Around("@within(org.springframework.web.bind.annotation.RestController)")
     public Object logApiExecutionTime(
@@ -33,13 +32,10 @@ public class ApiLoggingAspect {
             double durationMs =
                     (System.nanoTime() - startTime) / 1_000_000.0;
 
-            int status = response.getStatus();
-
             log.info(
-                    "API_COMPLETED method={} path={} status={} durationMs={}",
+                    "API_COMPLETED method={} path={} durationMs={}",
                     httpMethod,
                     path,
-                    status,
                     String.format("%.2f", durationMs)
             );
 
@@ -49,7 +45,7 @@ public class ApiLoggingAspect {
             double durationMs =
                     (System.nanoTime() - startTime) / 1_000_000.0;
 
-            log.debug(
+            log.warn(
                     "API_EXECUTION_INTERRUPTED method={} path={} durationMs={}",
                     httpMethod,
                     path,

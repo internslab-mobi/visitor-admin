@@ -1,4 +1,3 @@
-
 package com.adminvisitor.service.impl;
 
 import com.adminvisitor.entity.NotificationOutbox;
@@ -6,6 +5,7 @@ import com.adminvisitor.enums.NotificationOutboxStatus;
 import com.adminvisitor.repository.NotificationOutboxRepository;
 import com.adminvisitor.service.NotificationOutboxProcessor;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationOutboxProcessorImpl implements NotificationOutboxProcessor {
 
     private final NotificationOutboxRepository notificationOutboxRepository;
@@ -21,12 +22,18 @@ public class NotificationOutboxProcessorImpl implements NotificationOutboxProces
     public boolean claim(String id) {
         LocalDateTime now = LocalDateTime.now();
 
-        return notificationOutboxRepository.claimPendingNotification(
+        boolean claimed = notificationOutboxRepository.claimPendingNotification(
                 id,
                 NotificationOutboxStatus.PENDING,
                 NotificationOutboxStatus.PROCESSING,
                 now
         ) == 1;
+
+        if (claimed) {
+            log.debug("NOTIFICATION_OUTBOX_CLAIMED outboxId={}", id);
+        }
+
+        return claimed;
     }
 
     @Transactional
@@ -38,6 +45,12 @@ public class NotificationOutboxProcessorImpl implements NotificationOutboxProces
         outbox.setLastError(null);
 
         notificationOutboxRepository.save(outbox);
+
+        log.info(
+                "NOTIFICATION_OUTBOX_SENT outboxId={} attemptCount={}",
+                outbox.getId(),
+                outbox.getAttemptCount()
+        );
     }
 
     @Transactional
@@ -48,6 +61,15 @@ public class NotificationOutboxProcessorImpl implements NotificationOutboxProces
 
         if (outbox.getAttemptCount() >= outbox.getMaxAttempts()) {
             outbox.setStatus(NotificationOutboxStatus.FAILED);
+
+            log.warn(
+                    "NOTIFICATION_OUTBOX_FAILED outboxId={} attemptCount={} maxAttempts={} reason={}",
+                    outbox.getId(),
+                    outbox.getAttemptCount(),
+                    outbox.getMaxAttempts(),
+                    outbox.getLastError()
+            );
+
             return;
         }
 
@@ -57,6 +79,14 @@ public class NotificationOutboxProcessorImpl implements NotificationOutboxProces
         outbox.setStatus(NotificationOutboxStatus.PENDING);
         outbox.setNextAttemptAt(
                 LocalDateTime.now().plusSeconds(delaySeconds)
+        );
+
+        log.warn(
+                "NOTIFICATION_OUTBOX_RETRY_SCHEDULED outboxId={} attemptCount={} nextAttemptAt={} reason={}",
+                outbox.getId(),
+                outbox.getAttemptCount(),
+                outbox.getNextAttemptAt(),
+                outbox.getLastError()
         );
     }
 

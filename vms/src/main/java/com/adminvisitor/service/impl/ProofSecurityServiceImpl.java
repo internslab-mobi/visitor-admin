@@ -27,41 +27,39 @@ public class ProofSecurityServiceImpl implements ProofSecurityService {
 
     public String generateBlindIndex(ProofType proofType, String proofNumber) {
 
-        String normalizedProofNumber = normalizeProofNumber(proofType,proofNumber);
+        String normalizedProofNumber =
+                normalizeProofNumber(proofType, proofNumber);
 
         try {
             Mac mac = Mac.getInstance(HMAC_ALGORITHM);
-            SecretKeySpec keySpec =
-                    new SecretKeySpec(
-                            secretKey,
-                            HMAC_ALGORITHM
-                    );
+
+            SecretKeySpec keySpec = new SecretKeySpec(
+                    secretKey,
+                    HMAC_ALGORITHM
+            );
 
             mac.init(keySpec);
-            byte[] hmacBytes =
-                    mac.doFinal(
-                            normalizedProofNumber
-                                    .getBytes(StandardCharsets.UTF_8)
-                    );
 
-            String blindIndex = Base64.getUrlEncoder()
+            byte[] hmacBytes = mac.doFinal(
+                    normalizedProofNumber.getBytes(StandardCharsets.UTF_8)
+            );
+
+            return Base64.getUrlEncoder()
                     .withoutPadding()
                     .encodeToString(hmacBytes);
 
-            return blindIndex;
-
         } catch (GeneralSecurityException exception) {
-
             throw new IllegalStateException(
                     "Failed to generate HMAC blind index",
-                    exception);
+                    exception
+            );
         }
     }
 
     private String normalizeProofNumber(
             ProofType proofType,
-            String proofNumber) {
-
+            String proofNumber
+    ) {
         if (proofNumber == null || proofNumber.isBlank()) {
             throw new IllegalArgumentException(
                     "Proof number cannot be empty"
@@ -69,39 +67,51 @@ public class ProofSecurityServiceImpl implements ProofSecurityService {
         }
 
         String normalized = proofNumber.trim();
+
         return switch (proofType) {
 
             case AADHAAR -> {
                 String value = normalized.replaceAll("\\s+", "");
+
                 if (!value.matches("\\d{12}")) {
                     throw new IllegalArgumentException(
-                            "Aadhaar must contain exactly 12 digits");
+                            "Aadhaar must contain exactly 12 digits"
+                    );
                 }
+
                 yield value;
             }
 
             case PAN -> {
                 String value = normalized.toUpperCase();
+
                 if (!value.matches("[A-Z0-9]{10}")) {
                     throw new IllegalArgumentException(
-                            "PAN must contain exactly 10 alphanumeric characters");
+                            "PAN must contain exactly 10 alphanumeric characters"
+                    );
                 }
+
                 yield value;
             }
 
             case PASSPORT -> {
                 String value = normalized.replaceAll("\\s+", "");
+
                 if (value.isBlank()) {
                     throw new IllegalArgumentException(
-                            "Passport number cannot be empty" );
+                            "Passport number cannot be empty"
+                    );
                 }
+
                 yield value;
             }
         };
     }
 
-    public void validate(Nationality nationality, ProofType proofType) {
-
+    public void validate(
+            Nationality nationality,
+            ProofType proofType
+    ) {
         if (nationality == null) {
             throw new IllegalArgumentException("Nationality is required");
         }
@@ -121,12 +131,19 @@ public class ProofSecurityServiceImpl implements ProofSecurityService {
         };
 
         if (!valid) {
-            throw new IllegalArgumentException("Proof type "+ proofType+ " is not valid for nationality "+ nationality);
+            throw new IllegalArgumentException(
+                    "Proof type " + proofType
+                            + " is not valid for nationality " + nationality
+            );
         }
     }
 
-    public void validate(Nationality nationality, String aadharNumber, String panNumber, String passportNumber) {
-
+    public void validate(
+            Nationality nationality,
+            String aadharNumber,
+            String panNumber,
+            String passportNumber
+    ) {
         if (nationality == null) {
             throw new IllegalArgumentException("Nationality is required");
         }
@@ -135,29 +152,41 @@ public class ProofSecurityServiceImpl implements ProofSecurityService {
 
             case DOMESTIC -> {
                 if (aadharNumber == null || aadharNumber.isBlank()) {
-                    throw new IllegalArgumentException("Aadhaar number is required for domestic visitors");
+                    throw new IllegalArgumentException(
+                            "Aadhaar number is required for domestic visitors"
+                    );
                 }
 
                 if (panNumber == null || panNumber.isBlank()) {
-                    throw new IllegalArgumentException("PAN number is required for domestic visitors");
+                    throw new IllegalArgumentException(
+                            "PAN number is required for domestic visitors"
+                    );
                 }
 
                 if (passportNumber != null && !passportNumber.isBlank()) {
-                    throw new IllegalArgumentException("Passport is not allowed for domestic visitors");
+                    throw new IllegalArgumentException(
+                            "Passport is not allowed for domestic visitors"
+                    );
                 }
             }
 
             case INTERNATIONAL -> {
                 if (passportNumber == null || passportNumber.isBlank()) {
-                    throw new IllegalArgumentException("Passport number is required for international visitors");
+                    throw new IllegalArgumentException(
+                            "Passport number is required for international visitors"
+                    );
                 }
 
                 if (aadharNumber != null && !aadharNumber.isBlank()) {
-                    throw new IllegalArgumentException("Aadhaar is not allowed for international visitors");
+                    throw new IllegalArgumentException(
+                            "Aadhaar is not allowed for international visitors"
+                    );
                 }
 
                 if (panNumber != null && !panNumber.isBlank()) {
-                    throw new IllegalArgumentException("PAN is not allowed for international visitors");
+                    throw new IllegalArgumentException(
+                            "PAN is not allowed for international visitors"
+                    );
                 }
             }
         }

@@ -5,9 +5,9 @@ import com.adminvisitor.entity.VisitBadge;
 import com.adminvisitor.enums.BadgeStatus;
 import com.adminvisitor.exception.ResourceAlreadyExistsException;
 import com.adminvisitor.repository.VisitBadgeRepository;
-//import com.adminvisitor.service.QrTokenService;
 import com.adminvisitor.service.VisitBadgeService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,49 +15,11 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class VisitBadgeServiceImpl implements VisitBadgeService {
 
     private final VisitBadgeRepository visitBadgeRepository;
     private final IdGeneratorServiceImpl idGeneratorService;
-   // private final QrTokenService qrTokenService;
-
-//    @Transactional
-//    public VisitBadge createBadge(Visit visit) {
-//
-//        if (visitBadgeRepository.findByVisit_Id(visit.getId()).isPresent()) {
-//            throw new ResourceAlreadyExistsException(
-//                    "A visitor badge already exists for visit: " + visit.getId()
-//            );
-//        }
-//        String badgeId =
-//                idGeneratorService.generateId(
-//                        "VISITBADGE",
-//                        "VB"
-//                );
-//
-//        String qrToken =
-//                qrTokenService.generateToken();
-//
-//        LocalDateTime issuedAt = LocalDateTime.now();
-//     //   LocalDateTime validFrom = issuedAt;
-//
-//        LocalDateTime validUntil =
-//                visit.getExpectedArrivalAt()
-//                        .toLocalDate()
-//                        .atTime(23, 59, 59);
-//
-//        VisitBadge badge = new VisitBadge();
-//
-//        badge.setId(badgeId);
-//        badge.setVisit(visit);
-//        badge.setQrContainingToken(qrToken);
-//        badge.setIssuedAt(issuedAt);
-//        badge.setValidUntil(validUntil);
-//        badge.setStatus(BadgeStatus.ACTIVE);
-//
-//        return visitBadgeRepository.save(badge);
-//    }
-
 
     @Override
     @Transactional
@@ -96,8 +58,19 @@ public class VisitBadgeServiceImpl implements VisitBadgeService {
         badge.setValidUntil(validUntil);
         badge.setStatus(BadgeStatus.ACTIVE);
 
-        return visitBadgeRepository.save(badge);
+        VisitBadge savedBadge = visitBadgeRepository.save(badge);
+
+        log.info(
+                "VISIT_BADGE_CREATED badgeId={} visitId={} validUntil={}",
+                savedBadge.getId(),
+                visit.getId(),
+                validUntil
+        );
+
+        return savedBadge;
     }
+
+    @Override
     @Transactional
     public void invalidateBadgeOnCheckout(
             String visitId,
@@ -105,9 +78,13 @@ public class VisitBadgeServiceImpl implements VisitBadgeService {
     ) {
 
         VisitBadge badge = visitBadgeRepository.findByVisit_Id(visitId)
-                        .orElse(null);
+                .orElse(null);
 
         if (badge == null) {
+            log.debug(
+                    "VISIT_BADGE_INVALIDATION_SKIPPED visitId={} reason=BADGE_NOT_FOUND",
+                    visitId
+            );
             return;
         }
 
@@ -115,24 +92,24 @@ public class VisitBadgeServiceImpl implements VisitBadgeService {
         badge.setStatus(BadgeStatus.INVALID);
 
         visitBadgeRepository.save(badge);
+
+        log.info(
+                "VISIT_BADGE_INVALIDATED badgeId={} visitId={} checkoutTime={}",
+                badge.getId(),
+                visitId,
+                checkoutTime
+        );
     }
-
-
-
-
 
     @Override
     @Transactional(readOnly = true)
     public VisitBadge validateQrTokenForUpdate(String qrToken) {
 
-        VisitBadge badge =
-                visitBadgeRepository
-                        .findByQrContainingToken(qrToken)
-                        .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "Invalid QR code"
-                                )
-                        );
+        VisitBadge badge = visitBadgeRepository
+                .findByQrContainingToken(qrToken)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Invalid QR code")
+                );
 
         LocalDateTime now = LocalDateTime.now();
 

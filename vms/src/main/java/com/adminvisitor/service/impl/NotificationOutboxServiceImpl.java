@@ -1,4 +1,3 @@
-
 package com.adminvisitor.service.impl;
 
 import com.adminvisitor.dto.requestdto.NotificationRequest;
@@ -11,6 +10,7 @@ import com.adminvisitor.service.NotificationOutboxService;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationOutboxServiceImpl implements NotificationOutboxService {
 
     private static final int MAX_ATTEMPTS = 3;
@@ -35,10 +36,17 @@ public class NotificationOutboxServiceImpl implements NotificationOutboxService 
                     "Notification ID must not be blank"
             );
         }
+
         if (notificationOutboxRepository
                 .existsByNotificationId(request.notificationId())) {
+            log.debug(
+                    "NOTIFICATION_OUTBOX_DUPLICATE_SKIPPED notificationId={} scenario={}",
+                    request.notificationId(),
+                    request.scenario()
+            );
             return;
         }
+
         NotificationOutbox outbox = new NotificationOutbox();
 
         outbox.setId(
@@ -56,9 +64,16 @@ public class NotificationOutboxServiceImpl implements NotificationOutboxService 
         outbox.setMaxAttempts(MAX_ATTEMPTS);
         outbox.setNextAttemptAt(LocalDateTime.now());
 
-        notificationOutboxRepository.save(outbox);
-    }
+        NotificationOutbox savedOutbox =
+                notificationOutboxRepository.save(outbox);
 
+        log.info(
+                "NOTIFICATION_OUTBOX_ENQUEUED outboxId={} scenario={} maxAttempts={}",
+                savedOutbox.getId(),
+                savedOutbox.getScenario(),
+                savedOutbox.getMaxAttempts()
+        );
+    }
 
     private String serializeData(NotificationRequest request) {
         try {
@@ -70,5 +85,4 @@ public class NotificationOutboxServiceImpl implements NotificationOutboxService 
             );
         }
     }
-
 }

@@ -10,8 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class IdGeneratorServiceImpl implements IdGeneratorService{
-private final IdSequenceRepository idSequenceRepository;
+public class IdGeneratorServiceImpl implements IdGeneratorService {
+
+    private final IdSequenceRepository idSequenceRepository;
 
     @Transactional
     public String generateId(String sequenceName, String prefix) {
@@ -32,5 +33,4 @@ private final IdSequenceRepository idSequenceRepository;
 
         return String.format("%s-%03d", prefix, currentValue);
     }
-
 }

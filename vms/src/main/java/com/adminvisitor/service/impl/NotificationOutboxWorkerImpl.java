@@ -1,4 +1,3 @@
-
 package com.adminvisitor.service.impl;
 
 import com.adminvisitor.dto.requestdto.NotificationRequest;
@@ -40,11 +39,19 @@ public class NotificationOutboxWorkerImpl implements NotificationOutboxWorker {
                         PageRequest.of(0, BATCH_SIZE)
                 );
 
+        if (notifications.isEmpty()) {
+            return;
+        }
+
+        log.debug(
+                "NOTIFICATION_OUTBOX_BATCH_RETRIEVED batchSize={}",
+                notifications.size()
+        );
+
         for (NotificationOutbox notification : notifications) {
             processNotification(notification);
         }
     }
-
 
     private void processNotification(NotificationOutbox notification) {
         String id = notification.getId();
@@ -54,6 +61,10 @@ public class NotificationOutboxWorkerImpl implements NotificationOutboxWorker {
             claimed = notificationOutboxProcessor.claim(id);
 
             if (!claimed) {
+                log.debug(
+                        "NOTIFICATION_OUTBOX_CLAIM_SKIPPED outboxId={}",
+                        id
+                );
                 return;
             }
 
@@ -75,13 +86,18 @@ public class NotificationOutboxWorkerImpl implements NotificationOutboxWorker {
             notificationOutboxProcessor.markSent(id);
 
             log.info(
-                    "Notification accepted by service. id={}, scenario={}",
+                    "NOTIFICATION_OUTBOX_PROCESSING_SUCCEEDED outboxId={} scenario={}",
                     id,
                     notification.getScenario()
             );
 
         } catch (Exception exception) {
-            log.error("Notification processing failed. id={}", id, exception);
+            log.error(
+                    "NOTIFICATION_OUTBOX_PROCESSING_FAILED outboxId={} scenario={}",
+                    id,
+                    notification.getScenario(),
+                    exception
+            );
 
             if (claimed) {
                 try {
@@ -91,7 +107,7 @@ public class NotificationOutboxWorkerImpl implements NotificationOutboxWorker {
                     );
                 } catch (Exception updateException) {
                     log.error(
-                            "Failed to update notification failure state. id={}",
+                            "NOTIFICATION_OUTBOX_FAILURE_STATE_UPDATE_FAILED outboxId={}",
                             id,
                             updateException
                     );
@@ -99,5 +115,4 @@ public class NotificationOutboxWorkerImpl implements NotificationOutboxWorker {
             }
         }
     }
-
 }

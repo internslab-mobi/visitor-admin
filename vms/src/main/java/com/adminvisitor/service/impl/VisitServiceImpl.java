@@ -8,10 +8,8 @@ import com.adminvisitor.exception.*;
 import com.adminvisitor.repository.*;
 import com.adminvisitor.service.*;
 import com.adminvisitor.util.VisitReferenceUtil;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,10 +39,8 @@ public class VisitServiceImpl implements VisitService {
     private final DocumentRepository documentRepository;
     private final DocumentService documentService;
     private final ProofSecurityService proofSecurityService;
-
     private final VisitManagementServiceImpl visitManagementService;
 
-    // VISIT REGISTRATION
     @Transactional
     @Override
     public RegistrationResponse register(RegistrationRequest request) {
@@ -53,33 +49,30 @@ public class VisitServiceImpl implements VisitService {
 
         try {
             log.debug(
-                    "Starting visit registration. registrationType={}, visitorType={}, hostId={}",
+                    "VISIT_REGISTRATION_STARTED registrationType={} visitorType={} hostId={}",
                     request.registrationType(),
                     request.visitorType(),
                     request.hostId()
             );
 
-            // 1. Validate identity proofs and blacklist status.
             long stageStart = System.nanoTime();
 
             validateProofAndBlacklist(request);
 
             log.debug(
-                    "Timing: validateProofAndBlacklist={} ms",
+                    "VISIT_REGISTRATION_STAGE_COMPLETED stage=PROOF_AND_BLACKLIST_VALIDATION elapsedMs={}",
                     elapsedMillis(stageStart)
             );
 
-            // 2. Validate the visit schedule.
             stageStart = System.nanoTime();
 
             validateVisitTiming(request);
 
             log.debug(
-                    "Timing: validateVisitTiming={} ms",
+                    "VISIT_REGISTRATION_STAGE_COMPLETED stage=VISIT_TIMING_VALIDATION elapsedMs={}",
                     elapsedMillis(stageStart)
             );
 
-            // 3. Find or create the visitor and verify/store identity proofs.
             stageStart = System.nanoTime();
 
             Visitor visitor = findOrCreateVisitor(request);
@@ -140,8 +133,8 @@ public class VisitServiceImpl implements VisitService {
                     }
                 }
 
-                log.info(
-                        "Existing visitor identity verified. visitorId={}",
+                log.debug(
+                        "VISITOR_IDENTITY_VERIFIED visitorId={}",
                         visitor.getId()
                 );
 
@@ -156,21 +149,19 @@ public class VisitServiceImpl implements VisitService {
             }
 
             log.debug(
-                    "Timing: findOrCreateVisitorAndIdentityProcessing={} ms",
+                    "VISIT_REGISTRATION_STAGE_COMPLETED stage=VISITOR_AND_IDENTITY_PROCESSING elapsedMs={}",
                     elapsedMillis(stageStart)
             );
 
-            // 4. Create a vendor record when required.
             stageStart = System.nanoTime();
 
             createVendorIfRequired(visitor, request);
 
             log.debug(
-                    "Timing: createVendorIfRequired={} ms",
+                    "VISIT_REGISTRATION_STAGE_COMPLETED stage=VENDOR_PROCESSING elapsedMs={}",
                     elapsedMillis(stageStart)
             );
 
-            // 5. Load and validate the selected host.
             stageStart = System.nanoTime();
 
             Employee employee = employeeRepository.findById(request.hostId())
@@ -187,11 +178,10 @@ public class VisitServiceImpl implements VisitService {
             }
 
             log.debug(
-                    "Timing: loadAndValidateHost={} ms",
+                    "VISIT_REGISTRATION_STAGE_COMPLETED stage=HOST_VALIDATION elapsedMs={}",
                     elapsedMillis(stageStart)
             );
 
-            // 6. Build the visit.
             Visit visit = new Visit();
 
             stageStart = System.nanoTime();
@@ -199,7 +189,7 @@ public class VisitServiceImpl implements VisitService {
             visit.setId(idGeneratorService.generateId("VISIT", "VIS"));
 
             log.debug(
-                    "Timing: generateVisitId={} ms",
+                    "VISIT_REGISTRATION_STAGE_COMPLETED stage=VISIT_ID_GENERATION elapsedMs={}",
                     elapsedMillis(stageStart)
             );
 
@@ -226,7 +216,6 @@ public class VisitServiceImpl implements VisitService {
             visit.setExpectedDepartureAt(expectedDepartureAt);
             visit.setRemarks(request.remarks());
 
-            // 7. Prevent overlapping registered or checked-in visits.
             stageStart = System.nanoTime();
 
             List<Visit> overlappingVisits =
@@ -238,7 +227,7 @@ public class VisitServiceImpl implements VisitService {
                     );
 
             log.debug(
-                    "Timing: checkOverlappingVisits={} ms",
+                    "VISIT_REGISTRATION_STAGE_COMPLETED stage=OVERLAP_CHECK elapsedMs={}",
                     elapsedMillis(stageStart)
             );
 
@@ -250,28 +239,12 @@ public class VisitServiceImpl implements VisitService {
 
             visit.setStatus(VisitStatus.REGISTERED);
 
-            // 8. Persist the visit.
-            stageStart = System.nanoTime();
-
             Visit savedVisit = visitRepository.save(visit);
-
-            log.debug(
-                    "Timing: visitRepository.save={} ms",
-                    elapsedMillis(stageStart)
-            );
-
-            // 9. Send the confirmation email.
-            stageStart = System.nanoTime();
 
             emailService.sendVisitConfirmationEmail(savedVisit);
 
-            log.debug(
-                    "Timing: sendVisitConfirmationEmail={} ms",
-                    elapsedMillis(stageStart)
-            );
-
             log.info(
-                    "Visit registered successfully. visitId={}, visitReference={}, visitorId={}, registrationType={}, status={}",
+                    "VISIT_REGISTERED visitId={} visitReference={} visitorId={} registrationType={} status={}",
                     savedVisit.getId(),
                     savedVisit.getVisitReference(),
                     visitor.getId(),
@@ -279,7 +252,6 @@ public class VisitServiceImpl implements VisitService {
                     savedVisit.getStatus()
             );
 
-            // 10. Return the existing registration response structure.
             return RegistrationResponse.builder()
                     .visitId(savedVisit.getId())
                     .visitReference(savedVisit.getVisitReference())
@@ -300,18 +272,37 @@ public class VisitServiceImpl implements VisitService {
                     .message(getSuccessMessage(request.registrationType()))
                     .build();
 
-        } catch (RuntimeException exception) {
-            log.error(
-                    "Visit registration failed. registrationType={}, visitorType={}, hostId={}, elapsedMs={}",
+        } catch (BusinessRuleException | ResourceAlreadyExistsException exception) {
+
+            log.warn(
+                    "VISIT_REGISTRATION_REJECTED registrationType={} visitorType={} hostId={} elapsedMs={} reason={}",
                     request.registrationType(),
                     request.visitorType(),
                     request.hostId(),
                     elapsedMillis(totalStart),
-                    exception);
+                    exception.getMessage()
+            );
+
             throw exception;
+
+        } catch (RuntimeException exception) {
+
+            log.error(
+                    "VISIT_REGISTRATION_FAILED registrationType={} visitorType={} hostId={} elapsedMs={}",
+                    request.registrationType(),
+                    request.visitorType(),
+                    request.hostId(),
+                    elapsedMillis(totalStart),
+                    exception
+            );
+
+            throw exception;
+
         } finally {
-            log.info(
-                    "Timing: total register method execution={} ms",elapsedMillis(totalStart));
+            log.debug(
+                    "VISIT_REGISTRATION_EXECUTION_COMPLETED elapsedMs={}",
+                    elapsedMillis(totalStart)
+            );
         }
     }
 
@@ -329,31 +320,32 @@ public class VisitServiceImpl implements VisitService {
                 .findByMobileNumber(mobileNumber)
                 .orElse(null);
 
-        // Both contact details must belong to the same visitor.
         if (visitorByEmail != null
                 && visitorByMobileNumber != null
                 && visitorByEmail.getId().equals(visitorByMobileNumber.getId())) {
 
-            log.info(
-                    "Existing visitor found. visitorId={}",
-                    visitorByEmail.getId());
+            log.debug(
+                    "EXISTING_VISITOR_IDENTIFIED visitorId={}",
+                    visitorByEmail.getId()
+            );
+
             return visitorByEmail;
         }
 
         if (visitorByEmail != null) {
-            log.warn(
-                    "Visitor registration rejected because the supplied email is already associated with another visitor");
+            log.warn("VISITOR_REGISTRATION_REJECTED reason=EMAIL_ALREADY_ASSOCIATED");
 
             throw new ResourceAlreadyExistsException(
-                    "This email is already associated with another visitor");
+                    "This email is already associated with another visitor"
+            );
         }
 
         if (visitorByMobileNumber != null) {
-            log.warn(
-                    "Visitor registration rejected because the supplied mobile number is already associated with another visitor");
+            log.warn("VISITOR_REGISTRATION_REJECTED reason=MOBILE_ALREADY_ASSOCIATED");
 
             throw new ResourceAlreadyExistsException(
-                    "This mobile number is already associated with another visitor");
+                    "This mobile number is already associated with another visitor"
+            );
         }
 
         Visitor newVisitor = new Visitor();
@@ -365,23 +357,30 @@ public class VisitServiceImpl implements VisitService {
         newVisitor.setCompanyName(request.companyName());
 
         Visitor savedVisitor = visitorRepository.save(newVisitor);
+
         log.info(
-                "New visitor profile created. visitorId={}",
-                savedVisitor.getId());
+                "VISITOR_PROFILE_CREATED visitorId={}",
+                savedVisitor.getId()
+        );
+
         return savedVisitor;
     }
 
     // VISIT TIMING AND MESSAGES
     private void validateVisitTiming(RegistrationRequest request) {
-        if (!request.expectedDepartureTime() .isAfter(request.expectedArrivalTime())) {
+
+        if (!request.expectedDepartureTime().isAfter(request.expectedArrivalTime())) {
+
             log.warn(
-                    "Visit registration rejected because expected departure time is not after expected arrival time. visitDate={}, arrivalTime={}, departureTime={}",
+                    "VISIT_REGISTRATION_REJECTED reason=INVALID_TIME_RANGE visitDate={} arrivalTime={} departureTime={}",
                     request.visitDate(),
                     request.expectedArrivalTime(),
-                    request.expectedDepartureTime());
+                    request.expectedDepartureTime()
+            );
 
             throw new BusinessRuleException(
-                    "Expected departure time must be after expected arrival time on the same visit date");
+                    "Expected departure time must be after expected arrival time on the same visit date"
+            );
         }
     }
 
@@ -402,19 +401,22 @@ public class VisitServiceImpl implements VisitService {
     // VENDOR
     private void createVendorIfRequired(
             Visitor visitor,
-            RegistrationRequest request) {
+            RegistrationRequest request
+    ) {
 
         if (request.visitorType() != VisitorType.VENDOR) {
             return;
         }
+
         Optional<Vendor> existingVendor =
                 vendorRepository.findByVisitorId(visitor.getId());
-        if (existingVendor.isPresent()) {
 
-            log.info(
-                    "Vendor already exists for visitor. visitorId={}, vendorId={}",
+        if (existingVendor.isPresent()) {
+            log.debug(
+                    "VENDOR_CREATION_SKIPPED visitorId={} vendorId={} reason=ALREADY_EXISTS",
                     visitor.getId(),
-                    existingVendor.get().getId());
+                    existingVendor.get().getId()
+            );
             return;
         }
 
@@ -428,49 +430,65 @@ public class VisitServiceImpl implements VisitService {
         vendor.setCompanyName(visitor.getCompanyName());
 
         vendorRepository.save(vendor);
+
         log.info(
-                "Vendor created successfully. vendorId={}, visitorId={}",
+                "VENDOR_CREATED vendorId={} visitorId={}",
                 vendor.getId(),
-                visitor.getId());
+                visitor.getId()
+        );
     }
 
     // PROOF AND BLACKLIST VALIDATION
     private void validateProofAndBlacklist(RegistrationRequest request) {
+
         proofSecurityService.validate(
                 request.nationality(),
                 request.aadharNumber(),
                 request.panNumber(),
-                request.passportNumber());
+                request.passportNumber()
+        );
 
         switch (request.nationality()) {
+
             case DOMESTIC -> {
-                boolean aadhaarBlacklisted = blacklistService.isBlacklistedByProof(
-                        ProofType.AADHAAR,
-                        request.aadharNumber());
+
+                boolean aadhaarBlacklisted =
+                        blacklistService.isBlacklistedByProof(
+                                ProofType.AADHAAR,
+                                request.aadharNumber()
+                        );
 
                 if (aadhaarBlacklisted) {
                     throw new BusinessRuleException(
-                            "Person is in blacklist. Visit registration is not allowed");
+                            "Person is in blacklist. Visit registration is not allowed"
+                    );
                 }
 
-                boolean panBlacklisted = blacklistService.isBlacklistedByProof(
-                        ProofType.PAN,
-                        request.panNumber());
+                boolean panBlacklisted =
+                        blacklistService.isBlacklistedByProof(
+                                ProofType.PAN,
+                                request.panNumber()
+                        );
 
                 if (panBlacklisted) {
                     throw new BusinessRuleException(
-                            "Person is in blacklist. Visit registration is not allowed");
+                            "Person is in blacklist. Visit registration is not allowed"
+                    );
                 }
             }
 
             case INTERNATIONAL -> {
-                boolean passportBlacklisted = blacklistService.isBlacklistedByProof(
-                        ProofType.PASSPORT,
-                        request.passportNumber());
+
+                boolean passportBlacklisted =
+                        blacklistService.isBlacklistedByProof(
+                                ProofType.PASSPORT,
+                                request.passportNumber()
+                        );
 
                 if (passportBlacklisted) {
                     throw new BusinessRuleException(
-                            "Person is in blacklist. Visit registration is not allowed");
+                            "Person is in blacklist. Visit registration is not allowed"
+                    );
                 }
             }
         }
@@ -480,13 +498,17 @@ public class VisitServiceImpl implements VisitService {
     @Transactional(readOnly = true)
     public String getVisitPhotoPath(String visitId) {
 
-        String photoPath = documentService.getVisitPhoto(visitId).getDocumentPath();
+        String photoPath =
+                documentService.getVisitPhoto(visitId).getDocumentPath();
+
         Path path = Path.of(photoPath);
 
         if (!Files.exists(path) || !Files.isReadable(path)) {
             throw new ResourceNotFoundException(
-                    "Visitor photo file not found for visit: " + visitId);
+                    "Visitor photo file not found for visit: " + visitId
+            );
         }
+
         return photoPath;
     }
 }
