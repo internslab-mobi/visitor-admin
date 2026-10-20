@@ -5,7 +5,7 @@ import com.adminvisitor.entity.VisitBadge;
 import com.adminvisitor.enums.BadgeStatus;
 import com.adminvisitor.exception.ResourceAlreadyExistsException;
 import com.adminvisitor.repository.VisitBadgeRepository;
-import com.adminvisitor.service.QrTokenService;
+//import com.adminvisitor.service.QrTokenService;
 import com.adminvisitor.service.VisitBadgeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,32 +19,73 @@ public class VisitBadgeServiceImpl implements VisitBadgeService {
 
     private final VisitBadgeRepository visitBadgeRepository;
     private final IdGeneratorServiceImpl idGeneratorService;
-    private final QrTokenService qrTokenService;
+   // private final QrTokenService qrTokenService;
 
+//    @Transactional
+//    public VisitBadge createBadge(Visit visit) {
+//
+//        if (visitBadgeRepository.findByVisit_Id(visit.getId()).isPresent()) {
+//            throw new ResourceAlreadyExistsException(
+//                    "A visitor badge already exists for visit: " + visit.getId()
+//            );
+//        }
+//        String badgeId =
+//                idGeneratorService.generateId(
+//                        "VISITBADGE",
+//                        "VB"
+//                );
+//
+//        String qrToken =
+//                qrTokenService.generateToken();
+//
+//        LocalDateTime issuedAt = LocalDateTime.now();
+//     //   LocalDateTime validFrom = issuedAt;
+//
+//        LocalDateTime validUntil =
+//                visit.getExpectedArrivalAt()
+//                        .toLocalDate()
+//                        .atTime(23, 59, 59);
+//
+//        VisitBadge badge = new VisitBadge();
+//
+//        badge.setId(badgeId);
+//        badge.setVisit(visit);
+//        badge.setQrContainingToken(qrToken);
+//        badge.setIssuedAt(issuedAt);
+//        badge.setValidUntil(validUntil);
+//        badge.setStatus(BadgeStatus.ACTIVE);
+//
+//        return visitBadgeRepository.save(badge);
+//    }
+
+
+    @Override
     @Transactional
-    public VisitBadge createBadge(Visit visit) {
+    public VisitBadge createBadge(Visit visit, String qrToken) {
 
         if (visitBadgeRepository.findByVisit_Id(visit.getId()).isPresent()) {
             throw new ResourceAlreadyExistsException(
-                    "A visitor badge already exists for visit: " + visit.getId()
+                    "A visitor badge already exists for visit: "
+                            + visit.getId()
             );
         }
-        String badgeId =
-                idGeneratorService.generateId(
-                        "VISITBADGE",
-                        "VB"
-                );
 
-        String qrToken =
-                qrTokenService.generateToken();
+        if (qrToken == null || qrToken.isBlank()) {
+            throw new IllegalArgumentException(
+                    "QR token must not be empty"
+            );
+        }
+
+        String badgeId = idGeneratorService.generateId(
+                "VISITBADGE",
+                "VB"
+        );
 
         LocalDateTime issuedAt = LocalDateTime.now();
-     //   LocalDateTime validFrom = issuedAt;
 
-        LocalDateTime validUntil =
-                visit.getExpectedArrivalAt()
-                        .toLocalDate()
-                        .atTime(23, 59, 59);
+        LocalDateTime validUntil = visit.getExpectedArrivalAt()
+                .toLocalDate()
+                .atTime(23, 59, 59);
 
         VisitBadge badge = new VisitBadge();
 
@@ -57,7 +98,6 @@ public class VisitBadgeServiceImpl implements VisitBadgeService {
 
         return visitBadgeRepository.save(badge);
     }
-
     @Transactional
     public void invalidateBadgeOnCheckout(
             String visitId,
@@ -83,7 +123,7 @@ public class VisitBadgeServiceImpl implements VisitBadgeService {
 
     @Override
     @Transactional(readOnly = true)
-    public VisitBadge validateQrToken(String qrToken) {
+    public VisitBadge validateQrTokenForUpdate(String qrToken) {
 
         VisitBadge badge =
                 visitBadgeRepository

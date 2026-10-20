@@ -83,6 +83,19 @@ management:
     metrics:
       export:
         enabled: false
+qr:
+  service:
+    base-url: http://localhost:8062
 
+summary-export:
+  service:
+    export-url: http://localhost:8063
+
+springdoc:
+  swagger-ui:
+    csrf:
+      enabled: true
+      cookie-name: VMS-XSRF-TOKEN
+      header-name: X-VMS-XSRF-TOKEN
 
 

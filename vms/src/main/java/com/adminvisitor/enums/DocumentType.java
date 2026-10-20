@@ -6,5 +6,7 @@ public enum DocumentType {
     PAN,
     PASSPORT,
     NDA,
-    VISITOR_PHOTO
+    VISITOR_PHOTO,
+    NDA_SUPPORTING,
+    NDA_RENEWAL,
 }
