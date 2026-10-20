@@ -58,10 +58,6 @@ logging:
   level:
     root: INFO
     com.adminvisitor: DEBUG
-    logging:
-      level:
-        root: INFO
-        com.adminvisitor: DEBUG
 
 management:
   endpoints:
@@ -77,9 +73,11 @@ management:
     metrics:
       export:
         enabled: false
+
 qr:
   service:
-    base-url: http://localhost:8062
+    base-url: ${QR_SERVICE_BASE_URL:http://localhost:8062}
+    api-key: ${QR_SERVICE_API_KEY}
 
 summary-export:
   service:

@@ -16,9 +16,18 @@ public class QrMicroserviceClientImpl implements QrMicroserviceClient {
     private final RestClient restClient;
 
     public QrMicroserviceClientImpl(
-            @Value("${qr.service.base-url}") String baseUrl) {
+            @Value("${qr.service.base-url}") String baseUrl,
+            @Value("${qr.service.api-key}") String apiKey) {
 
-        this.restClient = RestClient.create(baseUrl);
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException(
+                    "QR service API key must be configured");
+        }
+
+        this.restClient = RestClient.create(baseUrl)
+                .mutate()
+                .defaultHeader("X-QR-API-KEY", apiKey)
+                .build();
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.adminvisitor.config;
+package com.adminvisitor.security;
 
 import com.adminvisitor.enums.ErrorCode;
 import com.adminvisitor.exception.ErrorResponseWriter;
