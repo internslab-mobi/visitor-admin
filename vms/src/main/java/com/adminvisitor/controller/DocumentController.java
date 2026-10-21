@@ -26,7 +26,7 @@ public class DocumentController {
 
     private final DocumentService documentService;
     private final DocumentMapper documentMapper;
-private final NdaService ndaService;
+    private final NdaService ndaService;
 
     @GetMapping("/{visitorId}/nda/download")
     public ResponseEntity<Resource> downloadNda(
@@ -162,7 +162,4 @@ private final NdaService ndaService;
     ) {documentService.deleteDocument(metadataId);
         return ResponseEntity.noContent().build();
     }
-
-
-
 }

@@ -1,4 +1,3 @@
-
 package com.adminvisitor.service.impl;
 
 import com.adminvisitor.dto.responsedto.BadgeEmailData;
@@ -6,24 +5,16 @@ import com.adminvisitor.dto.responsedto.CancellationEmailData;
 import com.adminvisitor.dto.responsedto.HostCheckInEmailData;
 import com.adminvisitor.dto.responsedto.HostDailyReminderEmailData;
 import com.adminvisitor.entity.Visit;
-import com.adminvisitor.exception.EmailDeliveryException;
 import com.adminvisitor.service.EmailService;
 import com.adminvisitor.service.NotificationOutboxService;
 import com.adminvisitor.util.DateTimeFormats;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.mail.MailException;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.thymeleaf.spring6.SpringTemplateEngine;
 import com.adminvisitor.dto.requestdto.NotificationRequest;
-import com.adminvisitor.service.NotificationClientService;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,7 +22,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-import java.util.Base64;
 import java.util.UUID;
 
 @Service
@@ -41,9 +31,6 @@ public class EmailServiceImpl implements EmailService {
     private final NotificationOutboxService notificationOutboxService;
 
     private static final long MAX_VISITOR_PHOTO_SIZE = 2 * 1024 * 1024; // 2 MB
-
-    @Value("${spring.mail.username}")
-    private String fromEmail;
 
     @Async
     @Override
@@ -121,7 +108,8 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendVisitBadgeEmail(BadgeEmailData data) {
         try {
-            Path photoPath = Path.of(data.visitorPhoto());
+            Path photoPath = Path.of(data.visitorPhoto())
+                    .toAbsolutePath().normalize();
 
             // Validate the photo before reading it into memory.
             if (!Files.isRegularFile(photoPath) || !Files.isReadable(photoPath)) {
@@ -138,9 +126,20 @@ public class EmailServiceImpl implements EmailService {
                 );
             }
 
-            // Encode the visitor photo for transfer to the separate service.
-            String visitorPhotoBase64 = Base64.getEncoder()
-                    .encodeToString(Files.readAllBytes(photoPath));
+            if (!Files.isRegularFile(photoPath) || !Files.isReadable(photoPath)) {
+                throw new IllegalArgumentException(
+                        "Visitor photo does not exist or is not readable"
+                );
+            }
+
+            if (Files.size(photoPath) > 2 * 1024 * 1024) {
+                throw new IllegalArgumentException(
+                        "Visitor photo must not exceed 2 MB"
+                );
+            }
+
+            // Store only the filename in the outbox payload.
+            String visitorPhotoFileName = photoPath.getFileName().toString();
 
             Map<String, Object> emailData = new HashMap<>();
             emailData.put("visitorName", data.visitorName());
@@ -149,7 +148,7 @@ public class EmailServiceImpl implements EmailService {
             emailData.put("issuedAt", data.issuedAt());
             emailData.put("validUntil", data.validUntil());
             emailData.put("qrCode", data.qrCode());
-            emailData.put("visitorPhotoBase64", visitorPhotoBase64);
+            emailData.put("visitorPhotoFileName", visitorPhotoFileName);
 
             NotificationRequest request = new NotificationRequest(
                     UUID.randomUUID().toString(),

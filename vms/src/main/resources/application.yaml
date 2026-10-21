@@ -33,7 +33,7 @@ app:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:4200}
 
 jwt:
-  secret: ${JWT_SECRET}
+  public-key-path: ${JWT_PUBLIC_KEY_PATH}
 
 vms:
   security:
@@ -73,12 +73,6 @@ management:
     sampling:
       probability: 1.0
 
-  opentelemetry:
-    tracing:
-      export:
-        otlp:
-          endpoint: http://localhost:4318/v1/traces
-
   otlp:
     metrics:
       export:
@@ -102,6 +96,5 @@ springdoc:
 notification:
   service:
     base-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8094}
-  test-recipient: ${NOTIFICATION_TEST_EMAIL}
 
 

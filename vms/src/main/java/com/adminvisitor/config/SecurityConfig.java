@@ -58,10 +58,6 @@ public class SecurityConfig {
         return new CookieAccessTokenFilter();
     }
 
-    /*
-     * Prevent Spring Boot from registering this filter as a regular
-     * servlet filter. It must run only inside the Spring Security chain.
-     */
     @Bean
     public FilterRegistrationBean<CookieAccessTokenFilter>
     cookieAccessTokenFilterRegistration(

@@ -49,7 +49,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return respond(errorCode, exception.getMessage(), path);
     }
 
-
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrity(
             DataIntegrityViolationException exception, HttpServletRequest request) {
