@@ -19,7 +19,9 @@ import com.adminvisitor.auth.repository.EmployeeRepository;
 import com.adminvisitor.auth.repository.PasswordResetTokenRepository;
 import com.adminvisitor.auth.repository.RefreshTokenRepository;
 import com.adminvisitor.auth.repository.UserRepository;
+import com.adminvisitor.auth.mapper.UserMapper;
 import com.adminvisitor.auth.security.JwtService;
+import com.adminvisitor.auth.service.IdGeneratorService;
 import com.adminvisitor.auth.service.Impl.AuthServiceImpl;
 import com.adminvisitor.auth.util.TokenUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,6 +69,12 @@ class AuthServiceImplTest {
     @Mock
     private AuthenticationManager authenticationManager;
 
+    @Mock
+    private IdGeneratorService idGeneratorService;
+
+    @Mock
+    private UserMapper userMapper;
+
     @InjectMocks
     private AuthServiceImpl authService;
 
@@ -97,8 +105,18 @@ class AuthServiceImplTest {
 
         when(employeeRepository.findById("EMP002")).thenReturn(Optional.of(employee));
         when(userRepository.findByEmployeeEmail("john.doe@example.com")).thenReturn(Optional.empty());
+        when(idGeneratorService.generateId("USER", "USR-")).thenReturn("USR002");
         when(passwordEncoder.encode(any())).thenReturn("hashedTempPassword");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userMapper.toUserResponse(any(User.class))).thenReturn(new UserResponse(
+                "USR002",
+                "EMP002",
+                "john.doe@example.com",
+                "John Doe",
+                UserRole.FRONT_DESK,
+                "ACTIVE",
+                true
+        ));
 
         UserResponse response = authService.createUser(request);
 
@@ -107,7 +125,8 @@ class AuthServiceImplTest {
         assertEquals("john.doe@example.com", response.email());
         assertTrue(response.mustChangePassword());
         verify(emailService, times(1))
-                .sendOnboardingEmail(any(UserCreatedEvent.class));    }
+                .sendOnboardingEmail(any(UserCreatedEvent.class));
+    }
 
     @Test
     void testCreateUserEmployeeNotFound() {
@@ -140,6 +159,7 @@ class AuthServiceImplTest {
         CreateUserRequest request = new CreateUserRequest("EMP002", UserRole.FRONT_DESK);
         when(employeeRepository.findById("EMP002")).thenReturn(Optional.of(employee));
         when(userRepository.findByEmployeeEmail("john.doe@example.com")).thenReturn(Optional.empty());
+        when(idGeneratorService.generateId("USER", "USR-")).thenReturn("USR002");
         when(passwordEncoder.encode(any())).thenReturn("hashedTempPassword");
         doThrow(new EmailSendException("SMTP error"))
                 .when(emailService)
@@ -152,6 +172,7 @@ class AuthServiceImplTest {
         LoginRequest request = new LoginRequest("john.doe@example.com", "tempPassword");
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
         when(userRepository.findByEmployeeEmail("john.doe@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByIdForUpdate("USR002")).thenReturn(Optional.of(user));
         when(jwtService.generateRestrictedToken("USR002", "FRONT_DESK")).thenReturn("restrictedJwtToken");
 
         AuthResult response = authService.login(request);
@@ -168,6 +189,7 @@ class AuthServiceImplTest {
         LoginRequest request = new LoginRequest("john.doe@example.com", "Password@123");
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
         when(userRepository.findByEmployeeEmail("john.doe@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByIdForUpdate("USR002")).thenReturn(Optional.of(user));
         when(jwtService.generateToken("USR002", "FRONT_DESK")).thenReturn("normalJwtToken");
         when(jwtService.getRefreshExpiration()).thenReturn(2700000L);
 
@@ -186,8 +208,13 @@ class AuthServiceImplTest {
         LoginRequest request = new LoginRequest("john.doe@example.com", "tempPassword");
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
         when(userRepository.findByEmployeeEmail("john.doe@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByIdForUpdate("USR002")).thenReturn(Optional.of(user));
 
-        assertThrows(BadCredentialsException.class, () -> authService.login(request));
+        BadCredentialsException exception = assertThrows(
+                BadCredentialsException.class,
+                () -> authService.login(request)
+        );
+        assertEquals("User account is inactive", exception.getMessage());
     }
 
     @Test
@@ -243,7 +270,7 @@ class AuthServiceImplTest {
         refreshToken.setCreatedAt(LocalDateTime.now().minusMinutes(5));
         refreshToken.setExpiresAt(LocalDateTime.now().plusMinutes(40));
 
-        when(refreshTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(refreshToken));
+        when(refreshTokenRepository.findByTokenHashForUpdate(tokenHash)).thenReturn(Optional.of(refreshToken));
         when(jwtService.generateToken("USR002", "FRONT_DESK")).thenReturn("newAccessToken");
         when(jwtService.getRefreshExpiration()).thenReturn(2700000L);
 
@@ -252,8 +279,9 @@ class AuthServiceImplTest {
         assertNotNull(response);
         assertEquals("newAccessToken", response.accessToken());
         assertNotNull(response.refreshToken());
-        assertNotNull(refreshToken.getRevokedAt());
-        verify(refreshTokenRepository, times(2)).save(any(RefreshToken.class));
+        assertNotEquals(rawToken, response.refreshToken());
+        assertEquals(TokenUtils.hashToken(response.refreshToken()), refreshToken.getTokenHash());
+        verify(refreshTokenRepository, times(1)).save(refreshToken);
     }
 
     @Test
@@ -266,7 +294,7 @@ class AuthServiceImplTest {
         refreshToken.setTokenHash(tokenHash);
         refreshToken.setRevokedAt(LocalDateTime.now().minusMinutes(1));
 
-        when(refreshTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(refreshToken));
+        when(refreshTokenRepository.findByTokenHashForUpdate(tokenHash)).thenReturn(Optional.of(refreshToken));
 
         assertThrows(InvalidTokenException.class, () -> authService.refresh(rawToken));
     }
@@ -281,7 +309,7 @@ class AuthServiceImplTest {
         refreshToken.setTokenHash(tokenHash);
         refreshToken.setExpiresAt(LocalDateTime.now().minusMinutes(10));
 
-        when(refreshTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(refreshToken));
+        when(refreshTokenRepository.findByTokenHashForUpdate(tokenHash)).thenReturn(Optional.of(refreshToken));
 
         assertThrows(InvalidTokenException.class, () -> authService.refresh(rawToken));
     }
@@ -297,7 +325,7 @@ class AuthServiceImplTest {
         refreshToken.setTokenHash(tokenHash);
         refreshToken.setExpiresAt(LocalDateTime.now().plusMinutes(30));
 
-        when(refreshTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(refreshToken));
+        when(refreshTokenRepository.findByTokenHashForUpdate(tokenHash)).thenReturn(Optional.of(refreshToken));
 
         assertThrows(InvalidTokenException.class, () -> authService.refresh(rawToken));
     }

@@ -15,6 +15,7 @@ spring:
     password: ${MAIL_PASSWORD:password}
 
 jwt:
-  secret: ${JWT_SECRET:TestOnlyJwtSecretKeyForUnitTests123456789012345678901234567890}
+  private-key-path: ${JWT_PRIVATE_KEY_PATH:src/test/resources/jwt/test-private.pem}
+  public-key-path: ${JWT_PUBLIC_KEY_PATH:src/test/resources/jwt/test-public.pem}
   expiration: 900000
   refresh-expiration: 2700000

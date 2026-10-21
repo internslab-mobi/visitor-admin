@@ -150,8 +150,9 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.status", is(401)))
                 .andExpect(jsonPath(
                         "$.message",
-                        is("Invalid email or password")
-                ));
+                        is("Invalid email or password.")
+                ))
+                .andExpect(jsonPath("$.code", is("INVALID_CREDENTIALS")));
     }
 
     @Test
@@ -200,8 +201,9 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.status", is(404)))
                 .andExpect(jsonPath(
                         "$.message",
-                        containsString("Employee not found")
-                ));
+                        is("Requested resource was not found.")
+                ))
+                .andExpect(jsonPath("$.code", is("RESOURCE_NOT_FOUND")));
     }
 
     @Test
@@ -223,8 +225,9 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.status", is(409)))
                 .andExpect(jsonPath(
                         "$.message",
-                        containsString("already has a user account")
-                ));
+                        is("Resource already exists.")
+                ))
+                .andExpect(jsonPath("$.code", is("RESOURCE_ALREADY_EXISTS")));
     }
 
     @Test
@@ -281,8 +284,9 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.status", is(400)))
                 .andExpect(jsonPath(
                         "$.message",
-                        containsString("at least 8 characters")
-                ));
+                        is("Invalid request.")
+                ))
+                .andExpect(jsonPath("$.code", is("INVALID_REQUEST")));
     }
 
     @Test
