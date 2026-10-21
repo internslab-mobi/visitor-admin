@@ -33,7 +33,7 @@ app:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:4200}
 
 jwt:
-  secret: ${JWT_SECRET}
+  public-key-path: ${JWT_PUBLIC_KEY_PATH}
 
 vms:
   security:
