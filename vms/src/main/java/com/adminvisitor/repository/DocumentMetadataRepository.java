@@ -89,4 +89,10 @@ public interface DocumentMetadataRepository
             NdaStatus status,
             LocalDateTime now
     );
+
+
+    List<DocumentMetadata>
+    findByDocument_Visitor_IdAndDocumentTypeIsNull(
+            String visitorId
+    );
 }

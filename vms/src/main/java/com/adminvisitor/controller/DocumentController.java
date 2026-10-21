@@ -53,7 +53,7 @@ private final NdaService ndaService;
     }
 
     @PostMapping(
-            value = "/api/proof-documents/upload/{visitorId}",
+            value = "/proof-documents/upload/{visitorId}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<List<DocumentResponse>> uploadProofDocuments(

@@ -2,38 +2,30 @@ spring:
   application:
     name: vms
 
+  profiles:
+    default: local
+
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
 
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
 
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
-          connectiontimeout: 10000
-          timeout: 10000
-          writetimeout: 10000
-
-app:
-  cors:
-    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:4200}
+  smtp:
+      auth: true
+      starttls:
+      enable: true
+      required: true
+      connectiontimeout: 10000
+      timeout: 10000
+      writetimeout: 10000
 
 jwt:
   secret: ${JWT_SECRET}
+
+crypto:
+  aes:
+    key: ${CRYPTO_AES_KEY}
 
 vms:
   security:
@@ -42,15 +34,6 @@ vms:
     hmac:
       blind-index-key: ${VMS_HMAC_BLIND_INDEX_KEY}
 
-  document:
-    nda-upload-dir: D:/VMS/NDA
-    upload-dir: D:/VMS/Proof
-    photo-upload-dir: D:/VMS/VisitorPhotos
-
-crypto:
-  aes:
-    key: ${CRYPTO_AES_KEY}
-
 server:
   port: 8092
 
@@ -58,33 +41,22 @@ logging:
   level:
     root: INFO
     com.adminvisitor: DEBUG
-    logging:
-      level:
-        root: INFO
-        com.adminvisitor: DEBUG
 
 management:
   endpoints:
     web:
       exposure:
         include: health,metrics
-
+  endpoint:
+    health:
+      show-details: never
   tracing:
     sampling:
       probability: 1.0
-
   otlp:
     metrics:
       export:
         enabled: false
-qr:
-  service:
-    base-url: ${QR_SERVICE_BASE_URL:http://localhost:8062}
-    api-key: ${QR_SERVICE_API_KEY}
-
-summary-export:
-  service:
-    export-url: http://localhost:8063
 
 springdoc:
   swagger-ui:
@@ -92,11 +64,3 @@ springdoc:
       enabled: true
       cookie-name: VMS-XSRF-TOKEN
       header-name: X-VMS-XSRF-TOKEN
-
-
-notification:
-  service:
-    base-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8094}
-  test-recipient: ${NOTIFICATION_TEST_EMAIL}
-
-

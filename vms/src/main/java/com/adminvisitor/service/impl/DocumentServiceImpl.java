@@ -34,6 +34,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import static com.adminvisitor.enums.DocumentType.NDA_RENEWAL;
+import static com.adminvisitor.enums.DocumentType.NDA_SUPPORTING;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -336,15 +339,11 @@ public class DocumentServiceImpl implements DocumentService {
                         )
                 );
 
+
+
         List<DocumentResponse> documents =
                 documentMetadataRepository
-                        .findByDocument_Visitor_IdAndDocumentTypeNotIn(
-                                visitorId,
-                                List.of(
-                                        DocumentType.NDA,
-                                        DocumentType.VISITOR_PHOTO
-                                )
-                        )
+                        .findByDocument_Visitor_IdAndDocumentTypeIsNull(visitorId)
                         .stream()
                         .map(documentMapper::toResponse)
                         .toList();
