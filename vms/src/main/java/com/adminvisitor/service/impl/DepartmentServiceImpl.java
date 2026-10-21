@@ -1,0 +1,100 @@
+package com.adminvisitor.service.impl;
+
+import com.adminvisitor.dto.requestdto.DepartmentCreateRequest;
+import com.adminvisitor.dto.responsedto.DepartmentResponse;
+import com.adminvisitor.entity.Department;
+import com.adminvisitor.exception.ResourceAlreadyExistsException;
+import com.adminvisitor.repository.DepartmentRepository;
+import com.adminvisitor.service.DepartmentService;
+import com.adminvisitor.service.IdGeneratorService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class DepartmentServiceImpl implements DepartmentService {
+
+    private final DepartmentRepository departmentRepository;
+    private final IdGeneratorService idGeneratorService;
+
+    @Transactional
+    public DepartmentResponse createDepartment(
+            DepartmentCreateRequest request
+    ) {
+
+        if (departmentRepository.existsByDepartmentCode(
+                request.getDepartmentCode().trim()
+        )) {
+            throw new ResourceAlreadyExistsException(
+                    "Department code already exists"
+            );
+        }
+
+        if (departmentRepository.existsByDepartmentName(
+                request.getDepartmentName().trim()
+        )) {
+            throw new ResourceAlreadyExistsException(
+                    "Department name already exists"
+            );
+        }
+
+        Department department = new Department();
+
+        department.setId(
+                idGeneratorService.generateId("DEPARTMENT", "DT")
+        );
+
+        department.setDepartmentCode(
+                request.getDepartmentCode().trim()
+        );
+
+        department.setDepartmentName(
+                request.getDepartmentName().trim()
+        );
+
+        department.setStatus("ACTIVE");
+
+        Department savedDepartment =
+                departmentRepository.save(department);
+
+        log.info(
+                "DEPARTMENT_CREATED departmentId={} departmentCode={}",
+                savedDepartment.getId(),
+                savedDepartment.getDepartmentCode()
+        );
+
+        return new DepartmentResponse(
+                savedDepartment.getId(),
+                savedDepartment.getDepartmentCode(),
+                savedDepartment.getDepartmentName(),
+                savedDepartment.getStatus()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<DepartmentResponse> getDepartments() {
+
+        List<DepartmentResponse> departments =
+                departmentRepository.findAll()
+                        .stream()
+                        .map(department -> new DepartmentResponse(
+                                department.getId(),
+                                department.getDepartmentCode(),
+                                department.getDepartmentName(),
+                                department.getStatus()
+                        ))
+                        .toList();
+
+        log.debug(
+                "DEPARTMENTS_RETRIEVED count={}",
+                departments.size()
+        );
+
+        return departments;
+    }
+}

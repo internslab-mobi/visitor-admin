@@ -1,0 +1,30 @@
+package com.adminvisitor.dto.responsedto;
+
+import com.adminvisitor.enums.BlacklistStatus;
+import com.adminvisitor.enums.Nationality;
+import com.adminvisitor.enums.ProofType;
+import com.adminvisitor.enums.VisitorType;
+import lombok.Builder;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Builder
+public record BlacklistResponse(
+        String id,
+        String visitorId,
+        String visitorName,
+        String email,
+        String mobileNumber,
+        String companyName,
+        Nationality nationality,
+        String reason,
+        BlacklistStatus status,
+        String createdBy,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        String updatedBy,
+        VisitorType visitorType,
+        List<ProofType> matchingProofTypes
+) {
+}

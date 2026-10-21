@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: vms
+
+  profiles:
+    default: local
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+
+  smtp:
+      auth: true
+      starttls:
+      enable: true
+      required: true
+      connectiontimeout: 10000
+      timeout: 10000
+      writetimeout: 10000
+
+jwt:
+  public-key-path: ${JWT_PUBLIC_KEY_PATH}
+
+crypto:
+  aes:
+    key: ${CRYPTO_AES_KEY}
+
+vms:
+  security:
+    cookie:
+      secure: ${VMS_COOKIE_SECURE:false}
+    hmac:
+      blind-index-key: ${VMS_HMAC_BLIND_INDEX_KEY}
+
+server:
+  port: 8092
+
+logging:
+  level:
+    root: INFO
+    com.adminvisitor: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+  endpoint:
+    health:
+      show-details: never
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    metrics:
+      export:
+        enabled: false
+
+springdoc:
+  swagger-ui:
+    csrf:
+      enabled: true
+      cookie-name: VMS-XSRF-TOKEN
+      header-name: X-VMS-XSRF-TOKEN
