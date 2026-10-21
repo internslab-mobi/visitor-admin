@@ -20,6 +20,7 @@ import com.adminvisitor.auth.security.JwtService;
 import com.adminvisitor.auth.service.IdGeneratorService;
 import com.adminvisitor.auth.util.PasswordGenerator;
 import com.adminvisitor.auth.util.TokenUtils;
+import com.adminvisitor.auth.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,6 +28,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
@@ -49,6 +51,7 @@ public class AuthServiceImpl implements AuthService {
     private final EmailService emailService;
     private final IdGeneratorService idGeneratorService;
     private final AuthenticationManager authenticationManager;
+    private final UserMapper userMapper;
 
     @Override
     @Transactional
@@ -111,19 +114,12 @@ public class AuthServiceImpl implements AuthService {
                 new UserCreatedEvent(employee.getEmail(), fullName, tempPassword)
         );
 
-        return new UserResponse(
-                user.getId(),
-                employee.getId(),
-                employee.getEmail(),
-                fullName,
-                user.getRole(),
-                user.getStatus(),
-                user.isMustChangePassword()
-        );
+        return userMapper.toUserResponse(user);
     }
 
+
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public AuthResult login(LoginRequest request) {
 
         authenticationManager.authenticate(
@@ -139,6 +135,13 @@ public class AuthServiceImpl implements AuthService {
                     return new BadCredentialsException("Invalid email or password");
                 });
 
+        // Lock the user row to serialize concurrent login attempts.
+        user = userRepository.findByIdForUpdate(user.getId())
+                .orElseThrow(() -> {
+                    log.warn("LOGIN_FAILED reason=USER_NOT_FOUND");
+                    return new BadCredentialsException("Invalid email or password");
+                });
+
         if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
             log.warn(
                     "LOGIN_FAILED reason=INACTIVE_ACCOUNT userId={}",
@@ -147,19 +150,9 @@ public class AuthServiceImpl implements AuthService {
             throw new BadCredentialsException("User account is inactive");
         }
 
-        Employee employee = user.getEmployee();
-        String fullName = employee.getFirstName() + " " + employee.getLastName();
+        UserResponse userResponse = userMapper.toUserResponse(user);
 
-        UserResponse userResponse = new UserResponse(
-                user.getId(),
-                employee.getId(),
-                employee.getEmail(),
-                fullName,
-                user.getRole(),
-                user.getStatus(),
-                user.isMustChangePassword()
-        );
-
+        // First-login users receive a restricted token, not a regular session.
         if (user.isMustChangePassword()) {
             log.info(
                     "FIRST_LOGIN_PASSWORD_CHANGE_REQUIRED userId={} role={}",
@@ -183,6 +176,25 @@ public class AuthServiceImpl implements AuthService {
             );
         }
 
+        // Count active, unrevoked, unexpired refresh-token sessions.
+        long activeSessions =
+                refreshTokenRepository
+                        .countByUser_IdAndRevokedAtIsNullAndExpiresAtAfter(
+                                user.getId(),
+                                LocalDateTime.now()
+                        );
+
+        if (activeSessions >= 2) {
+            log.warn(
+                    "LOGIN_REJECTED reason=MAX_ACTIVE_SESSIONS userId={}",
+                    user.getId()
+            );
+
+            throw new BadCredentialsException(
+                    "Maximum of 2 active sessions reached. Please log out from another device."
+            );
+        }
+
         String accessToken = jwtService.generateToken(
                 user.getId(),
                 user.getRole().name()
@@ -190,17 +202,17 @@ public class AuthServiceImpl implements AuthService {
 
         String rawRefreshToken = TokenUtils.generateOpaqueToken();
 
+        LocalDateTime now = LocalDateTime.now();
+
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setId(
                 idGeneratorService.generateId("REFRESH_TOKEN", "RTK-")
         );
         refreshToken.setUser(user);
         refreshToken.setTokenHash(TokenUtils.hashToken(rawRefreshToken));
-        refreshToken.setCreatedAt(LocalDateTime.now());
+        refreshToken.setCreatedAt(now);
         refreshToken.setExpiresAt(
-                LocalDateTime.now().plusSeconds(
-                        jwtService.getRefreshExpiration() / 1000
-                )
+                now.plusSeconds(jwtService.getRefreshExpiration() / 1000)
         );
 
         refreshTokenRepository.save(refreshToken);
@@ -221,6 +233,7 @@ public class AuthServiceImpl implements AuthService {
                 userResponse
         );
     }
+
 
     @Override
     @Transactional
@@ -372,18 +385,7 @@ public class AuthServiceImpl implements AuthService {
                 user.getRole()
         );
 
-        Employee employee = user.getEmployee();
-        String fullName = employee.getFirstName() + " " + employee.getLastName();
-
-        UserResponse userResponse = new UserResponse(
-                user.getId(),
-                employee.getId(),
-                employee.getEmail(),
-                fullName,
-                user.getRole(),
-                user.getStatus(),
-                user.isMustChangePassword()
-        );
+        UserResponse userResponse = userMapper.toUserResponse(user);
 
         return new AuthResult(
                 newAccessToken,

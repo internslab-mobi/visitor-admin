@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
-public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, Long> {
-
+public interface PasswordResetTokenRepository
+        extends JpaRepository<PasswordResetToken, String> {
     Optional<PasswordResetToken> findTopByUserIdAndInvalidatedFalseOrderByCreatedAtDesc(String userId);
 
     int countByUserIdAndCreatedAtAfter(String userId, LocalDateTime dateTime);

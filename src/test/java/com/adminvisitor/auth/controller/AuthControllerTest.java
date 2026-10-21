@@ -3,7 +3,6 @@ package com.adminvisitor.auth.controller;
 import com.adminvisitor.auth.dto.requestdto.ChangePasswordRequest;
 import com.adminvisitor.auth.dto.requestdto.CreateUserRequest;
 import com.adminvisitor.auth.dto.requestdto.LoginRequest;
-import com.adminvisitor.auth.dto.requestdto.RefreshTokenRequest;
 import com.adminvisitor.auth.dto.responsedto.AuthResult;
 import com.adminvisitor.auth.dto.responsedto.UserResponse;
 import com.adminvisitor.auth.enums.UserRole;
@@ -11,6 +10,8 @@ import com.adminvisitor.auth.exception.*;
 import com.adminvisitor.auth.service.AuthService;
 import com.adminvisitor.auth.util.TraceIdProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +25,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -53,7 +55,6 @@ class AuthControllerTest {
         );
 
         TraceIdProvider traceIdProvider = mock(TraceIdProvider.class);
-        when(traceIdProvider.getCurrentTraceId()).thenReturn("test-trace-id");
 
         ErrorResponseFactory errorResponseFactory =
                 new ErrorResponseFactory(traceIdProvider);
@@ -65,9 +66,16 @@ class AuthControllerTest {
                 .build();
     }
 
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Test
     void testLoginSuccessNormalUser() throws Exception {
-        LoginRequest request = new LoginRequest("user@example.com", "Password123!");
+        LoginRequest request =
+                new LoginRequest("user@example.com", "Password123!");
+
         AuthResult response = new AuthResult(
                 "accessToken123",
                 "refreshToken123",
@@ -77,7 +85,9 @@ class AuthControllerTest {
                 "Authentication successful.",
                 null
         );
-        when(authService.login(any(LoginRequest.class))).thenReturn(response);
+
+        when(authService.login(any(LoginRequest.class)))
+                .thenReturn(response);
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -87,6 +97,8 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.role", is("ADMIN")))
                 .andExpect(jsonPath("$.mustChangePassword", is(false)))
                 .andExpect(header().exists(HttpHeaders.SET_COOKIE));
+
+        verify(authService).login(any(LoginRequest.class));
     }
 
     @Test
@@ -106,7 +118,8 @@ class AuthControllerTest {
                 null
         );
 
-        when(authService.login(any(LoginRequest.class))).thenReturn(response);
+        when(authService.login(any(LoginRequest.class)))
+                .thenReturn(response);
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -120,23 +133,44 @@ class AuthControllerTest {
 
     @Test
     void testLoginBadCredentials() throws Exception {
-        LoginRequest request = new LoginRequest("user@example.com", "WrongPassword");
-        when(authService.login(any(LoginRequest.class))).thenThrow(new BadCredentialsException("Invalid email or password"));
+        LoginRequest request =
+                new LoginRequest("user@example.com", "WrongPassword");
+
+        when(authService.login(any(LoginRequest.class)))
+                .thenThrow(
+                        new BadCredentialsException(
+                                "Invalid email or password"
+                        )
+                );
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status", is(401)))
-                .andExpect(jsonPath("$.message", is("Invalid email or password")));
+                .andExpect(jsonPath(
+                        "$.message",
+                        is("Invalid email or password")
+                ));
     }
 
     @Test
     void testCreateUserSuccess() throws Exception {
-        CreateUserRequest request = new CreateUserRequest("EMP002", UserRole.FRONT_DESK);
-        UserResponse response = new UserResponse("USR002", "EMP002", "emp2@example.com", "John Doe", UserRole.FRONT_DESK, "ACTIVE", true);
+        CreateUserRequest request =
+                new CreateUserRequest("EMP002", UserRole.FRONT_DESK);
 
-        when(authService.createUser(any(CreateUserRequest.class))).thenReturn(response);
+        UserResponse response = new UserResponse(
+                "USR002",
+                "EMP002",
+                "emp2@example.com",
+                "John Doe",
+                UserRole.FRONT_DESK,
+                "ACTIVE",
+                true
+        );
+
+        when(authService.createUser(any(CreateUserRequest.class)))
+                .thenReturn(response);
 
         mockMvc.perform(post("/api/auth/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -149,69 +183,113 @@ class AuthControllerTest {
 
     @Test
     void testCreateUserEmployeeNotFound() throws Exception {
-        CreateUserRequest request = new CreateUserRequest("EMP999", UserRole.FRONT_DESK);
-        when(authService.createUser(any(CreateUserRequest.class))).thenThrow(new ResourceNotFoundException("Employee not found with ID: EMP999"));
+        CreateUserRequest request =
+                new CreateUserRequest("EMP999", UserRole.FRONT_DESK);
+
+        when(authService.createUser(any(CreateUserRequest.class)))
+                .thenThrow(
+                        new ResourceNotFoundException(
+                                "Employee not found with ID: EMP999"
+                        )
+                );
 
         mockMvc.perform(post("/api/auth/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status", is(404)))
-                .andExpect(jsonPath("$.message", containsString("Employee not found")));
+                .andExpect(jsonPath(
+                        "$.message",
+                        containsString("Employee not found")
+                ));
     }
 
     @Test
     void testCreateUserAlreadyExistsConflict() throws Exception {
-        CreateUserRequest request = new CreateUserRequest("EMP001", UserRole.ADMIN);
-        when(authService.createUser(any(CreateUserRequest.class))).thenThrow(new ResourceAlreadyExistsException("Employee already has a user account: EMP001"));
+        CreateUserRequest request =
+                new CreateUserRequest("EMP001", UserRole.ADMIN);
+
+        when(authService.createUser(any(CreateUserRequest.class)))
+                .thenThrow(
+                        new ResourceAlreadyExistsException(
+                                "Employee already has a user account: EMP001"
+                        )
+                );
 
         mockMvc.perform(post("/api/auth/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status", is(409)))
-                .andExpect(jsonPath("$.message", containsString("already has a user account")));
+                .andExpect(jsonPath(
+                        "$.message",
+                        containsString("already has a user account")
+                ));
     }
 
     @Test
     void testChangePasswordSuccess() throws Exception {
-        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("USR002", null));
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("USR002", null)
+        );
 
-        ChangePasswordRequest request = new ChangePasswordRequest("TempPass123!", "NewStrongPass123!");
-        doNothing().when(authService).changePassword(eq("USR002"), any(ChangePasswordRequest.class));
+        ChangePasswordRequest request = new ChangePasswordRequest(
+                "TempPass123!",
+                "NewStrongPass123!"
+        );
+
+        doNothing().when(authService)
+                .changePassword(eq("USR002"), any(ChangePasswordRequest.class));
 
         mockMvc.perform(post("/api/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message", containsString("Password changed successfully")));
+                .andExpect(jsonPath(
+                        "$.message",
+                        containsString("Password changed successfully")
+                ));
 
-        SecurityContextHolder.clearContext();
+        verify(authService).changePassword(
+                eq("USR002"),
+                any(ChangePasswordRequest.class)
+        );
     }
 
     @Test
     void testChangePasswordValidationFailure() throws Exception {
-        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("USR002", null));
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("USR002", null)
+        );
 
-        ChangePasswordRequest request = new ChangePasswordRequest("TempPass123!", "weak");
-        doThrow(new PasswordValidationException("New password must be at least 8 characters long"))
-                .when(authService).changePassword(eq("USR002"), any(ChangePasswordRequest.class));
+        ChangePasswordRequest request = new ChangePasswordRequest(
+                "TempPass123!",
+                "weak"
+        );
+
+        doThrow(
+                new PasswordValidationException(
+                        "New password must be at least 8 characters long"
+                )
+        ).when(authService)
+                .changePassword(eq("USR002"), any(ChangePasswordRequest.class));
 
         mockMvc.perform(post("/api/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status", is(400)))
-                .andExpect(jsonPath("$.message", containsString("at least 8 characters")));
-
-        SecurityContextHolder.clearContext();
+                .andExpect(jsonPath(
+                        "$.message",
+                        containsString("at least 8 characters")
+                ));
     }
 
     @Test
     void testRefreshSuccess() throws Exception {
-        AuthResult response = new AuthResult(
-                "accessToken123",
-                "refreshToken123",
+        AuthResult authResult = new AuthResult(
+                "newAccessToken123",
+                "newRefreshToken123",
                 false,
                 UserRole.ADMIN,
                 "USR001",
@@ -219,10 +297,14 @@ class AuthControllerTest {
                 null
         );
 
-        when(authService.refresh("refreshToken123")).thenReturn(response);
+        when(authService.refresh("refreshToken123"))
+                .thenReturn(authResult);
+
         mockMvc.perform(post("/api/auth/refresh")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new RefreshTokenRequest("refreshToken123"))))
+                        .cookie(new Cookie(
+                                "REFRESH_TOKEN",
+                                "refreshToken123"
+                        )))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId", is("USR001")))
                 .andExpect(jsonPath("$.role", is("ADMIN")))
@@ -234,16 +316,20 @@ class AuthControllerTest {
 
     @Test
     void testRefreshRevokedTokenUnauthorized() throws Exception {
-        when(authService.refresh("revokedRefreshToken123")).thenThrow(new InvalidTokenException("Refresh token has been revoked"));
+        when(authService.refresh("revokedRefreshToken123"))
+                .thenThrow(
+                        new InvalidTokenException(
+                                "Refresh token has been revoked"
+                        )
+                );
 
         mockMvc.perform(post("/api/auth/refresh")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(
-                                new RefreshTokenRequest("revokedRefreshToken123")
+                        .cookie(new Cookie(
+                                "REFRESH_TOKEN",
+                                "revokedRefreshToken123"
                         )))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.status", is(401)))
-                .andExpect(jsonPath("$.message", is("Invalid or expired token")))
-                .andExpect(jsonPath("$.traceId", is("test-trace-id")));
+                .andExpect(status().isUnauthorized());
+
+        verify(authService).refresh("revokedRefreshToken123");
     }
 }

@@ -160,6 +160,15 @@
 		</dependency>
 
 
+		<!-- OpenAPI documentation for the Auth REST API -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>3.1.1</version>
+		</dependency>
+
+
+
 	</dependencies>
 
 	<build>

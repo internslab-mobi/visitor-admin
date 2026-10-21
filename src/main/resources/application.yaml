@@ -29,7 +29,8 @@ server:
 jwt:
   expiration: 900000
   refresh-expiration: 43200000
-  secret: ${JWT_SECRET}
+  private-key-path: ${JWT_PRIVATE_KEY_PATH}
+  public-key-path: ${JWT_PUBLIC_KEY_PATH}
 
 auth:
   cookie:
@@ -37,7 +38,9 @@ auth:
 
 app:
   cors:
-    allowed-origin: http://localhost:4200
+    allowed-origins: http://localhost:4200,http://localhost:8094
+
+
 
 logging:
   level:

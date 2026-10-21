@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
-public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
+public interface RefreshTokenRepository extends JpaRepository<RefreshToken, String> {
 
     Optional<RefreshToken> findByTokenHash(String tokenHash);
 
@@ -25,6 +25,11 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
                   AND r.revokedAt IS NULL
             """)
     int revokeAllByUserId(@Param("userId") String userId, @Param("revokedAt") LocalDateTime revokedAt);
+
+    long countByUser_IdAndRevokedAtIsNullAndExpiresAtAfter(
+            String userId,
+            LocalDateTime now
+    );
 
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

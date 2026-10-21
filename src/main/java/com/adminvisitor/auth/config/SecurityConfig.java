@@ -27,8 +27,8 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-    @Value("${app.cors.allowed-origin}")
-    private String allowedOrigin;
+    @Value("${app.cors.allowed-origins}")
+    private List<String> allowedOrigins;
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
@@ -59,7 +59,9 @@ public class SecurityConfig {
                                 "/api/auth/forgot-password",
                                 "/api/auth/forgot-password/resend",
                                 "/api/auth/verify-reset-otp",
-                                "/api/auth/reset-password"
+                                "/api/auth/reset-password",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**"
                         ).permitAll()
                         .requestMatchers("/api/auth/users").hasRole("ADMIN")
                         .requestMatchers("/api/auth/change-password").hasAnyAuthority(
@@ -81,7 +83,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of(allowedOrigin));
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(
                 List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         );
@@ -103,8 +105,10 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
+
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(12);
     }
+
 }

@@ -1,4 +1,3 @@
-
 package com.adminvisitor.auth.service.Impl;
 
 import com.adminvisitor.auth.event.UserCreatedEvent;
