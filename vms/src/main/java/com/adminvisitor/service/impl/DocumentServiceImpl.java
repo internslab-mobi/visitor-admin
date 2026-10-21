@@ -1,11 +1,11 @@
 package com.adminvisitor.service.impl;
 
+import com.adminvisitor.dto.requestdto.DepartmentCreateRequest;
+import com.adminvisitor.dto.responsedto.DocumentResponse;
 import com.adminvisitor.entity.Visit;
 import com.adminvisitor.mapper.DocumentMapper;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.service.DocumentService;
-import com.adminvisitor.dto.responsedto.DocumentResponse;
-// import com.adminvisitor.dto.responsedto.DocumentResponse;
 import com.adminvisitor.entity.Document;
 import com.adminvisitor.entity.DocumentMetadata;
 import com.adminvisitor.entity.Visitor;
@@ -15,17 +15,15 @@ import com.adminvisitor.enums.ProofType;
 import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.repository.DocumentMetadataRepository;
 import com.adminvisitor.repository.DocumentRepository;
-//import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.repository.VisitorRepository;
-import com.adminvisitor.service.DocumentService;
 import com.adminvisitor.service.IdGeneratorService;
 import com.adminvisitor.service.ProofSecurityService;
-import lombok.RequiredArgsConstructor;
 import com.adminvisitor.service.DocumentStorageService;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,39 +32,33 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+
+import static com.adminvisitor.enums.DocumentType.NDA_RENEWAL;
+import static com.adminvisitor.enums.DocumentType.NDA_SUPPORTING;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
-
 public class DocumentServiceImpl implements DocumentService {
 
     private final DocumentRepository documentRepository;
     private final VisitorRepository visitorRepository;
-    private final com.adminvisitor.service.IdGeneratorService idGeneratorService;
-   // private final IdGeneratorService idGeneratorService;
-   private final VisitRepository visitRepository;
+    private final IdGeneratorService idGeneratorService;
+    private final VisitRepository visitRepository;
     private final DocumentMetadataRepository documentMetadataRepository;
     private final DocumentMapper documentMapper;
     private final DocumentStorageService documentStorageService;
-     //Active service for generating HMAC-SHA-256 blind indexes.
-
     private final ProofSecurityService proofSecurityService;
-
 
     @Value("${vms.document.nda-upload-dir}")
     private String ndaUploadDir;
 
     @Value("${vms.document.upload-dir}")
     private String documentUploadDir;
-  //  private final VisitRepository visitRepository;
-
 
     @Value("${vms.document.photo-upload-dir}")
     private String photoUploadDir;
-
 
     @Transactional
     @Override
@@ -150,7 +142,18 @@ public class DocumentServiceImpl implements DocumentService {
             metadata.setDocumentType(DocumentType.VISITOR_PHOTO);
             metadata.setDocumentPath(filePath.toString());
 
-            return documentMetadataRepository.save(metadata);
+            DocumentMetadata savedMetadata =
+                    documentMetadataRepository.save(metadata);
+
+            log.info(
+                    "VISITOR_PHOTO_UPLOADED metadataId={} visitorId={} visitId={} fileSizeBytes={}",
+                    savedMetadata.getId(),
+                    visitorId,
+                    visitId,
+                    file.getSize()
+            );
+
+            return savedMetadata;
 
         } catch (IOException exception) {
 
@@ -160,46 +163,6 @@ public class DocumentServiceImpl implements DocumentService {
             );
         }
     }
-
-
-//    @Transactional(readOnly = true)
-//    public DocumentMetadata getLatestNda(String visitorId) {
-//
-//        // 1. Verify visitor exists
-//        Visitor visitor = visitorRepository.findById(visitorId)
-//                .orElseThrow(() ->
-//                        new ResourceNotFoundException(
-//                                "Visitor not found: " + visitorId
-//                        )
-//                );
-//
-//        // 2. Check whether NDA is currently valid
-//        if (isNdaRequired(visitor)) {
-//            throw new ResourceNotFoundException(
-//                    "No valid NDA found for visitor: " + visitorId
-//            );
-//        }
-//
-//        // 3. Find latest NDA only
-//        Document document = documentRepository
-//                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
-//                .orElseThrow(() ->
-//                        new ResourceNotFoundException(
-//                                "No document found for visitor: " + visitorId
-//                        )
-//                );
-//
-//        return documentMetadataRepository
-//                .findTopByDocumentIdAndDocumentTypeOrderByCreatedAtDesc(
-//                        document.getId(),
-//                        DocumentType.NDA
-//                )
-//                .orElseThrow(() ->
-//                        new ResourceNotFoundException(
-//                                "No valid NDA found for visitor: " + visitorId
-//                        )
-//                );
-//    }
 
     @Transactional(readOnly = true)
     public DocumentMetadata getLatestVisitorPhoto(String visitorId) {
@@ -215,50 +178,6 @@ public class DocumentServiceImpl implements DocumentService {
                         )
                 );
     }
-
-
-
-//    public DocumentMetadata getValidNda(Visitor visitor) {
-//
-//        if (visitor == null || isNdaRequired(visitor)) {
-//            return null;
-//        }
-//
-//        Document document = documentRepository
-//                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
-//                .orElse(null);
-//
-//        if (document == null) {
-//            return null;
-//        }
-//
-//        return documentMetadataRepository
-//                .findTopByDocumentIdAndDocumentTypeOrderByCreatedAtDesc(
-//                        document.getId(),
-//                        DocumentType.NDA
-//                )
-//                .orElse(null);
-//    }
-//
-//    public Resource getNdaFile(String visitorId) {
-//
-//        DocumentMetadata metadata = getLatestNda(visitorId);
-//
-//        Path filePath = Paths.get(
-//                metadata.getDocumentPath()
-//        );
-//
-//        if (!Files.exists(filePath)) {
-//            throw new IllegalArgumentException(
-//                    "NDA file not found"
-//            );
-//        }
-//
-//        return new FileSystemResource(filePath);
-//    }
-//
-
-
 
     @Transactional
     public Document saveIdentityProofs(
@@ -281,8 +200,7 @@ public class DocumentServiceImpl implements DocumentService {
         document.setVisitor(visitor);
         document.setNationality(nationality);
 
-
-        //Aadhaar
+        // Aadhaar
         if (aadharNumber != null && !aadharNumber.isBlank()) {
 
             document.setAadharNumber(
@@ -293,8 +211,8 @@ public class DocumentServiceImpl implements DocumentService {
             );
         }
 
-        //pan
-        if (panNumber != null && !panNumber.isBlank()){
+        // PAN
+        if (panNumber != null && !panNumber.isBlank()) {
 
             document.setPanNumber(
                     proofSecurityService.generateBlindIndex(
@@ -304,7 +222,7 @@ public class DocumentServiceImpl implements DocumentService {
             );
         }
 
-        //passport
+        // Passport
         if (passportNumber != null && !passportNumber.isBlank()) {
 
             document.setPassportNumber(
@@ -315,7 +233,16 @@ public class DocumentServiceImpl implements DocumentService {
             );
         }
 
-        return documentRepository.save(document);
+        Document savedDocument = documentRepository.save(document);
+
+        log.info(
+                "IDENTITY_PROOFS_SAVED documentId={} visitorId={} nationality={}",
+                savedDocument.getId(),
+                visitor.getId(),
+                nationality
+        );
+
+        return savedDocument;
     }
 
     public Document getLatestIdentityDocument(String visitorId) {
@@ -384,146 +311,6 @@ public class DocumentServiceImpl implements DocumentService {
         };
     }
 
-
-    /*
-     * ============================================================
-     * OLD AES ENCRYPTION FLOW
-     * ============================================================
-
-    private final AesEncryptionService aesEncryptionService;
-
-    @Transactional
-    public Document saveIdentityProofsUsingAes(
-            Visitor visitor,
-            Nationality nationality,
-            String aadharNumber,
-            String panNumber,
-            String passportNumber
-    ) {
-
-        String documentId =
-                idGeneratorService.generateId(
-                        "DOCUMENT",
-                        "doc"
-                );
-
-        Document document = new Document();
-
-        document.setId(documentId);
-        document.setVisitor(visitor);
-        document.setNationality(nationality);
-
-        if (aadharNumber != null && !aadharNumber.isBlank()) {
-
-            document.setAadharNumber(
-                    aesEncryptionService.encrypt(aadharNumber)
-            );
-        }
-
-        if (panNumber != null && !panNumber.isBlank()) {
-
-            document.setPanNumber(
-                    aesEncryptionService.encrypt(panNumber)
-            );
-        }
-
-        if (passportNumber != null && !passportNumber.isBlank()) {
-
-            document.setPassportNumber(
-                    aesEncryptionService.encrypt(passportNumber)
-            );
-        }
-
-        return documentRepository.save(document);
-    }
-
-    public IdentityProofResponse getIdentityProofsUsingAes(
-            String visitorId
-    ) {
-
-        Document document =
-                documentRepository
-                        .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Identity document not found for visitor: "
-                                                + visitorId
-                                )
-                        );
-
-        String aadharNumber = null;
-        String panNumber = null;
-        String passportNumber = null;
-
-        if (document.getAadharNumber() != null) {
-
-            aadharNumber =
-                    maskAadhar(
-                            aesEncryptionService.decrypt(
-                                    document.getAadharNumber()
-                            )
-                    );
-        }
-
-        if (document.getPanNumber() != null) {
-
-            panNumber =
-                    maskPan(
-                            aesEncryptionService.decrypt(
-                                    document.getPanNumber()
-                            )
-                    );
-        }
-
-        if (document.getPassportNumber() != null) {
-
-            passportNumber =
-                    maskPassport(
-                            aesEncryptionService.decrypt(
-                                    document.getPassportNumber()
-                            )
-                    );
-        }
-
-        return new IdentityProofResponse(
-                document.getId(),
-                document.getVisitor().getId(),
-                document.getNationality().name(),
-                aadharNumber,
-                panNumber,
-                passportNumber
-        );
-    }
-
-    private String maskAadhar(String aadharNumber) {
-
-        return "XXXX XXXX "
-                + aadharNumber.substring(
-                        aadharNumber.length() - 4
-                );
-    }
-
-    private String maskPan(String panNumber) {
-
-        return "XXXXXX"
-                + panNumber.substring(
-                        panNumber.length() - 4
-                );
-    }
-
-    private String maskPassport(String passportNumber) {
-
-        if (passportNumber.length() <= 4) {
-            return "XXXX";
-        }
-
-        return "XXXX"
-                + passportNumber.substring(
-                        passportNumber.length() - 4
-                );
-    }
-    */
-
     @Transactional(readOnly = true)
     @Override
     public DocumentMetadata getVisitPhoto(String visitId) {
@@ -540,7 +327,6 @@ public class DocumentServiceImpl implements DocumentService {
                 );
     }
 
-
     @Transactional(readOnly = true)
     public List<DocumentResponse> getAllDocuments(
             String visitorId
@@ -553,19 +339,23 @@ public class DocumentServiceImpl implements DocumentService {
                         )
                 );
 
-        return documentMetadataRepository
-                .findByDocument_Visitor_IdAndDocumentTypeNotIn(
-                        visitorId,
-                        List.of(
-                                DocumentType.NDA,
-                                DocumentType.VISITOR_PHOTO
-                        )
-                )
-                .stream()
-                .map(documentMapper::toResponse)
-                .toList();
-    }
 
+
+        List<DocumentResponse> documents =
+                documentMetadataRepository
+                        .findByDocument_Visitor_IdAndDocumentTypeIsNull(visitorId)
+                        .stream()
+                        .map(documentMapper::toResponse)
+                        .toList();
+
+        log.debug(
+                "VISITOR_DOCUMENTS_RETRIEVED visitorId={} documentCount={}",
+                visitorId,
+                documents.size()
+        );
+
+        return documents;
+    }
 
     @Transactional
     public List<DocumentMetadata> uploadProofDocuments(
@@ -573,14 +363,11 @@ public class DocumentServiceImpl implements DocumentService {
             List<MultipartFile> files
     ) {
 
-
         if (visitorId == null || visitorId.isBlank()) {
             throw new IllegalArgumentException(
                     "Visitor ID is required"
             );
         }
-
-
 
         if (files == null || files.isEmpty()) {
             throw new IllegalArgumentException(
@@ -588,37 +375,25 @@ public class DocumentServiceImpl implements DocumentService {
             );
         }
 
-
         if (!visitorRepository.existsById(visitorId)) {
             throw new ResourceNotFoundException(
                     "Visitor not found: " + visitorId
             );
         }
 
-
-
         Document document = documentRepository
                 .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Document not found for visitor: "
-                                        + visitorId
+                                "Document not found for visitor: " + visitorId
                         )
                 );
-
-
 
         List<DocumentMetadata> existingDocuments =
                 documentMetadataRepository
                         .findByDocumentId(document.getId());
 
-//        if (!existingDocuments.isEmpty()) {
-//            return existingDocuments;
-//        }
-
-
-        final long MAX_FILE_SIZE =
-                5 * 1024 * 1024; // 5 MB
+        final long MAX_FILE_SIZE = 5 * 1024 * 1024;
 
         for (MultipartFile file : files) {
 
@@ -639,13 +414,11 @@ public class DocumentServiceImpl implements DocumentService {
             }
         }
 
-
         Path visitorDirectory =
                 Paths.get(
                         documentUploadDir,
                         visitorId
                 );
-
 
         try {
 
@@ -678,8 +451,14 @@ public class DocumentServiceImpl implements DocumentService {
                 uploadedDocuments.add(savedMetadata);
             }
 
-            return uploadedDocuments;
+            log.info(
+                    "PROOF_DOCUMENTS_UPLOADED visitorId={} documentId={} documentCount={}",
+                    visitorId,
+                    document.getId(),
+                    uploadedDocuments.size()
+            );
 
+            return uploadedDocuments;
 
         } catch (IOException exception) {
 
@@ -689,8 +468,6 @@ public class DocumentServiceImpl implements DocumentService {
             );
         }
     }
-
-
 
     @Transactional(readOnly = true)
     public DocumentMetadata getDocumentMetadata(String documentId) {
@@ -704,8 +481,6 @@ public class DocumentServiceImpl implements DocumentService {
                 );
     }
 
-
-
     @Transactional
     public void deleteDocument(String metadataId) {
 
@@ -718,6 +493,7 @@ public class DocumentServiceImpl implements DocumentService {
                         );
 
         String documentPath = metadata.getDocumentPath();
+
         if (documentPath != null && !documentPath.isBlank()) {
 
             try {
@@ -734,6 +510,13 @@ public class DocumentServiceImpl implements DocumentService {
                 );
             }
         }
+
         documentMetadataRepository.delete(metadata);
+
+        log.info(
+                "DOCUMENT_DELETED metadataId={} documentId={}",
+                metadata.getId(),
+                metadata.getDocument().getId()
+        );
     }
 }

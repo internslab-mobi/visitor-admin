@@ -41,7 +41,6 @@ public class VisitManagementServiceImpl implements VisitManagementService{
             DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
 
     private final QrMicroserviceClient qrMicroserviceClient;
-
     private final VisitRepository visitRepository;
     private final VendorRepository vendorRepository;
     private final ProofSecurityService proofSecurityService;
@@ -49,8 +48,8 @@ public class VisitManagementServiceImpl implements VisitManagementService{
     private final EmailService emailService;
     private final DocumentService documentService;
     private final VisitBadgeService visitBadgeService;
-    //private final QrTokenService qrTokenService;
-private final NdaService ndaService;
+    private final NdaService ndaService;
+
     private double elapsedMillis(long startNanos) {
         return (System.nanoTime() - startNanos) / 1_000_000.0;
     }
@@ -127,20 +126,22 @@ private final NdaService ndaService;
         List<Visit> visits =
                 visitRepository.findAll(specification, sort);
 
-        long queryEnd = System.nanoTime();
+        double fetchMs = elapsedMillis(queryStart);
+
+        long mappingStart = System.nanoTime();
 
         List<VisitDashboardResponse> responses =
                 visits.stream()
                         .map(visitMapper::toDashboardResponse)
                         .toList();
 
-        long mappingEnd = System.nanoTime();
+        double mappingMs = elapsedMillis(mappingStart);
 
-        log.info(
-                "Dashboard visits performance: visitCount={}, fetchMs={}, mappingMs={}",
+        log.debug(
+                "VISIT_DASHBOARD_RETRIEVED visitCount={} fetchMs={} mappingMs={}",
                 visits.size(),
-                (queryEnd - queryStart) / 1_000_000.0,
-                (mappingEnd - queryEnd) / 1_000_000.0
+                fetchMs,
+                mappingMs
         );
 
         return responses;
@@ -159,18 +160,18 @@ private final NdaService ndaService;
             int size,
             String sortDirection
     ) {
-        long startNanos = System.nanoTime();
 
-        try {
-            if (page < 0) {
-                throw new BusinessRuleException(
-                        "Page number cannot be negative");
-            }
+        if (page < 0) {
+            throw new BusinessRuleException(
+                    "Page number cannot be negative"
+            );
+        }
 
-            if (size < 1 || size > 100) {
-                throw new BusinessRuleException(
-                        "Page size must be between 1 and 100");
-            }
+        if (size < 1 || size > 100) {
+            throw new BusinessRuleException(
+                    "Page size must be between 1 and 100"
+            );
+        }
 
 //            Specification<Visit> specification =
 //                    (root, query, criteriaBuilder) ->
@@ -179,52 +180,33 @@ private final NdaService ndaService;
                     (root, query, criteriaBuilder) ->
                             criteriaBuilder.conjunction();
 
-            specification = addSpecification(
-                    specification, VisitSpecification.hasSearch(search));
-            specification = addSpecification(
-                    specification, VisitSpecification.hasFromDate(fromDate));
-            specification = addSpecification(
-                    specification, VisitSpecification.hasToDate(toDate));
-            specification = addSpecification(
-                    specification, VisitSpecification.hasStatus(status));
-            specification = addSpecification(
-                    specification, VisitSpecification.hasVisitorType(visitorType));
-            specification = addSpecification(
-                    specification, VisitSpecification.hasHostId(hostId));
+        specification = addSpecification(
+                specification, VisitSpecification.hasSearch(search));
+        specification = addSpecification(
+                specification, VisitSpecification.hasFromDate(fromDate));
+        specification = addSpecification(
+                specification, VisitSpecification.hasToDate(toDate));
+        specification = addSpecification(
+                specification, VisitSpecification.hasStatus(status));
+        specification = addSpecification(
+                specification, VisitSpecification.hasVisitorType(visitorType));
+        specification = addSpecification(
+                specification, VisitSpecification.hasHostId(hostId));
 
-            Sort.Direction direction =
-                    "ASC".equalsIgnoreCase(sortDirection)
-                            ? Sort.Direction.ASC
-                            : Sort.Direction.DESC;
+        Sort.Direction direction =
+                "ASC".equalsIgnoreCase(sortDirection)
+                        ? Sort.Direction.ASC
+                        : Sort.Direction.DESC;
 
-            Sort sort = Sort.by(direction, "expectedArrivalAt")
-                    .and(Sort.by(Sort.Direction.ASC, "id"));
+        Sort sort = Sort.by(direction, "expectedArrivalAt")
+                .and(Sort.by(Sort.Direction.ASC, "id"));
 
-            Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
-            Page<Visit> visits =
-                    visitRepository.findAll(specification, pageable);
+        Page<Visit> visits =
+                visitRepository.findAll(specification, pageable);
 
-            return visits.map(visitMapper::toVisitorLogResponse);
-
-        } catch (RuntimeException ex) {
-            log.error(
-                    "Visitor log retrieval failed. page={}, size={}, elapsedMs={}",
-                    page,
-                    size,
-                    elapsedMillis(startNanos),
-                    ex
-            );
-            throw ex;
-
-        } finally {
-            log.info(
-                    "Visitor log execution finished. page={}, size={}, elapsedMs={}",
-                    page,
-                    size,
-                    elapsedMillis(startNanos)
-            );
-        }
+        return visits.map(visitMapper::toVisitorLogResponse);
     }
 
     // VISIT DETAILS
@@ -234,7 +216,9 @@ private final NdaService ndaService;
         Visit visit = visitRepository.findDetailsById(visitId)
                 .orElseThrow(() ->
                         new BusinessRuleException(
-                                "Visit not found with id: " + visitId));
+                                "Visit not found with id: " + visitId
+                        )
+                );
 
         VisitDetailResponse response =
                 visitMapper.toVisitDetailResponse(visit);
@@ -295,57 +279,21 @@ private final NdaService ndaService;
         ).getSeconds();
     }
 
-    // NDA STATUS
-//    @Transactional(readOnly = true)
-//    public NdaStatusResponse getNdaStatus(String visitId) {
-//
-//        Visit visit = visitRepository.findById(visitId)
-//                .orElseThrow(() ->
-//                        new BusinessRuleException(
-//                                "Visit not found with id: " + visitId));
-//
-//        Visitor visitor = visit.getVisitor();
-//
-//        boolean ndaRequired =
-//                visit.getVisitorType() == VisitorType.VENDOR
-//                        && documentService.isNdaRequired(visitor);
-//
-//        boolean ndaAvailable =
-//                visit.getVisitorType() == VisitorType.VENDOR
-//                        && !ndaRequired;
-//
-//        DocumentMetadata latestNda = null;
-//
-//        if (ndaAvailable) {
-//            latestNda = ndaService.getLatestNda(visitor.getId());
-//        }
-//
-//        return NdaStatusResponse.builder()
-//                .visitorId(visitor.getId())
-//                .visitorType(visit.getVisitorType().name())
-//                .ndaRequired(ndaRequired)
-//                .ndaAvailable(ndaAvailable)
-//                .validUntil(latestNda != null
-//                        ? latestNda.getValidUntil() : null)
-//                .documentId(latestNda != null
-//                        ? latestNda.getId() : null)
-//                .build();
-//    }
-
-    // CANCEL VISIT
+    // VISIT CANCELLATION
     @Transactional
     public VisitDetailResponse cancelVisit(String visitId) {
-
-        log.info("Cancellation started. visitId={}", visitId);
 
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() ->
                         new BusinessRuleException(
-                                "Visit not found with id: " + visitId));
+                                "Visit not found with id: " + visitId
+                        )
+                );
 
         if (visit.getStatus() != VisitStatus.REGISTERED) {
             throw new BusinessRuleException(
-                    "Only a registered visit can be cancelled");
+                    "Only a registered visit can be cancelled"
+            );
         }
 
         visit.setStatus(VisitStatus.CANCELLED);
@@ -369,7 +317,7 @@ private final NdaService ndaService;
         emailService.sendVisitCancellationEmail(emailData);
 
         log.info(
-                "Visit cancelled successfully. visitId={}, visitReference={}, visitorId={}",
+                "VISIT_CANCELLED visitId={} visitReference={} visitorId={}",
                 cancelledVisit.getId(),
                 cancelledVisit.getVisitReference(),
                 cancelledVisit.getVisitor().getId()
@@ -385,162 +333,124 @@ private final NdaService ndaService;
             CheckInRequest request,
             MultipartFile photo
     ) {
-        long startNanos = System.nanoTime();
 
-        try {
-            Visit visit = visitRepository.findById(visitId)
-                    .orElseThrow(() ->
-                            new BusinessRuleException(
-                                    "Visit not found with id: " + visitId));
+        Visit visit = visitRepository.findById(visitId)
+                .orElseThrow(() ->
+                        new BusinessRuleException(
+                                "Visit not found with id: " + visitId
+                        )
+                );
 
-            if (visit.getStatus() != VisitStatus.REGISTERED) {
-                throw new BusinessRuleException(
-                        "Only a registered visit can be checked in");
-            }
-
-            if (!visit.getExpectedArrivalAt()
-                    .toLocalDate()
-                    .equals(LocalDate.now())) {
-                throw new BusinessRuleException(
-                        "Visit can only be checked in on the scheduled visit date");
-            }
-
-            validateVisitorIdentity(visit.getVisitor(), request);
-
-            if (visit.getVisitorType() == VisitorType.VENDOR) {
-                boolean ndaRequired =
-                        ndaService.isNdaRequired(visit.getVisitor());
-
-                if (ndaRequired) {
-                    throw new BusinessRuleException(
-                            "A valid NDA is required for this vendor before check-in");
-                }
-            }
-
-            DocumentMetadata visitorPhoto =
-                    documentService.uploadVisitorPhoto(
-                            visit.getVisitor().getId(),
-                            visit.getId(),
-                            photo
-                    );
-
-            LocalDateTime checkedInAt = LocalDateTime.now();
-
-            visit.setCheckedInAt(checkedInAt);
-            visit.setStatus(VisitStatus.CHECKED_IN);
-
-            Visit checkedInVisit = visitRepository.save(visit);
-
-//            VisitBadge badge =
-//                    visitBadgeService.createBadge(checkedInVisit);
-//
-//            String qrCode =
-//                    qrTokenService.generateQrCode(
-//                            badge.getQrContainingToken());
-
-            String qrToken = qrMicroserviceClient.generateToken();
-            System.out.println(qrToken);
-
-            VisitBadge badge = visitBadgeService.createBadge(
-                    checkedInVisit,
-                    qrToken
-            );
-
-            String qrCode = qrMicroserviceClient.generateQrCode(
-                    badge.getQrContainingToken()
-            );
-            log.info(
-                    "QR code generated successfully. visitId={}, qrLength={}",
-                    checkedInVisit.getId(),
-                    qrCode.length()
-            );
-
-            BadgeEmailData emailData = new BadgeEmailData(
-                    checkedInVisit.getVisitor().getFirstName()
-                            + " " + checkedInVisit.getVisitor().getLastName(),
-                    checkedInVisit.getVisitor().getEmail(),
-                    checkedInVisit.getVisitReference(),
-                    checkedInVisit.getHost().getFirstName()
-                            + " " + checkedInVisit.getHost().getLastName(),
-                    checkedInVisit.getHost().getEmail(),
-                    badge.getIssuedAt().format(EMAIL_DATE_TIME_FORMATTER),
-                    badge.getValidUntil().format(EMAIL_DATE_TIME_FORMATTER),
-                    qrCode,
-                    visitorPhoto.getDocumentPath()
-            );
-
-            log.info(
-                    "Visitor badge created successfully. visitId={}, badgeId={}",
-                    checkedInVisit.getId(),
-                    badge.getId()
-            );
-
-            emailService.sendVisitBadgeEmail(emailData);
-
-            HostCheckInEmailData hostEmailData =
-                    new HostCheckInEmailData(
-                            checkedInVisit.getHost().getEmail(),
-                            checkedInVisit.getHost().getFirstName()
-                                    + " " + checkedInVisit.getHost().getLastName(),
-                            checkedInVisit.getVisitor().getFirstName()
-                                    + " " + checkedInVisit.getVisitor().getLastName(),
-                            checkedInVisit.getVisitorType().name(),
-                            checkedInVisit.getVisitor().getCompanyName(),
-                            checkedInVisit.getVisitReference(),
-                            checkedInVisit.getPurpose(),
-                            checkedInAt.format(EMAIL_DATE_TIME_FORMATTER)
-                    );
-
-            emailService.sendHostCheckInNotification(hostEmailData);
-
-            log.info(
-                    "Visitor checked in successfully. visitId={}, visitReference={}, visitorId={}, checkedInAt={}",
-                    checkedInVisit.getId(),
-                    checkedInVisit.getVisitReference(),
-                    checkedInVisit.getVisitor().getId(),
-                    checkedInVisit.getCheckedInAt()
-            );
-
-            return visitMapper.toVisitDetailResponse(checkedInVisit);
-
-        } catch (RuntimeException ex) {
-            log.error(
-                    "Check-in failed. visitId={}, elapsedMs={}",
-                    visitId,
-                    elapsedMillis(startNanos),
-                    ex
-            );
-            throw ex;
-
-        } finally {
-            log.info(
-                    "Check-in execution finished. visitId={}, elapsedMs={}",
-                    visitId,
-                    elapsedMillis(startNanos)
+        if (visit.getStatus() != VisitStatus.REGISTERED) {
+            throw new BusinessRuleException(
+                    "Only a registered visit can be checked in"
             );
         }
+
+        if (!visit.getExpectedArrivalAt()
+                .toLocalDate()
+                .equals(LocalDate.now())) {
+            throw new BusinessRuleException(
+                    "Visit can only be checked in on the scheduled visit date"
+            );
+        }
+
+        validateVisitorIdentity(visit.getVisitor(), request);
+
+        if (visit.getVisitorType() == VisitorType.VENDOR) {
+            boolean ndaRequired =
+                    ndaService.isNdaRequired(visit.getVisitor());
+
+            if (ndaRequired) {
+                throw new BusinessRuleException(
+                        "A valid NDA is required for this vendor before check-in"
+                );
+            }
+        }
+
+        DocumentMetadata visitorPhoto =
+                documentService.uploadVisitorPhoto(
+                        visit.getVisitor().getId(),
+                        visit.getId(),
+                        photo
+                );
+
+        LocalDateTime checkedInAt = LocalDateTime.now();
+
+        visit.setCheckedInAt(checkedInAt);
+        visit.setStatus(VisitStatus.CHECKED_IN);
+
+        Visit checkedInVisit = visitRepository.save(visit);
+
+        String qrToken = qrMicroserviceClient.generateToken();
+
+        VisitBadge badge = visitBadgeService.createBadge(
+                checkedInVisit,
+                qrToken
+        );
+
+        String qrCode = qrMicroserviceClient.generateQrCode(
+                badge.getQrContainingToken()
+        );
+
+        BadgeEmailData emailData = new BadgeEmailData(
+                checkedInVisit.getVisitor().getFirstName()
+                        + " " + checkedInVisit.getVisitor().getLastName(),
+                checkedInVisit.getVisitor().getEmail(),
+                checkedInVisit.getVisitReference(),
+                checkedInVisit.getHost().getFirstName()
+                        + " " + checkedInVisit.getHost().getLastName(),
+                checkedInVisit.getHost().getEmail(),
+                badge.getIssuedAt().format(EMAIL_DATE_TIME_FORMATTER),
+                badge.getValidUntil().format(EMAIL_DATE_TIME_FORMATTER),
+                qrCode,
+                visitorPhoto.getDocumentPath()
+        );
+
+        emailService.sendVisitBadgeEmail(emailData);
+
+        HostCheckInEmailData hostEmailData =
+                new HostCheckInEmailData(
+                        checkedInVisit.getHost().getEmail(),
+                        checkedInVisit.getHost().getFirstName()
+                                + " " + checkedInVisit.getHost().getLastName(),
+                        checkedInVisit.getVisitor().getFirstName()
+                                + " " + checkedInVisit.getVisitor().getLastName(),
+                        checkedInVisit.getVisitorType().name(),
+                        checkedInVisit.getVisitor().getCompanyName(),
+                        checkedInVisit.getVisitReference(),
+                        checkedInVisit.getPurpose(),
+                        checkedInAt.format(EMAIL_DATE_TIME_FORMATTER)
+                );
+
+        emailService.sendHostCheckInNotification(hostEmailData);
+
+        log.info(
+                "VISIT_CHECKED_IN visitId={} visitReference={} visitorId={} checkedInAt={}",
+                checkedInVisit.getId(),
+                checkedInVisit.getVisitReference(),
+                checkedInVisit.getVisitor().getId(),
+                checkedInVisit.getCheckedInAt()
+        );
+
+        return visitMapper.toVisitDetailResponse(checkedInVisit);
     }
 
     // CHECK-OUT
     @Transactional
     public VisitDetailResponse checkOut(String visitId) {
 
-        log.info("Checkout started. visitId={}", visitId);
-
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() ->
                         new BusinessRuleException(
-                                "Visit not found with id: " + visitId));
-
-        log.info(
-                "Visit loaded. visitId={}, status={}",
-                visit.getId(),
-                visit.getStatus()
-        );
+                                "Visit not found with id: " + visitId
+                        )
+                );
 
         if (visit.getStatus() != VisitStatus.CHECKED_IN) {
             throw new BusinessRuleException(
-                    "Only a checked-in visit can be checked out");
+                    "Only a checked-in visit can be checked out"
+            );
         }
 
         LocalDateTime checkedOutAt = LocalDateTime.now();
@@ -556,7 +466,7 @@ private final NdaService ndaService;
         );
 
         log.info(
-                "Visitor checked out successfully. visitId={}, visitReference={}, visitorId={}, checkedOutAt={}",
+                "VISIT_CHECKED_OUT visitId={} visitReference={} visitorId={} checkedOutAt={}",
                 checkedOutVisit.getId(),
                 checkedOutVisit.getVisitReference(),
                 checkedOutVisit.getVisitor().getId(),
@@ -566,23 +476,27 @@ private final NdaService ndaService;
         return visitMapper.toVisitDetailResponse(checkedOutVisit);
     }
 
+    // IDENTITY VERIFICATION
     @Transactional(readOnly = true)
     public void verifyIdentity(String visitId, CheckInRequest request) {
 
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() ->
                         new BusinessRuleException(
-                                "Visit not found with id: " + visitId));
+                                "Visit not found with id: " + visitId
+                        )
+                );
 
         if (visit.getStatus() != VisitStatus.REGISTERED) {
             throw new BusinessRuleException(
-                    "Only a registered visit can have its identity verified");
+                    "Only a registered visit can have its identity verified"
+            );
         }
 
         validateVisitorIdentity(visit.getVisitor(), request);
 
         log.info(
-                "Visitor identity verified successfully. visitId={}",
+                "VISITOR_IDENTITY_VERIFIED visitId={}",
                 visitId
         );
     }
@@ -593,7 +507,9 @@ private final NdaService ndaService;
             CheckInRequest request
     ) {
 
-        Document identityDocument = documentService.getLatestIdentityDocument(visitor.getId());
+        Document identityDocument =
+                documentService.getLatestIdentityDocument(visitor.getId());
+
         Nationality nationality = identityDocument.getNationality();
 
         proofSecurityService.validate(
@@ -602,34 +518,45 @@ private final NdaService ndaService;
                 request.panNumber(),
                 request.passportNumber()
         );
+
         boolean identityMatches;
 
         switch (nationality) {
             case DOMESTIC -> {
-                boolean aadhaarMatches = documentService.verifyIdentityProof(
+                boolean aadhaarMatches =
+                        documentService.verifyIdentityProof(
                                 visitor,
                                 ProofType.AADHAAR,
-                                request.aadharNumber());
+                                request.aadharNumber()
+                        );
 
-                boolean panMatches = documentService.verifyIdentityProof(
+                boolean panMatches =
+                        documentService.verifyIdentityProof(
                                 visitor,
                                 ProofType.PAN,
-                                request.panNumber());
+                                request.panNumber()
+                        );
+
                 identityMatches = aadhaarMatches && panMatches;
             }
 
             case INTERNATIONAL ->
-                    identityMatches = documentService.verifyIdentityProof(
+                    identityMatches =
+                            documentService.verifyIdentityProof(
                                     visitor,
                                     ProofType.PASSPORT,
-                                    request.passportNumber());
+                                    request.passportNumber()
+                            );
 
             default -> throw new BusinessRuleException(
-                    "Unsupported nationality for identity verification");
+                    "Unsupported nationality for identity verification"
+            );
         }
 
         if (!identityMatches) {
-            throw new BusinessRuleException("Identity verification failed");
+            throw new BusinessRuleException(
+                    "Identity verification failed"
+            );
         }
     }
 }

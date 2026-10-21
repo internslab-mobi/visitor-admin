@@ -1,7 +1,7 @@
-
 package com.adminvisitor.service.impl;
 
 import com.adminvisitor.service.QrMicroserviceClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
@@ -10,17 +10,24 @@ import org.springframework.web.client.RestClient;
 import java.util.Map;
 
 @Service
-public class QrMicroserviceClientImpl
-        implements QrMicroserviceClient {
+@Slf4j
+public class QrMicroserviceClientImpl implements QrMicroserviceClient {
 
     private final RestClient restClient;
 
     public QrMicroserviceClientImpl(
-//            RestClient.Builder builder,
-            @Value("${qr.service.base-url}") String baseUrl) {
+            @Value("${qr.service.base-url}") String baseUrl,
+            @Value("${qr.service.api-key}") String apiKey) {
 
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException(
+                    "QR service API key must be configured");
+        }
 
-        this.restClient = RestClient.create(baseUrl);
+        this.restClient = RestClient.create(baseUrl)
+                .mutate()
+                .defaultHeader("X-QR-API-KEY", apiKey)
+                .build();
     }
 
     @Override
@@ -37,12 +44,16 @@ public class QrMicroserviceClientImpl
             );
         }
 
+        log.info("QR_TOKEN_GENERATION_SUCCEEDED");
+
+
         return response.get("token").toString();
+
     }
 
     @Override
     public String generateQrCode(String payload) {
-
+        System.out.println(payload);
         Map<String, String> request = Map.of(
                 "payload", payload
         );
@@ -58,6 +69,8 @@ public class QrMicroserviceClientImpl
                     "QR microservice returned no QR image"
             );
         }
+
+        log.info("QR_CODE_GENERATION_SUCCEEDED");
 
         return response.get("qrCode").toString();
     }

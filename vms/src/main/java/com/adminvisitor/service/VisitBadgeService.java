@@ -1,5 +1,6 @@
 package com.adminvisitor.service;
 
+import com.adminvisitor.dto.responsedto.QrScanResponse;
 import com.adminvisitor.entity.Visit;
 import com.adminvisitor.entity.VisitBadge;
 import com.adminvisitor.enums.BadgeStatus;
@@ -16,6 +17,6 @@ public interface VisitBadgeService {
      //VisitBadge validateQrToken(String qrToken);
     VisitBadge validateQrTokenForUpdate(String qrToken);
 
-
+    QrScanResponse processScan(String token);
 
 }

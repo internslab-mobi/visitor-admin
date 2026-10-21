@@ -1,5 +1,8 @@
 package com.adminvisitor.config;
 
+import com.adminvisitor.security.CustomAccessDeniedHandler;
+import com.adminvisitor.security.CustomAuthenticationEntryPoint;
+import com.adminvisitor.security.CookieAccessTokenFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +31,18 @@ import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 
 import java.util.function.Supplier;
 
@@ -39,19 +54,32 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+
     @Bean
     public JwtDecoder jwtDecoder(
-            @Value("${jwt.secret}") String secret
-    ) {
-        SecretKeySpec secretKey = new SecretKeySpec(
-                secret.getBytes(StandardCharsets.UTF_8),
-                "HmacSHA256"
+            @Value("${jwt.public-key-path}") String publicKeyPath
+    ) throws Exception {
+        String pem = Files.readString(
+                Path.of(publicKeyPath),
+                StandardCharsets.UTF_8
         );
 
+        String encoded = pem
+                .replace("-----BEGIN PUBLIC KEY-----", "")
+                .replace("-----END PUBLIC KEY-----", "")
+                .replaceAll("\\s", "");
+
+        byte[] keyBytes = Base64.getDecoder().decode(encoded);
+
+        PublicKey publicKey = KeyFactory.getInstance("RSA")
+                .generatePublic(new X509EncodedKeySpec(keyBytes));
+
         return NimbusJwtDecoder
-                .withSecretKey(secretKey)
+                .withPublicKey((RSAPublicKey) publicKey)
+                .signatureAlgorithm(SignatureAlgorithm.RS256)
                 .build();
     }
+
 
     @Bean
     public CookieAccessTokenFilter cookieAccessTokenFilter() {

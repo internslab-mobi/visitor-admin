@@ -11,9 +11,9 @@ import com.adminvisitor.mapper.VendorMapper;
 import com.adminvisitor.repository.DocumentMetadataRepository;
 import com.adminvisitor.repository.VendorRepository;
 import com.adminvisitor.service.VendorService;
-
 import com.adminvisitor.service.VisitorService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +22,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class VendorServiceImpl implements VendorService {
 
     private final VendorMapper vendorMapper;
@@ -31,10 +32,14 @@ public class VendorServiceImpl implements VendorService {
 
     public List<VendorResponse> getAllVendors() {
 
-        return vendorRepository.findAll()
+        List<VendorResponse> vendors = vendorRepository.findAll()
                 .stream()
                 .map(vendorMapper::toResponse)
                 .toList();
+
+        log.debug("VENDOR_LIST_RETRIEVED count={}", vendors.size());
+
+        return vendors;
     }
 
     public VendorResponse getVendorById(String id) {
@@ -48,20 +53,6 @@ public class VendorServiceImpl implements VendorService {
 
         return mapToResponse(vendor);
     }
-
-//    private VendorResponse mapToResponse(Vendor vendor) {
-//
-//        return new VendorResponse(
-//                vendor.getId(),
-//                vendor.getVisitor().getId(),
-//                vendor.getFirstName(),
-//                vendor.getLastName(),
-//                vendor.getEmail(),
-//                vendor.getMobileNumber(),
-//                vendor.getCompanyName()
-//        );
-//    }
-
 
     private VendorResponse mapToResponse(Vendor vendor) {
         return vendorMapper.toResponse(vendor);
@@ -84,6 +75,12 @@ public class VendorServiceImpl implements VendorService {
 
         List<VendorEditResponse.NdaInfo> ndas =
                 getVendorNdas(vendor.getVisitor().getId());
+
+        log.debug(
+                "VENDOR_EDIT_DETAILS_RETRIEVED vendorId={} ndaCount={}",
+                vendorId,
+                ndas.size()
+        );
 
         return vendorMapper.toEditResponse(
                 vendor,

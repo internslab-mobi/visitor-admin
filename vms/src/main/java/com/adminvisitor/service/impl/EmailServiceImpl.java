@@ -74,12 +74,12 @@ public class EmailServiceImpl implements EmailService {
                 notificationOutboxService.enqueue(request);
 
                 log.info(
-                        "Visit confirmation notification accepted. visitReference={}",
+                        "NOTIFICATION_ENQUEUE_REQUESTED scenario=VISIT_CONFIRMATION visitReference={}",
                         visit.getVisitReference()
                 );
             } catch (RuntimeException exception) {
                 log.error(
-                        "Visit confirmation notification failed. visitReference={}",
+                        "NOTIFICATION_ENQUEUE_FAILED scenario=VISIT_CONFIRMATION visitReference={}",
                         visit.getVisitReference(),
                         exception
                 );
@@ -96,6 +96,11 @@ public class EmailServiceImpl implements EmailService {
                             sendNotification.run();
                         }
                     }
+            );
+
+            log.debug(
+                    "NOTIFICATION_ENQUEUE_DEFERRED scenario=VISIT_CONFIRMATION visitReference={}",
+                    visit.getVisitReference()
             );
 
         } else {
@@ -161,14 +166,14 @@ public class EmailServiceImpl implements EmailService {
             notificationOutboxService.enqueue(request);
 
             log.info(
-                    "Visitor badge email request sent to Notification Service. visitReference={}, recipient={}",
+                    "NOTIFICATION_ENQUEUED scenario=VISIT_BADGE visitReference={} photoSizeBytes={}",
                     data.visitReference(),
                     data.visitorEmail()
             );
 
         } catch (IOException | RuntimeException exception) {
             log.error(
-                    "Failed to send visitor badge email request. visitReference={}, recipient={}",
+                    "NOTIFICATION_ENQUEUE_FAILED scenario=VISIT_BADGE visitReference={}",
                     data.visitReference(),
                     data.visitorEmail(),
                     exception
@@ -206,14 +211,13 @@ public class EmailServiceImpl implements EmailService {
             notificationOutboxService.enqueue(request);
 
             log.info(
-                    "Host check-in notification request sent to Notification Service. visitReference={}, hostEmail={}",
-                    data.visitReference(),
-                    data.hostEmail()
+                    "NOTIFICATION_ENQUEUED scenario=HOST_CHECK_IN visitReference={}",
+                    data.visitReference()
             );
 
         } catch (RuntimeException exception) {
             log.error(
-                    "Failed to send host check-in notification request. visitReference={}, hostEmail={}",
+                    "NOTIFICATION_ENQUEUE_FAILED scenario=HOST_CHECK_IN visitReference={}",
                     data.visitReference(),
                     data.hostEmail(),
                     exception
@@ -250,14 +254,13 @@ public class EmailServiceImpl implements EmailService {
             notificationOutboxService.enqueue(request);
 
             log.info(
-                    "Visit cancellation notification request sent to Notification Service. visitReference={}, recipient={}",
-                    data.visitReference(),
-                    data.visitorEmail()
+                    "NOTIFICATION_ENQUEUED scenario=VISIT_CANCELLATION visitReference={}",
+                    data.visitReference()
             );
 
         } catch (RuntimeException exception) {
             log.error(
-                    "Failed to send visit cancellation notification request. visitReference={}, recipient={}",
+                    "NOTIFICATION_ENQUEUE_FAILED scenario=VISIT_CANCELLATION visitReference={}",
                     data.visitReference(),
                     data.visitorEmail(),
                     exception
@@ -291,16 +294,14 @@ public class EmailServiceImpl implements EmailService {
             notificationOutboxService.enqueue(request);
 
             log.info(
-                    "Host daily reminder request sent to Notification Service. hostEmail={}, reminderDate={}, visitCount={}",
-                    data.hostEmail(),
+                    "NOTIFICATION_ENQUEUED scenario=HOST_DAILY_REMINDER reminderDate={} visitCount={}",
                     data.reminderDate(),
                     data.visits().size()
             );
 
         } catch (RuntimeException exception) {
             log.error(
-                    "Failed to send host daily reminder request. hostEmail={}, reminderDate={}",
-                    data.hostEmail(),
+                    "NOTIFICATION_ENQUEUE_FAILED scenario=HOST_DAILY_REMINDER reminderDate={}",
                     data.reminderDate(),
                     exception
             );

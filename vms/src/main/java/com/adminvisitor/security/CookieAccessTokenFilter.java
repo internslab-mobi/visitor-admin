@@ -1,4 +1,4 @@
-package com.adminvisitor.config;
+package com.adminvisitor.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

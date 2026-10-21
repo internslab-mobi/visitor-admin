@@ -1,18 +1,12 @@
 package com.adminvisitor.service.impl;
 
+import com.adminvisitor.dto.responsedto.HostDailyReminderEmailData;
+import com.adminvisitor.entity.Employee;
 import com.adminvisitor.entity.Visit;
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.repository.VisitRepository;
-import com.adminvisitor.service.VisitAutomationService;
-import com.adminvisitor.dto.responsedto.HostDailyReminderEmailData;
-import com.adminvisitor.entity.Employee;
 import com.adminvisitor.service.EmailService;
-
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import java.util.stream.Collectors;
-
+import com.adminvisitor.service.VisitAutomationService;
 import com.adminvisitor.service.VisitBadgeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,13 +16,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class VisitAutomationServiceImpl
-        implements VisitAutomationService {
+public class VisitAutomationServiceImpl implements VisitAutomationService {
 
     private final VisitRepository visitRepository;
     private final VisitBadgeService visitBadgeService;
@@ -38,8 +35,7 @@ public class VisitAutomationServiceImpl
     @Transactional
     public void markNoShowVisits() {
 
-        LocalDateTime startOfToday =
-                LocalDate.now().atStartOfDay();
+        LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
 
         List<Visit> visits =
                 visitRepository.findByStatusAndExpectedArrivalAtBefore(
@@ -48,26 +44,26 @@ public class VisitAutomationServiceImpl
                 );
 
         for (Visit visit : visits) {
-
             visit.setStatus(VisitStatus.NO_SHOW);
-
-            log.info(
-                    "Visit marked as NO_SHOW. visitId={}, visitReference={}",
-                    visit.getId(),
-                    visit.getVisitReference()
-            );
         }
 
-        visitRepository.saveAll(visits);
+        if (!visits.isEmpty()) {
+            visitRepository.saveAll(visits);
+
+            log.info(
+                    "VISITS_MARKED_NO_SHOW count={}",
+                    visits.size()
+            );
+        } else {
+            log.debug("VISITS_NO_SHOW_NONE_FOUND");
+        }
     }
 
     @Scheduled(fixedRate = 300000)
     @Transactional
     public void autoCheckOutVisits() {
 
-        LocalDateTime startOfToday =
-                LocalDate.now().atStartOfDay();
-
+        LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
         LocalDateTime now = LocalDateTime.now();
 
         List<Visit> visits =
@@ -85,15 +81,18 @@ public class VisitAutomationServiceImpl
                     visit.getId(),
                     now
             );
-
-            log.info(
-                    "Visit automatically checked out. visitId={}, visitReference={}",
-                    visit.getId(),
-                    visit.getVisitReference()
-            );
         }
 
-        visitRepository.saveAll(visits);
+        if (!visits.isEmpty()) {
+            visitRepository.saveAll(visits);
+
+            log.info(
+                    "VISITS_AUTOMATICALLY_CHECKED_OUT count={}",
+                    visits.size()
+            );
+        } else {
+            log.debug("VISITS_AUTO_CHECKOUT_NONE_FOUND");
+        }
     }
 
     @Scheduled(
@@ -119,8 +118,8 @@ public class VisitAutomationServiceImpl
                         );
 
         if (visits.isEmpty()) {
-            log.info(
-                    "No registered visits found for today's host reminders. date={}",
+            log.debug(
+                    "HOST_DAILY_REMINDERS_NO_VISITS date={}",
                     today
             );
             return;
@@ -135,6 +134,8 @@ public class VisitAutomationServiceImpl
 
         DateTimeFormatter timeFormatter =
                 DateTimeFormatter.ofPattern("hh:mm a");
+
+        int remindersQueued = 0;
 
         for (Map.Entry<Employee, List<Visit>> entry : visitsByHost.entrySet()) {
 
@@ -167,13 +168,21 @@ public class VisitAutomationServiceImpl
                     );
 
             emailService.sendHostDailyReminderEmail(reminderData);
+            remindersQueued++;
 
             log.info(
-                    "Host daily reminder queued. hostId={}, visitCount={}, date={}",
+                    "HOST_DAILY_REMINDER_SUBMITTED hostId={} visitCount={} date={}",
                     host.getId(),
                     reminderItems.size(),
                     today
             );
         }
+
+        log.info(
+                "HOST_DAILY_REMINDER_BATCH_COMPLETED date={} visitCount={} hostCount={}",
+                today,
+                visits.size(),
+                remindersQueued
+        );
     }
 }

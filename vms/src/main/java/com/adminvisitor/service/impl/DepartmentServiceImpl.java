@@ -8,12 +8,14 @@ import com.adminvisitor.repository.DepartmentRepository;
 import com.adminvisitor.service.DepartmentService;
 import com.adminvisitor.service.IdGeneratorService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class DepartmentServiceImpl implements DepartmentService {
 
@@ -44,7 +46,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         Department department = new Department();
 
         department.setId(
-                idGeneratorService.generateId("DEPARTMENT","DT")
+                idGeneratorService.generateId("DEPARTMENT", "DT")
         );
 
         department.setDepartmentCode(
@@ -60,6 +62,12 @@ public class DepartmentServiceImpl implements DepartmentService {
         Department savedDepartment =
                 departmentRepository.save(department);
 
+        log.info(
+                "DEPARTMENT_CREATED departmentId={} departmentCode={}",
+                savedDepartment.getId(),
+                savedDepartment.getDepartmentCode()
+        );
+
         return new DepartmentResponse(
                 savedDepartment.getId(),
                 savedDepartment.getDepartmentCode(),
@@ -70,14 +78,23 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Transactional(readOnly = true)
     public List<DepartmentResponse> getDepartments() {
-        return departmentRepository.findAll()
-                .stream()
-                .map(department -> new DepartmentResponse(
-                        department.getId(),
-                        department.getDepartmentCode(),
-                        department.getDepartmentName(),
-                        department.getStatus()
-                ))
-                .toList();
+
+        List<DepartmentResponse> departments =
+                departmentRepository.findAll()
+                        .stream()
+                        .map(department -> new DepartmentResponse(
+                                department.getId(),
+                                department.getDepartmentCode(),
+                                department.getDepartmentName(),
+                                department.getStatus()
+                        ))
+                        .toList();
+
+        log.debug(
+                "DEPARTMENTS_RETRIEVED count={}",
+                departments.size()
+        );
+
+        return departments;
     }
 }

@@ -34,26 +34,27 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
     private final BlacklistRepository blacklistRepository;
     private final VisitRepository visitRepository;
     private final VisitManagementServiceImpl visitManagementService;
+
     @Transactional(readOnly = true)
     public VisitorResponse getVisitor(String visitorId) {
-
-        log.info("Fetching visitor. visitorId={}", visitorId);
 
         Visitor visitor = visitorRepository.findById(visitorId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Visitor not found with id: " + visitorId));
+                                "Visitor not found with id: " + visitorId
+                        )
+                );
 
         return toVisitorResponse(visitor);
     }
 
     @Transactional(readOnly = true)
     public List<VisitorResponse> getAllVisitors() {
-        log.info("Fetching all visitors");
 
         List<Visitor> visitors = visitorRepository.findAll();
 
         if (visitors.isEmpty()) {
+            log.debug("VISITOR_LIST_RETRIEVED count=0");
             return List.of();
         }
 
@@ -70,7 +71,7 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
                         (first, second) -> first
                 ));
 
-        return visitors.stream()
+        List<VisitorResponse> responses = visitors.stream()
                 .map(visitor -> {
                     Object[] latest = latestVisits.get(visitor.getId());
 
@@ -90,37 +91,42 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
                     );
                 })
                 .toList();
+
+        log.debug("VISITOR_LIST_RETRIEVED count={}", responses.size());
+
+        return responses;
     }
 
     @Transactional
     public VisitorResponse updateVisitor(
             String visitorId,
-            UpdateVisitorRequest request) {
-
-        log.info("Updating visitor. visitorId={}", visitorId);
+            UpdateVisitorRequest request
+    ) {
 
         Visitor visitor = visitorRepository.findById(visitorId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Visitor not found with id: " + visitorId));
+                                "Visitor not found with id: " + visitorId
+                        )
+                );
 
-        // Check whether email belongs to another visitor
+        // Check whether email belongs to another visitor.
         visitorRepository.findByEmail(request.email())
                 .ifPresent(existingVisitor -> {
-
                     if (!existingVisitor.getId().equals(visitorId)) {
                         throw new ResourceAlreadyExistsException(
-                                "This email is already associated with another visitor");
+                                "This email is already associated with another visitor"
+                        );
                     }
                 });
 
-        // Check whether mobile number belongs to another visitor
+        // Check whether mobile number belongs to another visitor.
         visitorRepository.findByMobileNumber(request.mobileNumber())
                 .ifPresent(existingVisitor -> {
-
                     if (!existingVisitor.getId().equals(visitorId)) {
                         throw new ResourceAlreadyExistsException(
-                                "This mobile number is already associated with another visitor");
+                                "This mobile number is already associated with another visitor"
+                        );
                     }
                 });
 
@@ -132,6 +138,7 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
         // visitor.setValidity(request.validity());
 
         Visitor updatedVisitor = visitorRepository.save(visitor);
+
         Optional<Vendor> vendorOptional =
                 vendorRepository.findByVisitorId(visitorId);
 
@@ -148,13 +155,14 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
             vendorRepository.save(vendor);
 
             log.info(
-                    "Vendor details synchronized. visitorId={}, vendorId={}",
+                    "VENDOR_DETAILS_SYNCHRONIZED visitorId={} vendorId={}",
                     visitorId,
                     vendor.getId()
             );
         }
+
         log.info(
-                "Visitor updated successfully. visitorId={}",
+                "VISITOR_UPDATED visitorId={}",
                 updatedVisitor.getId()
         );
 
@@ -163,31 +171,20 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
 
     private VisitorResponse toVisitorResponse(Visitor visitor) {
 
-        Visit latestVisit =
-                visitRepository
-                        .findTopByVisitorIdOrderByCreatedAtDesc(
-                                visitor.getId()
-                        )
-                        .orElse(null);
+        Visit latestVisit = visitRepository
+                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
+                .orElse(null);
 
         return new VisitorResponse(
-
                 visitor.getId(),
-
                 visitor.getFirstName(),
-
                 visitor.getLastName(),
-
                 visitor.getEmail(),
-
                 visitor.getMobileNumber(),
-
                 visitor.getCompanyName(),
-
                 latestVisit != null
                         ? latestVisit.getVisitorType().name()
                         : null,
-
                 latestVisit != null
                         ? latestVisit.getExpectedArrivalAt()
                         : null
@@ -195,64 +192,39 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
     }
 
     @Transactional(readOnly = true)
-    public VisitorEditResponse getVisitorEditDetails(
-            String visitorId
-    ) {
+    public VisitorEditResponse getVisitorEditDetails(String visitorId) {
 
-        Visitor visitor =
-                visitorRepository.findById(visitorId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Visitor not found with id: "
-                                                + visitorId
-                                )
-                        );
-
-
-
-        Visit latestVisit =
-                visitRepository
-                        .findTopByVisitorIdOrderByCreatedAtDesc(
-                                visitorId
+        Visitor visitor = visitorRepository.findById(visitorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Visitor not found with id: " + visitorId
                         )
-                        .orElse(null);
+                );
 
-        VisitorType visitorType =
-                latestVisit != null
-                        ? latestVisit.getVisitorType()
-                        : null;
+        Visit latestVisit = visitRepository
+                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
+                .orElse(null);
 
+        VisitorType visitorType = latestVisit != null
+                ? latestVisit.getVisitorType()
+                : null;
 
-        Nationality nationality =
-                documentRepository
-                        .findTopByVisitorIdOrderByCreatedAtDesc(
-                                visitorId
-                        )
-                        .map(Document::getNationality)
-                        .orElse(null);
-
+        Nationality nationality = documentRepository
+                .findTopByVisitorIdOrderByCreatedAtDesc(visitorId)
+                .map(Document::getNationality)
+                .orElse(null);
 
         VisitorEditResponse.VisitorInfo visitorInfo =
                 new VisitorEditResponse.VisitorInfo(
-
                         visitor.getId(),
-
                         visitor.getFirstName(),
-
                         visitor.getLastName(),
-
                         visitor.getEmail(),
-
                         visitor.getMobileNumber(),
-
                         visitor.getCompanyName(),
-
                         visitorType,
-
                         nationality
                 );
-
-
 
         VisitorEditResponse.VendorInfo vendorInfo = null;
 
@@ -260,13 +232,10 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
                 vendorRepository.findByVisitorId(visitorId);
 
         if (vendor.isPresent()) {
-
-            vendorInfo =
-                    new VisitorEditResponse.VendorInfo(
-                            vendor.get().getId()
-                    );
+            vendorInfo = new VisitorEditResponse.VendorInfo(
+                    vendor.get().getId()
+            );
         }
-
 
         List<Document> visitorDocuments =
                 documentRepository.findByVisitorId(visitorId);
@@ -284,7 +253,8 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
                           .filter(metadata ->
                                   metadata.getDocumentType() == null
                                   || (metadata.getDocumentType() != DocumentType.NDA
-                                      && metadata.getDocumentType() != DocumentType.VISITOR_PHOTO))
+                                      && metadata.getDocumentType() != DocumentType.VISITOR_PHOTO)
+                          )
                           .map(metadata ->
                                new VisitorEditResponse.DocumentInfo(
                                        metadata.getId(),
@@ -292,81 +262,48 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
                                        metadata.getCreatedAt() != null
                                        ? metadata.getCreatedAt().toString()
                                        : null
-                               ))
+                               )
+                          )
                           .toList();
 
-
-        // ==========================================
-        // VISIT HISTORY
-        // ==========================================
-
+        // Visit history.
         List<VisitorEditResponse.VisitInfo> visits =
-
                 visitRepository
-                        .findByVisitorIdOrderByExpectedArrivalAtDesc(
-                                visitorId
-                        )
-
+                        .findByVisitorIdOrderByExpectedArrivalAtDesc(visitorId)
                         .stream()
-
                         .map(visit -> {
 
-                            Employee host =
-                                    visit.getHost();
+                            Employee host = visit.getHost();
 
-                            String hostName =
-                                    host.getFirstName()
-                                            + " "
-                                            + host.getLastName();
+                            String hostName = host.getFirstName()
+                                    + " "
+                                    + host.getLastName();
 
                             String departmentName =
-                                    host.getDepartment()
-                                            .getDepartmentName();
+                                    host.getDepartment().getDepartmentName();
 
                             return new VisitorEditResponse.VisitInfo(
-
                                     visit.getId(),
-
                                     visit.getVisitReference(),
-
                                     visit.getVisitorType(),
-
                                     visit.getRegistrationType(),
-
                                     visit.getPurpose(),
-
                                     host.getId(),
-
                                     hostName,
-
                                     host.getDepartment().getId(),
-
                                     departmentName,
-
                                     visit.getExpectedArrivalAt(),
-
                                     visit.getExpectedDepartureAt(),
-
                                     visit.getCheckedInAt(),
-
                                     visit.getCheckedOutAt(),
-
                                     visitManagementService.calculateDuration(visit),
-
                                     visit.getRemarks(),
-
                                     visit.getStatus()
                             );
-
                         })
-
                         .toList();
 
-
-        // ==========================================
-        // CURRENT BLACKLIST
-        // ==========================================
-
+        // Current blacklist.
         VisitorEditResponse.BlacklistInfo blacklistInfo = null;
 
         Optional<Blacklist> activeBlacklist =
@@ -377,35 +314,30 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
 
         if (activeBlacklist.isPresent()) {
 
-            Blacklist blacklist =
-                    activeBlacklist.get();
+            Blacklist blacklist = activeBlacklist.get();
 
-            blacklistInfo =
-                    new VisitorEditResponse.BlacklistInfo(
-
-                            blacklist.getId(),
-
-                            blacklist.getReason(),
-
-                            blacklist.getStatus(),
-
-                            blacklist.getCreatedAt()
-                    );
+            blacklistInfo = new VisitorEditResponse.BlacklistInfo(
+                    blacklist.getId(),
+                    blacklist.getReason(),
+                    blacklist.getStatus(),
+                    blacklist.getCreatedAt()
+            );
         }
 
+        log.debug(
+                "VISITOR_EDIT_DETAILS_RETRIEVED visitorId={} documentCount={} visitCount={} blacklisted={}",
+                visitorId,
+                documents.size(),
+                visits.size(),
+                activeBlacklist.isPresent()
+        );
 
         return new VisitorEditResponse(
-
                 visitorInfo,
-
                 vendorInfo,
-
                 documents,
-
                 visits,
-
                 blacklistInfo,
-
                 activeBlacklist.isPresent()
         );
     }
