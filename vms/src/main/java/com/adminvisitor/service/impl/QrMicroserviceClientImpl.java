@@ -46,12 +46,14 @@ public class QrMicroserviceClientImpl implements QrMicroserviceClient {
 
         log.info("QR_TOKEN_GENERATION_SUCCEEDED");
 
+
         return response.get("token").toString();
+
     }
 
     @Override
     public String generateQrCode(String payload) {
-
+        System.out.println(payload);
         Map<String, String> request = Map.of(
                 "payload", payload
         );
