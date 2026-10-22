@@ -123,11 +123,14 @@ public class AuthController {
         String userId = authentication.getName();
 
         authService.changePassword(userId, request);
-
-        return ResponseEntity.ok(Map.of(
-                "message",
-                "Password changed successfully. Please log in with your new password."
-        ));
+        ResponseCookie clearAccessCookie =
+                clearCookie(ACCESS_COOKIE, "/api");
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, clearAccessCookie.toString())
+                .body(Map.of(
+                        "message",
+                        "Password changed successfully. Please log in with your new password."
+                ));
     }
 
     @PostMapping("/forgot-password")
