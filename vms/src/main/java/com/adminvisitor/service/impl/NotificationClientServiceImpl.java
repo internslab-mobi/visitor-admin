@@ -18,7 +18,7 @@ import org.springframework.web.client.RestClient;
 public class NotificationClientServiceImpl
         implements NotificationClientService {
 
-    private final RestClient.Builder restClientBuilder;
+    private final RestClient notificationRestClient;
 
     @Value("${notification.service.base-url}")
     private String notificationServiceUrl;
@@ -26,11 +26,7 @@ public class NotificationClientServiceImpl
     @Override
     public void sendEmail(NotificationRequest request) {
 
-        RestClient client = restClientBuilder
-                .baseUrl(notificationServiceUrl)
-                .build();
-
-        client.post()
+        notificationRestClient.post()
                 .uri("/api/notifications/email")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
