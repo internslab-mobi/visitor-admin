@@ -383,16 +383,20 @@ public class VisitManagementServiceImpl implements VisitManagementService {
 
         Visit checkedInVisit = visitRepository.save(visit);
 
-        String qrToken = qrMicroserviceClient.generateToken();
+        QrBadgeResponse qrBadge =
+                qrMicroserviceClient.generateQrBadge();
+
+        String qrToken = qrBadge.token();
 
         VisitBadge badge = visitBadgeService.createBadge(
                 checkedInVisit,
                 qrToken
         );
 
-        String qrCode = qrMicroserviceClient.generateQrCode(
-                badge.getQrContainingToken()
-        );
+        String qrCode = qrBadge.qrCode();
+
+
+        visitBadgeService.processScan(qrToken);
 
         BadgeEmailData emailData = new BadgeEmailData(
                 checkedInVisit.getVisitor().getFirstName()

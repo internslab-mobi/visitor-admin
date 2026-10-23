@@ -1,6 +1,5 @@
 package com.adminvisitor.service.impl;
 
-import com.adminvisitor.dto.requestdto.DepartmentCreateRequest;
 import com.adminvisitor.dto.responsedto.DocumentResponse;
 import com.adminvisitor.entity.Visit;
 import com.adminvisitor.mapper.DocumentMapper;
@@ -32,10 +31,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
-
-import static com.adminvisitor.enums.DocumentType.NDA_RENEWAL;
-import static com.adminvisitor.enums.DocumentType.NDA_SUPPORTING;
 
 @Service
 @Slf4j
@@ -51,8 +48,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentStorageService documentStorageService;
     private final ProofSecurityService proofSecurityService;
 
-    @Value("${vms.document.nda-upload-dir}")
-    private String ndaUploadDir;
+    private static final long MAX_FILE_SIZE = 5L * 1024 * 1024;
 
     @Value("${vms.document.upload-dir}")
     private String documentUploadDir;
@@ -101,19 +97,14 @@ public class DocumentServiceImpl implements DocumentService {
                         )
                 );
 
-        final long MAX_FILE_SIZE = 5 * 1024 * 1024;
 
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException(
-                    "Visitor photo cannot exceed 5 MB"
-            );
-        }
+
+
+        validateFile(file, "Visitor photo");
 
         String contentType = file.getContentType();
 
-        if (contentType == null
-                || !contentType.startsWith("image/")) {
-
+        if (contentType == null || !contentType.startsWith("image/")) {
             throw new IllegalArgumentException(
                     "Only image files are allowed for visitor photo"
             );
@@ -134,13 +125,21 @@ public class DocumentServiceImpl implements DocumentService {
                     metadataId
             );
 
-            DocumentMetadata metadata = new DocumentMetadata();
+//            DocumentMetadata metadata = new DocumentMetadata();
+//
+//            metadata.setId(metadataId);
+//            metadata.setDocument(document);
+//            metadata.setVisit(visit);
+//            metadata.setDocumentType(DocumentType.VISITOR_PHOTO);
+//            metadata.setDocumentPath(filePath.toString());
 
-            metadata.setId(metadataId);
-            metadata.setDocument(document);
-            metadata.setVisit(visit);
-            metadata.setDocumentType(DocumentType.VISITOR_PHOTO);
-            metadata.setDocumentPath(filePath.toString());
+            DocumentMetadata metadata =
+                    documentMapper.toVisitorPhotoMetadata(
+                            metadataId,
+                            document,
+                            visit,
+                            filePath.toString()
+                    );
 
             DocumentMetadata savedMetadata =
                     documentMetadataRepository.save(metadata);
@@ -188,50 +187,34 @@ public class DocumentServiceImpl implements DocumentService {
             String passportNumber
     ) {
 
-        String documentId =
-                idGeneratorService.generateId(
-                        "DOCUMENT",
-                        "doc"
-                );
+        String documentId = idGeneratorService.generateId(
+                "DOCUMENT",
+                "doc"
+        );
 
-        Document document = new Document();
+        String aadhaarIndex = hasValue(aadharNumber)
+                ? proofSecurityService.generateBlindIndex(
+                ProofType.AADHAAR, aadharNumber)
+                : null;
 
-        document.setId(documentId);
-        document.setVisitor(visitor);
-        document.setNationality(nationality);
+        String panIndex = hasValue(panNumber)
+                ? proofSecurityService.generateBlindIndex(
+                ProofType.PAN, panNumber)
+                : null;
 
-        // Aadhaar
-        if (aadharNumber != null && !aadharNumber.isBlank()) {
+        String passportIndex = hasValue(passportNumber)
+                ? proofSecurityService.generateBlindIndex(
+                ProofType.PASSPORT, passportNumber)
+                : null;
 
-            document.setAadharNumber(
-                    proofSecurityService.generateBlindIndex(
-                            ProofType.AADHAAR,
-                            aadharNumber
-                    )
-            );
-        }
-
-        // PAN
-        if (panNumber != null && !panNumber.isBlank()) {
-
-            document.setPanNumber(
-                    proofSecurityService.generateBlindIndex(
-                            ProofType.PAN,
-                            panNumber
-                    )
-            );
-        }
-
-        // Passport
-        if (passportNumber != null && !passportNumber.isBlank()) {
-
-            document.setPassportNumber(
-                    proofSecurityService.generateBlindIndex(
-                            ProofType.PASSPORT,
-                            passportNumber
-                    )
-            );
-        }
+        Document document = documentMapper.toIdentityProofDocument(
+                documentId,
+                visitor,
+                nationality,
+                aadhaarIndex,
+                panIndex,
+                passportIndex
+        );
 
         Document savedDocument = documentRepository.save(document);
 
@@ -243,6 +226,10 @@ public class DocumentServiceImpl implements DocumentService {
         );
 
         return savedDocument;
+    }
+
+    private boolean hasValue(String value) {
+        return value != null && !value.isBlank();
     }
 
     public Document getLatestIdentityDocument(String visitorId) {
@@ -280,38 +267,28 @@ public class DocumentServiceImpl implements DocumentService {
             );
         }
 
-        String blindIndex =
-                proofSecurityService.generateBlindIndex(
-                        proofType,
-                        proofNumber
-                );
+        String blindIndex = proofSecurityService.generateBlindIndex(
+                proofType,
+                proofNumber
+        );
 
         return switch (proofType) {
 
-            case AADHAAR ->
-                    documentRepository
-                            .existsByVisitorIdAndAadharNumber(
-                                    visitor.getId(),
-                                    blindIndex
-                            );
+            case AADHAAR -> documentRepository.existsByVisitorIdAndAadharNumber(
+                    visitor.getId(), blindIndex
+            );
 
-            case PAN ->
-                    documentRepository
-                            .existsByVisitorIdAndPanNumber(
-                                    visitor.getId(),
-                                    blindIndex
-                            );
+            case PAN -> documentRepository.existsByVisitorIdAndPanNumber(
+                    visitor.getId(), blindIndex
+            );
 
-            case PASSPORT ->
-                    documentRepository
-                            .existsByVisitorIdAndPassportNumber(
-                                    visitor.getId(),
-                                    blindIndex
-                            );
+            case PASSPORT -> documentRepository.existsByVisitorIdAndPassportNumber(
+                    visitor.getId(), blindIndex
+            );
         };
     }
 
-    @Transactional(readOnly = true)
+
     @Override
     public DocumentMetadata getVisitPhoto(String visitId) {
 
@@ -327,20 +304,16 @@ public class DocumentServiceImpl implements DocumentService {
                 );
     }
 
-    @Transactional(readOnly = true)
+
     public List<DocumentResponse> getAllDocuments(
             String visitorId
     ) {
-
         visitorRepository.findById(visitorId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Visitor not found: " + visitorId
                         )
                 );
-
-
-
         List<DocumentResponse> documents =
                 documentMetadataRepository
                         .findByDocument_Visitor_IdAndDocumentTypeIsNull(visitorId)
@@ -389,44 +362,92 @@ public class DocumentServiceImpl implements DocumentService {
                         )
                 );
 
-        List<DocumentMetadata> existingDocuments =
-                documentMetadataRepository
-                        .findByDocumentId(document.getId());
+//        List<DocumentMetadata> existingDocuments =
+//                documentMetadataRepository
+//                        .findByDocumentId(document.getId());
+//
+//        final long MAX_FILE_SIZE = 5 * 1024 * 1024;
+//
+//        for (MultipartFile file : files) {
+//
+//            if (file == null || file.isEmpty()) {
+//
+//                throw new IllegalArgumentException(
+//                        "Proof document cannot be empty"
+//                );
+//            }
+//
+//            if (file.getSize() > MAX_FILE_SIZE) {
+//
+//                throw new IllegalArgumentException(
+//                        "Proof document '"
+//                                + file.getOriginalFilename()
+//                                + "' exceeds the maximum size of 5 MB"
+//                );
+//            }
+//        }
+//
+//        Path visitorDirectory =
+//                Paths.get(
+//                        documentUploadDir,
+//                        visitorId
+//                );
+//
+//        try {
+//
+//            List<DocumentMetadata> uploadedDocuments =
+//                    new java.util.ArrayList<>();
+//
+//            for (MultipartFile file : files) {
+//
+//                String metadataId = idGeneratorService.generateId(
+//                        "DOCUMENT_METADATA",
+//                        "DMD"
+//                );
+//
+//                Path filePath = documentStorageService.store(
+//                        file,
+//                        documentUploadDir,
+//                        visitorId,
+//                        metadataId
+//                );
+//
+//                DocumentMetadata metadata = new DocumentMetadata();
+//
+//                metadata.setId(metadataId);
+//                metadata.setDocument(document);
+//                metadata.setDocumentPath(filePath.toString());
+//
+//                DocumentMetadata savedMetadata =
+//                        documentMetadataRepository.save(metadata);
+//
+//                uploadedDocuments.add(savedMetadata);
+//            }
+//
+//            log.info(
+//                    "PROOF_DOCUMENTS_UPLOADED visitorId={} documentId={} documentCount={}",
+//                    visitorId,
+//                    document.getId(),
+//                    uploadedDocuments.size()
+//            );
+//
+//            return uploadedDocuments;
+//
+//        } catch (IOException exception) {
+//
+//            throw new RuntimeException(
+//                    "Failed to save proof documents",
+//                    exception
+//            );
+//        }
 
-        final long MAX_FILE_SIZE = 5 * 1024 * 1024;
+        files.forEach(file -> validateFile(file, "Proof document"));
 
-        for (MultipartFile file : files) {
-
-            if (file == null || file.isEmpty()) {
-
-                throw new IllegalArgumentException(
-                        "Proof document cannot be empty"
-                );
-            }
-
-            if (file.getSize() > MAX_FILE_SIZE) {
-
-                throw new IllegalArgumentException(
-                        "Proof document '"
-                                + file.getOriginalFilename()
-                                + "' exceeds the maximum size of 5 MB"
-                );
-            }
-        }
-
-        Path visitorDirectory =
-                Paths.get(
-                        documentUploadDir,
-                        visitorId
-                );
+        List<DocumentMetadata> uploadedDocuments =
+                new ArrayList<>(files.size());
 
         try {
-
-            List<DocumentMetadata> uploadedDocuments =
-                    new java.util.ArrayList<>();
-
             for (MultipartFile file : files) {
-
                 String metadataId = idGeneratorService.generateId(
                         "DOCUMENT_METADATA",
                         "DMD"
@@ -439,16 +460,16 @@ public class DocumentServiceImpl implements DocumentService {
                         metadataId
                 );
 
-                DocumentMetadata metadata = new DocumentMetadata();
+                DocumentMetadata metadata =
+                        documentMapper.toProofDocumentMetadata(
+                                metadataId,
+                                document,
+                                filePath.toString()
+                        );
 
-                metadata.setId(metadataId);
-                metadata.setDocument(document);
-                metadata.setDocumentPath(filePath.toString());
-
-                DocumentMetadata savedMetadata =
-                        documentMetadataRepository.save(metadata);
-
-                uploadedDocuments.add(savedMetadata);
+                uploadedDocuments.add(
+                        documentMetadataRepository.save(metadata)
+                );
             }
 
             log.info(
@@ -461,13 +482,41 @@ public class DocumentServiceImpl implements DocumentService {
             return uploadedDocuments;
 
         } catch (IOException exception) {
-
             throw new RuntimeException(
                     "Failed to save proof documents",
                     exception
             );
         }
     }
+
+//    private void validateProofDocument(MultipartFile file) {
+//        if (file == null || file.isEmpty()) {
+//            throw new IllegalArgumentException(
+//                    "Proof document cannot be empty"
+//            );
+//        }
+//
+//        if (file.getSize() > 5L * 1024 * 1024) {
+//            throw new IllegalArgumentException(
+//                    "Proof document '" + file.getOriginalFilename()
+//                            + "' exceeds the maximum size of 5 MB"
+//            );
+//        }
+
+    private void validateFile(MultipartFile file, String fileDescription) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException(
+                    fileDescription + " is required"
+            );
+        }
+
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException(
+                    fileDescription + " cannot exceed 5 MB"
+            );
+        }
+    }
+
 
     @Transactional(readOnly = true)
     public DocumentMetadata getDocumentMetadata(String documentId) {
@@ -519,4 +568,7 @@ public class DocumentServiceImpl implements DocumentService {
                 metadata.getDocument().getId()
         );
     }
+
 }
+
+

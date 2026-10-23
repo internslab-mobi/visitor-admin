@@ -20,15 +20,8 @@ public interface DocumentService {
             MultipartFile file
     );
 
-//    boolean isNdaRequired(Visitor visitor);
-
-//    DocumentMetadata getLatestNda(String visitorId);
-
     DocumentMetadata getLatestVisitorPhoto(String visitorId);
 
-   // DocumentMetadata getValidNda(Visitor visitor);
-
-//  Resource getNdaFile(String visitorId);
 
     Document saveIdentityProofs(
             Visitor visitor,
@@ -43,16 +36,6 @@ public interface DocumentService {
             Visitor visitor,
             ProofType proofType,
             String proofNumber);
-
-//    Document saveIdentityProofsUsingAes(
-//            Visitor visitor,
-//            Nationality nationality,
-//            String aadharNumber,
-//            String panNumber,
-//            String passportNumber);
-//
-//    IdentityProofResponse getIdentityProofsUsingAes(
-//            String visitorId);
 
     DocumentMetadata getVisitPhoto(String visitId);
 

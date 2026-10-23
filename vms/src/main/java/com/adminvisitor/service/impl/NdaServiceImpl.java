@@ -54,6 +54,17 @@ public class NdaServiceImpl implements NdaService {
     @Value("${vms.document.nda-upload-dir}")
     private String ndaUploadDir;
 
+    /**
+     * Uploads a new NDA document for a vendor visitor.
+     * Validates the file and validity date, verifies visitor and visit details,
+     * prevents a new upload while an existing NDA is still valid, stores the
+     * file, and saves its metadata.
+     *
+     * @param visitorId unique identifier of the visitor
+     * @param ndaFile NDA PDF file to upload
+     * @param validUntil date until which the NDA remains valid
+     * @return saved NDA document metadata
+     */
     @Transactional
     public DocumentMetadata uploadNewNda(
             String visitorId,
@@ -139,7 +150,6 @@ public class NdaServiceImpl implements NdaService {
                     visitorId,
                     metadataId
             );
-
             DocumentMetadata metadata = createNdaMetadata(
                     metadataId,
                     document,
@@ -169,6 +179,17 @@ public class NdaServiceImpl implements NdaService {
             );
         }
     }
+    /**
+     * Extends an existing NDA's validity using an uploaded supporting document.
+     * Validates the request, checks the current NDA's validity, classifies the
+     * extension document, stores a new metadata record, and marks the previous
+     * record as superseded.
+     *
+     * @param visitorId unique identifier of the visitor
+     * @param supportingDocument PDF supporting document for the extension
+     * @param newValidUntil requested new validity end date
+     * @return saved metadata for the extension document
+     */
 
     @Transactional
     public DocumentMetadata extendNdaValidity(
@@ -303,6 +324,12 @@ public class NdaServiceImpl implements NdaService {
         }
     }
 
+    /**
+     * Retrieves the latest non-superseded NDA-related document for a visitor.
+     *
+     * @param visitorId unique identifier of the visitor
+     * @return latest eligible NDA metadata
+     */
     @Transactional(readOnly = true)
     public DocumentMetadata getLatestNda(String visitorId) {
 
@@ -327,6 +354,15 @@ public class NdaServiceImpl implements NdaService {
                                 "No NDA found for visitor: " + visitorId
                         ));
     }
+
+
+    /**
+     * Retrieves the NDA-related document history for a visitor and maps each
+     * metadata record to a response DTO.
+     *
+     * @param visitorId unique identifier of the visitor
+     * @return NDA history ordered by creation date, newest first
+     */
 
     @Transactional(readOnly = true)
     public List<DocumentResponse> getNdaHistory(String visitorId) {
@@ -358,7 +394,13 @@ public class NdaServiceImpl implements NdaService {
                 .map(documentMapper::toResponse)
                 .toList();
     }
-
+    /**
+     * Checks whether the uploaded file declares a PDF content type and has a
+     * filename ending in the .pdf extension.
+     *
+     * @param file uploaded file to validate
+     * @return true when both PDF checks pass; otherwise false
+     */
     private boolean isPdf(MultipartFile file) {
         String contentType = file.getContentType();
         String fileName = file.getOriginalFilename();
@@ -372,6 +414,19 @@ public class NdaServiceImpl implements NdaService {
         return validContentType && validExtension;
     }
 
+
+    /**
+     * Creates an NDA-related metadata entity and initializes its document,
+     * path, validity period, document type, overwrite reference, and status.
+     *
+     * @param metadataId unique identifier for the metadata record
+     * @param document document associated with the visitor
+     * @param filePath stored file path
+     * @param validFrom start of the effective validity period
+     * @param validUntil date on which validity ends
+     * @param documentType type assigned to the NDA-related document
+     * @return initialized document metadata entity
+     */
     private DocumentMetadata createNdaMetadata(
             String metadataId,
             Document document,
@@ -394,6 +449,13 @@ public class NdaServiceImpl implements NdaService {
         return metadata;
     }
 
+    /**
+     * Determines whether the visitor's latest NDA record is missing or no
+     * longer valid based on its validity end timestamp.
+     *
+     * @param visitor visitor whose NDA validity is checked
+     * @return true if an NDA is required; otherwise false
+     */
     public boolean isNdaRequired(Visitor visitor) {
 
         Optional<DocumentMetadata> latestNda =
@@ -416,6 +478,15 @@ public class NdaServiceImpl implements NdaService {
         return !validUntil.isAfter(LocalDateTime.now());
     }
 
+
+    /**
+     * Resolves the latest eligible NDA document to a file-system resource.
+     *
+     * @param visitorId unique identifier of the visitor
+     * @return resource representing the stored NDA file
+     * @throws IllegalArgumentException if the NDA file does not exist
+     */
+
     public Resource getNdaFile(String visitorId) {
 
         DocumentMetadata metadata = getLatestNda(visitorId);
@@ -429,6 +500,10 @@ public class NdaServiceImpl implements NdaService {
         return new FileSystemResource(filePath);
     }
 
+    /**
+     * Updates active NDA records to EXPIRED when their validity end timestamp
+     * has passed. The scheduled task runs every 300,000 milliseconds.
+     */
     @Scheduled(fixedRate = 300000)
     @Transactional
     public void updateExpiredNdaStatuses() {

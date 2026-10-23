@@ -35,7 +35,7 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
     private final VisitRepository visitRepository;
     private final VisitManagementServiceImpl visitManagementService;
 
-    @Transactional(readOnly = true)
+    
     public VisitorResponse getVisitor(String visitorId) {
 
         Visitor visitor = visitorRepository.findById(visitorId)
@@ -48,7 +48,7 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
         return toVisitorResponse(visitor);
     }
 
-    @Transactional(readOnly = true)
+    
     public List<VisitorResponse> getAllVisitors() {
 
         List<Visitor> visitors = visitorRepository.findAll();
@@ -191,7 +191,7 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
         );
     }
 
-    @Transactional(readOnly = true)
+    
     public VisitorEditResponse getVisitorEditDetails(String visitorId) {
 
         Visitor visitor = visitorRepository.findById(visitorId)

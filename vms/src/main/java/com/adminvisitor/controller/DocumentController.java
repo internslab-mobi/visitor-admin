@@ -5,9 +5,14 @@ import com.adminvisitor.entity.DocumentMetadata;
 import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.mapper.DocumentMapper;
 import com.adminvisitor.service.DocumentService;
-import com.adminvisitor.service.DocumentService;
 import com.adminvisitor.service.NdaService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -22,15 +27,37 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/documents")
 @RequiredArgsConstructor
+@Tag(
+        name = "Document Management",
+        description = "APIs for uploading, viewing, downloading, and deleting visitor documents"
+)
 public class DocumentController {
 
     private final DocumentService documentService;
     private final DocumentMapper documentMapper;
-private final NdaService ndaService;
+    private final NdaService ndaService;
 
+    /**
+     * Downloads or displays the NDA document for a visitor.
+     * @param visitorId unique identifier of the visitor
+     * @return NDA document as a resource
+     */
     @GetMapping("/{visitorId}/nda/download")
+    @Operation(
+            summary = "Download visitor NDA",
+            description = "Retrieves the latest NDA document for the specified visitor for inline viewing."
+    )
     public ResponseEntity<Resource> downloadNda(
-            @PathVariable String visitorId) {
+
+            @Parameter(
+                    name = "visitorId",
+                    description = "Unique identifier of the visitor",
+                    required = true,
+                    example = "VIS001"
+            )
+            @PathVariable("visitorId") String visitorId
+
+    ) {
 
         Resource resource = ndaService.getNdaFile(visitorId);
 
@@ -43,22 +70,66 @@ private final NdaService ndaService;
                 .body(resource);
     }
 
+    /**
+     * Retrieves all documents associated with a visitor.
+     *
+     * @param visitorId unique identifier of the visitor
+     * @return list of document details
+     */
     @GetMapping("/visitor/{visitorId}")
+    @Operation(
+            summary = "Get all visitor documents",
+            description = "Retrieves all document metadata records associated with the specified visitor."
+    )
     public ResponseEntity<List<DocumentResponse>> getAllDocuments(
-            @PathVariable String visitorId) {
+
+            @Parameter(
+                    name = "visitorId",
+                    description = "Unique identifier of the visitor",
+                    required = true,
+                    example = "VIS001"
+            )
+            @PathVariable("visitorId") String visitorId
+
+    ) {
 
         return ResponseEntity.ok(
                 documentService.getAllDocuments(visitorId)
         );
     }
 
+    /**
+     * Uploads proof documents for a visitor.
+     *
+     * @param visitorId unique identifier of the visitor
+     * @param files list of proof document files to upload
+     * @return list of uploaded document details
+     */
     @PostMapping(
             value = "/proof-documents/upload/{visitorId}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
+    @Operation(
+            summary = "Upload proof documents",
+            description = "Uploads one or more proof documents for the specified visitor and returns their document details."
+    )
     public ResponseEntity<List<DocumentResponse>> uploadProofDocuments(
-            @PathVariable String visitorId,
+
+            @Parameter(
+                    name = "visitorId",
+                    description = "Unique identifier of the visitor",
+                    required = true,
+                    example = "VIS001"
+            )
+            @PathVariable("visitorId") String visitorId,
+
+            @Parameter(
+                    name = "files",
+                    description = "One or more proof document files to upload",
+                    required = true
+            )
             @RequestParam("files") List<MultipartFile> files
+
     ) {
 
         List<DocumentMetadata> uploadedDocuments =
@@ -67,7 +138,6 @@ private final NdaService ndaService;
                         files
                 );
 
-
         List<DocumentResponse> response = uploadedDocuments.stream()
                 .map(documentMapper::toResponse)
                 .toList();
@@ -75,13 +145,26 @@ private final NdaService ndaService;
         return ResponseEntity.ok(response);
     }
 
-
-
-    @GetMapping(
-            "/visitor/{visitorId}/photo"
+    /**
+     * Retrieves the latest photo of a visitor.
+     *
+     * @param visitorId unique identifier of the visitor
+     * @return visitor photo as a resource
+     */
+    @GetMapping("/visitor/{visitorId}/photo")
+    @Operation(
+            summary = "Get visitor photo",
+            description = "Retrieves the latest photo associated with the specified visitor for inline viewing."
     )
     public ResponseEntity<Resource> getVisitorPhoto(
-            @PathVariable String visitorId
+
+            @Parameter(
+                    name = "visitorId",
+                    required = true,
+                    example = "VIS001"
+            )
+            @PathVariable("visitorId") String visitorId
+
     ) {
 
         DocumentMetadata metadata =
@@ -118,11 +201,26 @@ private final NdaService ndaService;
                 .body(resource);
     }
 
-
-
+    /**
+     * Retrieves a document by its unique document identifier.
+     *
+     * @param documentId unique identifier of the document
+     * @return document as a resource for inline viewing
+     */
     @GetMapping("/{documentId}/view")
+    @Operation(
+            summary = "View document",
+            description = "Retrieves a document using its unique identifier and returns the file for inline viewing."
+    )
     public ResponseEntity<Resource> viewDocument(
-            @PathVariable String documentId
+
+            @Parameter(
+                    name = "documentId",
+                   required = true,
+                    example = "DOC001"
+            )
+            @PathVariable("documentId") String documentId
+
     ) {
 
         DocumentMetadata metadata =
@@ -155,14 +253,30 @@ private final NdaService ndaService;
                 .body(resource);
     }
 
-
+    /**
+     * Deletes a document metadata record.
+     *
+     * @param metadataId unique identifier of the document metadata
+     * @return empty response with HTTP 204 status
+     */
     @DeleteMapping("/{metadataId}")
+    @Operation(
+            summary = "Delete document",
+            description = "Deletes a document using its unique metadata identifier and returns an empty response."
+    )
     public ResponseEntity<Void> deleteDocument(
-            @PathVariable String metadataId
-    ) {documentService.deleteDocument(metadataId);
+
+            @Parameter(
+                    name = "metadataId",
+                    required = true,
+                    example = "DOC001"
+            )
+            @PathVariable("metadataId") String metadataId
+
+    ) {
+
+        documentService.deleteDocument(metadataId);
+
         return ResponseEntity.noContent().build();
     }
-
-
-
 }

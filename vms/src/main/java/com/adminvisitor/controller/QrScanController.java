@@ -1,7 +1,7 @@
 package com.adminvisitor.controller;
 
 import com.adminvisitor.dto.responsedto.QrScanResponse;
-import com.adminvisitor.service.QrScanService;
+//import com.adminvisitor.service.QrScanService;
 import com.adminvisitor.service.VisitBadgeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,13 +1,18 @@
+
 package com.adminvisitor.service.impl;
 
+import com.adminvisitor.dto.responsedto.QrBadgeResponse;
+import com.adminvisitor.exception.ServiceUnavailableException;
 import com.adminvisitor.service.QrMicroserviceClient;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
-import java.util.Map;
+import java.util.function.Supplier;
 
 @Service
 @Slf4j
@@ -21,7 +26,8 @@ public class QrMicroserviceClientImpl implements QrMicroserviceClient {
 
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException(
-                    "QR service API key must be configured");
+                    "QR service API key must be configured"
+            );
         }
 
         this.restClient = RestClient.create(baseUrl)
@@ -31,47 +37,44 @@ public class QrMicroserviceClientImpl implements QrMicroserviceClient {
     }
 
     @Override
-    public String generateToken() {
+    public QrBadgeResponse generateQrBadge() {
 
-        Map<String, Object> response = restClient.post()
-                .uri("/api/qr/token")
-                .retrieve()
-                .body(new ParameterizedTypeReference<>() {});
+        QrBadgeResponse response = executeQrRequest(
+                () -> restClient.post()
+                        .uri("/api/qr/generate-badge")
+                        .retrieve()
+                        .body(QrBadgeResponse.class),
+                "generate QR badge"
+        );
 
-        if (response == null || response.get("token") == null) {
-            throw new IllegalStateException(
-                    "QR microservice returned no token"
+        if (response == null|| response.token() == null|| response.token().isBlank()
+                || response.qrCode() == null
+                || response.qrCode().isBlank()) {
+
+            throw new ServiceUnavailableException(
+                    "QR microservice returned an incomplete QR badge"
             );
         }
 
-        log.info("QR_TOKEN_GENERATION_SUCCEEDED");
-
-
-        return response.get("token").toString();
+        System.out.println(response.token());
+        log.info("QR_BADGE_GENERATION_SUCCEEDED");
+        return response;
 
     }
 
-    @Override
-    public String generateQrCode(String payload) {
-        System.out.println(payload);
-        Map<String, String> request = Map.of(
-                "payload", payload
-        );
+    private <T> T executeQrRequest(Supplier<T> request,String operation) {
 
-        Map<String, Object> response = restClient.post()
-                .uri("/api/qr/generate")
-                .body(request)
-                .retrieve()
-                .body(new ParameterizedTypeReference<>() {});
+        try {
+            return request.get();
 
-        if (response == null || response.get("qrCode") == null) {
-            throw new IllegalStateException(
-                    "QR microservice returned no QR image"
+        } catch (RestClientException ex) {
+
+            log.error("QR_MICROSERVICE_REQUEST_FAILED: {}", operation, ex);
+
+            throw new ServiceUnavailableException(
+                    "QR service is currently unavailable. Please try again later.",
+                    ex
             );
         }
-
-        log.info("QR_CODE_GENERATION_SUCCEEDED");
-
-        return response.get("qrCode").toString();
     }
 }

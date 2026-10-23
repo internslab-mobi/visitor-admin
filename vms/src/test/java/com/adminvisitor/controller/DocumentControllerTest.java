@@ -1,6 +1,7 @@
 
 package com.adminvisitor.controller;
 
+import com.adminvisitor.VMSApplication;
 import com.adminvisitor.dto.responsedto.DocumentResponse;
 import com.adminvisitor.entity.DocumentMetadata;
 import com.adminvisitor.exception.ErrorResponseFactory;
@@ -12,10 +13,12 @@ import com.adminvisitor.service.NdaService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -33,6 +36,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(DocumentController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class DocumentControllerTest {
+
+    @MockitoBean
+    private JpaMetamodelMappingContext jpaMappingContext;
 
     @Autowired
     private MockMvc mockMvc;
