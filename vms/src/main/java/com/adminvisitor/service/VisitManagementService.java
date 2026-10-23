@@ -49,5 +49,5 @@ public interface VisitManagementService {
     );
 
     VisitDetailResponse checkOut(String visitId);
-
+    VisitTimeTrackingResponse getVisitTimeTracking(String visitId);
 }

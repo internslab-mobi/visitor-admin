@@ -331,4 +331,21 @@ public final class VisitSpecification {
             );
         };
     }
+
+    public static Specification<Visit> hasMonthAndYear(
+            int year,
+            int month
+    ) {
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDateTime start = startDate.atStartOfDay();
+        LocalDateTime end = startDate.plusMonths(1).atStartOfDay();
+
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.and(
+                        criteriaBuilder.greaterThanOrEqualTo(
+                                root.get("expectedArrivalAt"), start),
+                        criteriaBuilder.lessThan(
+                                root.get("expectedArrivalAt"), end)
+                );
+    }
 }

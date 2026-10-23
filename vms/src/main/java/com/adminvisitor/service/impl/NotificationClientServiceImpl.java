@@ -1,22 +1,22 @@
+
 package com.adminvisitor.service.impl;
 
 import com.adminvisitor.dto.requestdto.NotificationRequest;
 import com.adminvisitor.service.NotificationClientService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
-
-import java.net.http.HttpClient;
-import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class NotificationClientServiceImpl implements NotificationClientService {
+public class NotificationClientServiceImpl
+        implements NotificationClientService {
 
     private final RestClient.Builder restClientBuilder;
 
@@ -26,18 +26,8 @@ public class NotificationClientServiceImpl implements NotificationClientService 
     @Override
     public void sendEmail(NotificationRequest request) {
 
-        HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
-                .build();
-
-        JdkClientHttpRequestFactory requestFactory =
-                new JdkClientHttpRequestFactory(httpClient);
-
-        requestFactory.setReadTimeout(Duration.ofSeconds(60));
-
         RestClient client = restClientBuilder
                 .baseUrl(notificationServiceUrl)
-                .requestFactory(requestFactory)
                 .build();
 
         client.post()
@@ -48,7 +38,7 @@ public class NotificationClientServiceImpl implements NotificationClientService 
                 .toBodilessEntity();
 
         log.info(
-                "NOTIFICATION_REQUEST_ACCEPTED scenario={}",
+                "Notification request accepted. scenario={}",
                 request.scenario()
         );
     }

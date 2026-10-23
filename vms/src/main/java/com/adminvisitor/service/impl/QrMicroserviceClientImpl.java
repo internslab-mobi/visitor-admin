@@ -1,6 +1,8 @@
 
 package com.adminvisitor.service.impl;
 
+import com.adminvisitor.dto.requestdto.CheckoutBadgeInvalidationRequest;
+import com.adminvisitor.dto.requestdto.QrBadgeRequest;
 import com.adminvisitor.dto.responsedto.QrBadgeResponse;
 import com.adminvisitor.exception.ServiceUnavailableException;
 import com.adminvisitor.service.QrMicroserviceClient;
@@ -12,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.function.Supplier;
 
 @Service
@@ -36,30 +40,40 @@ public class QrMicroserviceClientImpl implements QrMicroserviceClient {
                 .build();
     }
 
-    @Override
-    public QrBadgeResponse generateQrBadge() {
 
-        QrBadgeResponse response = executeQrRequest(
+
+    public QrBadgeResponse generateQrBadge(QrBadgeRequest request) {
+        return executeQrRequest(
                 () -> restClient.post()
                         .uri("/api/qr/generate-badge")
+                        .body(request)
                         .retrieve()
                         .body(QrBadgeResponse.class),
                 "generate QR badge"
         );
+    }
 
-        if (response == null|| response.token() == null|| response.token().isBlank()
-                || response.qrCode() == null
-                || response.qrCode().isBlank()) {
 
-            throw new ServiceUnavailableException(
-                    "QR microservice returned an incomplete QR badge"
-            );
-        }
+    @Override
+    public void invalidateBadgeOnCheckout(
+            String visitId,
+            LocalDateTime checkoutTime
+    ) {
+        executeQrRequest(
+                () -> {
+                    restClient.post()
+                            .uri("/api/qr/invalidate-badge")
+                            .body(Map.of(
+                                    "visitId", visitId,
+                                    "checkoutTime", checkoutTime
+                            ))
+                            .retrieve()
+                            .toBodilessEntity();
 
-        System.out.println(response.token());
-        log.info("QR_BADGE_GENERATION_SUCCEEDED");
-        return response;
-
+                    return null;
+                },
+                "invalidate QR badge on checkout"
+        );
     }
 
     private <T> T executeQrRequest(Supplier<T> request,String operation) {

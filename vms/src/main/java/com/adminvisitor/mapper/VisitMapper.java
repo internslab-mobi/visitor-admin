@@ -1,5 +1,6 @@
 package com.adminvisitor.mapper;
 
+import com.adminvisitor.dto.responsedto.RegistrationResponse;
 import com.adminvisitor.dto.responsedto.VisitDashboardResponse;
 import com.adminvisitor.dto.responsedto.VisitDetailResponse;
 import com.adminvisitor.dto.responsedto.VisitorLogResponse;
@@ -8,7 +9,9 @@ import com.adminvisitor.entity.Visitor;
 import com.adminvisitor.entity.Employee;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-
+import com.adminvisitor.entity.MetaTimeTracking;
+import com.adminvisitor.dto.responsedto.VisitTimeTrackingResponse;
+import java.time.LocalDateTime;
 import java.time.Duration;
 
 @Mapper(componentModel = "spring")
@@ -120,5 +123,40 @@ public interface VisitMapper {
                 visit.getCheckedOutAt()
         ).getSeconds();
     }
-}
 
+    @Mapping(target = "visitId", source = "visit.id")
+    @Mapping(target = "visitReference", source = "visit.visitReference")
+    @Mapping(target = "visitorId", source = "visitor.id")
+    @Mapping(target = "firstName", source = "visitor.firstName")
+    @Mapping(target = "lastName", source = "visitor.lastName")
+    @Mapping(target = "email", source = "visitor.email")
+    @Mapping(target = "mobileNumber", source = "visitor.mobileNumber")
+    @Mapping(target = "companyName", source = "visitor.companyName")
+    @Mapping(target = "visitorType", source = "visit.visitorType")
+    @Mapping(target = "registrationType", source = "visit.registrationType")
+    @Mapping(target = "purpose", source = "visit.purpose")
+    @Mapping(target = "hostId", source = "visit.host.id")
+    @Mapping(target = "expectedArrivalAt", source = "visit.expectedArrivalAt")
+    @Mapping(target = "expectedDepartureAt", source = "visit.expectedDepartureAt")
+    @Mapping(target = "remarks", source = "visit.remarks")
+    @Mapping(target = "status", source = "visit.status")
+    @Mapping(target = "message", source = "message")
+    RegistrationResponse toRegistrationResponse(
+            Visit visit,
+            Visitor visitor,
+            String message
+    );
+
+    @Mapping(target = "trackingId", source = "tracking.id")
+    @Mapping(target = "badgeId", source = "tracking.badgeId")
+    @Mapping(target = "inTime", source = "tracking.inTime")
+    @Mapping(target = "outTime", source = "tracking.outTime")
+    @Mapping(
+            target = "durationSeconds",
+            expression = "java(java.time.Duration.between(tracking.getInTime(), tracking.getOutTime() != null ? tracking.getOutTime() : referenceTime).getSeconds())"
+    )
+    VisitTimeTrackingResponse.SessionResponse toTrackingSessionResponse(
+            MetaTimeTracking tracking,
+            LocalDateTime referenceTime
+    );
+}

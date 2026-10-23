@@ -21,7 +21,7 @@
 //@Slf4j
 //public class QrScanServiceImpl implements QrScanService {
 //
-//    private final VisitBadgeService visitBadgeService;
+//    
 //    private final MetaTimeTrackingRepository trackingRepository;
 //
 //    @Override

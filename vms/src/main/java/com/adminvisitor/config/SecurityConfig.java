@@ -31,6 +31,18 @@ import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 
 import java.util.function.Supplier;
 
@@ -42,29 +54,38 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+
     @Bean
     public JwtDecoder jwtDecoder(
-            @Value("${jwt.secret}") String secret
-    ) {
-        SecretKeySpec secretKey = new SecretKeySpec(
-                secret.getBytes(StandardCharsets.UTF_8),
-                "HmacSHA256"
+            @Value("${jwt.public-key-path}") String publicKeyPath
+    ) throws Exception {
+        String pem = Files.readString(
+                Path.of(publicKeyPath),
+                StandardCharsets.UTF_8
         );
 
+        String encoded = pem
+                .replace("-----BEGIN PUBLIC KEY-----", "")
+                .replace("-----END PUBLIC KEY-----", "")
+                .replaceAll("\\s", "");
+
+        byte[] keyBytes = Base64.getDecoder().decode(encoded);
+
+        PublicKey publicKey = KeyFactory.getInstance("RSA")
+                .generatePublic(new X509EncodedKeySpec(keyBytes));
+
         return NimbusJwtDecoder
-                .withSecretKey(secretKey)
+                .withPublicKey((RSAPublicKey) publicKey)
+                .signatureAlgorithm(SignatureAlgorithm.RS256)
                 .build();
     }
+
 
     @Bean
     public CookieAccessTokenFilter cookieAccessTokenFilter() {
         return new CookieAccessTokenFilter();
     }
 
-    /*
-     * Prevent Spring Boot from registering this filter as a regular
-     * servlet filter. It must run only inside the Spring Security chain.
-     */
     @Bean
     public FilterRegistrationBean<CookieAccessTokenFilter>
     cookieAccessTokenFilterRegistration(
@@ -174,22 +195,22 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/visitors"
-                        ).hasAnyRole("ADMIN","FRONT_DESK")
+                        ).hasAnyRole("ADMIN","HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/visitors/*"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/visitors/*/edit"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/visitors/*"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -199,36 +220,36 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/visits"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.PATCH,
                                 "/api/visits/*/check-in"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.PATCH, "/api/visits/*/check-out"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.PATCH,
                                 "/api/visits/*/cancel"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/visit-badges/*"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/visit-badges/validate"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/documents/visitor/*"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.POST,
@@ -238,43 +259,43 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/documents/*/nda/download"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/documents/*/nda/all"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/vendors"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/vendors/*"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/employees"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/departments"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/blacklist/visitor/*/status"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/blacklist",
                                 "/api/blacklist/*"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.POST,
@@ -285,12 +306,12 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/qr-scan"
-                  ).hasAnyRole("ADMIN", "FRONT_DESK")
+                  ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/vms/summary-export"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
 
                         .requestMatchers(
@@ -331,7 +352,7 @@ public class SecurityConfig {
 
             String role = jwt.getClaimAsString("role");
 
-            if (!"ADMIN".equals(role) && !"FRONT_DESK".equals(role)) {
+            if (!"ADMIN".equals(role) && !"HR".equals(role)) {
                 throw new BadCredentialsException("Invalid role in JWT");
             }
 

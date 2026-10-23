@@ -59,7 +59,7 @@ springdotenv:
 
 
 jwt:
-  secret: ${JWT_SECRET}
+  public-key-path: ${JWT_PUBLIC_KEY_PATH}
 
 
 

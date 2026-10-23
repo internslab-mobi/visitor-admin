@@ -1,12 +1,13 @@
-
 package com.adminvisitor.service.impl;
 
 import com.adminvisitor.dto.requestdto.CheckInRequest;
+import com.adminvisitor.dto.requestdto.QrBadgeRequest;
 import com.adminvisitor.dto.responsedto.*;
 import com.adminvisitor.entity.*;
 import com.adminvisitor.enums.*;
 import com.adminvisitor.exception.BusinessRuleException;
 import com.adminvisitor.mapper.VisitMapper;
+import com.adminvisitor.repository.MetaTimeTrackingRepository;
 import com.adminvisitor.repository.VendorRepository;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.service.*;
@@ -31,17 +32,12 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class VisitManagementServiceImpl implements VisitManagementService {
-
-    private static final List<VisitStatus> OPERATIONAL_STATUSES =
-            List.of(VisitStatus.REGISTERED, VisitStatus.CHECKED_IN);
-
-    private static final List<VisitStatus> HISTORICAL_STATUSES =
-            List.of(
-                    VisitStatus.CHECKED_OUT,
-                    VisitStatus.CANCELLED,
-                    VisitStatus.NO_SHOW
-            );
+public class VisitManagementServiceImpl implements VisitManagementService{
+//    private static final List<VisitStatus> OPERATIONAL_STATUSES =
+//            List.of(VisitStatus.REGISTERED,VisitStatus.CHECKED_IN);
+//
+//    private static final List<VisitStatus> HISTORICAL_STATUSES =
+//            List.of(VisitStatus.CHECKED_OUT,VisitStatus.CANCELLED,VisitStatus.NO_SHOW);
 
     private static final DateTimeFormatter EMAIL_DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
@@ -53,7 +49,7 @@ public class VisitManagementServiceImpl implements VisitManagementService {
     private final VisitMapper visitMapper;
     private final EmailService emailService;
     private final DocumentService documentService;
-    private final VisitBadgeService visitBadgeService;
+  private MetaTimeTrackingRepository metaTimeTrackingRepository;
     private final NdaService ndaService;
 
     private double elapsedMillis(long startNanos) {
@@ -82,9 +78,12 @@ public class VisitManagementServiceImpl implements VisitManagementService {
             String sortBy
     ) {
 
+//        Specification<Visit> specification =
+//                (root, query, criteriaBuilder) ->
+//                        root.get("status").in(OPERATIONAL_STATUSES);
         Specification<Visit> specification =
                 (root, query, criteriaBuilder) ->
-                        root.get("status").in(OPERATIONAL_STATUSES);
+                        criteriaBuilder.conjunction();
 
         specification = addSpecification(
                 specification, VisitSpecification.hasView(view));
@@ -176,9 +175,12 @@ public class VisitManagementServiceImpl implements VisitManagementService {
             );
         }
 
-        Specification<Visit> specification =
-                (root, query, criteriaBuilder) ->
-                        root.get("status").in(HISTORICAL_STATUSES);
+//            Specification<Visit> specification =
+//                    (root, query, criteriaBuilder) ->
+//                            root.get("status").in(HISTORICAL_STATUSES);
+            Specification<Visit> specification =
+                    (root, query, criteriaBuilder) ->
+                            criteriaBuilder.conjunction();
 
         specification = addSpecification(
                 specification, VisitSpecification.hasSearch(search));
@@ -267,7 +269,6 @@ public class VisitManagementServiceImpl implements VisitManagementService {
 
     // VISIT DURATION
     public Long calculateDuration(Visit visit) {
-
         if (visit == null
                 || visit.getCheckedInAt() == null
                 || visit.getCheckedOutAt() == null) {
@@ -328,6 +329,7 @@ public class VisitManagementServiceImpl implements VisitManagementService {
     }
 
     // CHECK-IN
+
     @Transactional
     public VisitDetailResponse checkIn(
             String visitId,
@@ -383,20 +385,23 @@ public class VisitManagementServiceImpl implements VisitManagementService {
 
         Visit checkedInVisit = visitRepository.save(visit);
 
-        QrBadgeResponse qrBadge =
-                qrMicroserviceClient.generateQrBadge();
-
-        String qrToken = qrBadge.token();
-
-        VisitBadge badge = visitBadgeService.createBadge(
-                checkedInVisit,
-                qrToken
+        // VMS requests badge creation and initial IN tracking from QR.
+        QrBadgeRequest qrRequest = new QrBadgeRequest(
+                checkedInVisit.getId(),
+                checkedInVisit.getExpectedArrivalAt(),
+                checkedInVisit.getVisitor().getId(),
+                checkedInAt
         );
+
+        QrBadgeResponse qrBadge =
+                qrMicroserviceClient.generateQrBadge(qrRequest);
 
         String qrCode = qrBadge.qrCode();
 
-
-        visitBadgeService.processScan(qrToken);
+        LocalDateTime validUntil =
+                checkedInVisit.getExpectedArrivalAt()
+                        .toLocalDate()
+                        .atTime(23, 59, 59);
 
         BadgeEmailData emailData = new BadgeEmailData(
                 checkedInVisit.getVisitor().getFirstName()
@@ -406,8 +411,8 @@ public class VisitManagementServiceImpl implements VisitManagementService {
                 checkedInVisit.getHost().getFirstName()
                         + " " + checkedInVisit.getHost().getLastName(),
                 checkedInVisit.getHost().getEmail(),
-                badge.getIssuedAt().format(EMAIL_DATE_TIME_FORMATTER),
-                badge.getValidUntil().format(EMAIL_DATE_TIME_FORMATTER),
+                checkedInAt.format(EMAIL_DATE_TIME_FORMATTER),
+                validUntil.format(EMAIL_DATE_TIME_FORMATTER),
                 qrCode,
                 visitorPhoto.getDocumentPath()
         );
@@ -441,6 +446,7 @@ public class VisitManagementServiceImpl implements VisitManagementService {
         return visitMapper.toVisitDetailResponse(checkedInVisit);
     }
 
+
     // CHECK-OUT
     @Transactional
     public VisitDetailResponse checkOut(String visitId) {
@@ -465,7 +471,7 @@ public class VisitManagementServiceImpl implements VisitManagementService {
 
         Visit checkedOutVisit = visitRepository.save(visit);
 
-        visitBadgeService.invalidateBadgeOnCheckout(
+        qrMicroserviceClient.invalidateBadgeOnCheckout(
                 visitId,
                 checkedOutAt
         );
@@ -527,7 +533,6 @@ public class VisitManagementServiceImpl implements VisitManagementService {
         boolean identityMatches;
 
         switch (nationality) {
-
             case DOMESTIC -> {
                 boolean aadhaarMatches =
                         documentService.verifyIdentityProof(
@@ -564,5 +569,37 @@ public class VisitManagementServiceImpl implements VisitManagementService {
                     "Identity verification failed"
             );
         }
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public VisitTimeTrackingResponse getVisitTimeTracking(String visitId) {
+
+        if (!visitRepository.existsById(visitId)) {
+            throw new BusinessRuleException("Visit not found with id: " + visitId);
+        }
+
+        LocalDateTime referenceTime = LocalDateTime.now();
+
+        List<MetaTimeTracking> trackingRecords =
+                metaTimeTrackingRepository.findByVisitIdOrderByInTimeAsc(visitId);
+
+        List<VisitTimeTrackingResponse.SessionResponse> sessions =
+                trackingRecords.stream()
+                        .map(tracking ->
+                                visitMapper.toTrackingSessionResponse(
+                                        tracking, referenceTime))
+                        .toList();
+
+        long totalDurationSeconds = sessions.stream()
+                .mapToLong(VisitTimeTrackingResponse.SessionResponse::durationSeconds)
+                .sum();
+
+        return VisitTimeTrackingResponse.builder()
+                .visitId(visitId)
+                .sessions(sessions)
+                .totalDurationSeconds(totalDurationSeconds)
+                .build();
     }
 }
