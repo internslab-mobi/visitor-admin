@@ -33,7 +33,7 @@ public class TestUserSeeder {
     CommandLineRunner createTestUser() {
         return args -> {
 
-            User user = userRepository.findById("USR001")
+            User user = userRepository.findById("USR-001")
                     .orElseGet(User::new);
 
             Employee employee = employeeRepository.findById("EMP-001")
@@ -49,7 +49,7 @@ public class TestUserSeeder {
                         return employeeRepository.save(emp);
                     });
 
-            user.setId("USR001");
+            user.setId("USR-001");
             user.setEmployee(employee);
 
             user.setPasswordHash(

@@ -86,7 +86,7 @@ class AuthControllerTest {
                 "restrictedToken123",
                 null,
                 true,
-                UserRole.FRONT_DESK,
+                UserRole.HR,
                 "USR002",
                 "First login password change is required."
         );
@@ -118,8 +118,8 @@ class AuthControllerTest {
 
     @Test
     void testCreateUserSuccess() throws Exception {
-        CreateUserRequest request = new CreateUserRequest("EMP002", UserRole.FRONT_DESK);
-        UserResponse response = new UserResponse("USR002", "EMP002", "emp2@example.com", "John Doe", UserRole.FRONT_DESK, "ACTIVE", true);
+        CreateUserRequest request = new CreateUserRequest("EMP002", UserRole.HR);
+        UserResponse response = new UserResponse("USR002", "EMP002", "emp2@example.com", "John Doe", UserRole.HR, "ACTIVE", true);
 
         when(authService.createUser(any(CreateUserRequest.class))).thenReturn(response);
 
@@ -134,7 +134,7 @@ class AuthControllerTest {
 
     @Test
     void testCreateUserEmployeeNotFound() throws Exception {
-        CreateUserRequest request = new CreateUserRequest("EMP999", UserRole.FRONT_DESK);
+        CreateUserRequest request = new CreateUserRequest("EMP999", UserRole.HR);
         when(authService.createUser(any(CreateUserRequest.class))).thenThrow(new ResourceNotFoundException("Employee not found with ID: EMP999"));
 
         mockMvc.perform(post("/api/auth/users")

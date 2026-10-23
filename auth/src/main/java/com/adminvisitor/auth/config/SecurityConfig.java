@@ -34,9 +34,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/change-password").hasAnyAuthority(
                                 JwtAuthenticationFilter.INITIAL_PASSWORD_CHANGE_AUTHORITY,
                                 "ROLE_ADMIN",
-                                "ROLE_FRONT_DESK"
+                                "ROLE_HR"
                         )
-                        .anyRequest().hasAnyRole("ADMIN", "FRONT_DESK")
+                        .anyRequest().hasAnyRole("ADMIN", "HR")
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

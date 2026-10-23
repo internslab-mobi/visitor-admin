@@ -4,6 +4,7 @@ import com.adminvisitor.auth.dto.requestdto.ChangePasswordRequest;
 import com.adminvisitor.auth.dto.requestdto.CreateUserRequest;
 import com.adminvisitor.auth.dto.requestdto.LoginRequest;
 import com.adminvisitor.auth.dto.responsedto.AuthResult;
+import com.adminvisitor.auth.dto.responsedto.ErrorResponseFactory;
 import com.adminvisitor.auth.dto.responsedto.UserResponse;
 import com.adminvisitor.auth.enums.UserRole;
 import com.adminvisitor.auth.exception.*;
@@ -76,14 +77,20 @@ class AuthControllerTest {
         LoginRequest request =
                 new LoginRequest("user@example.com", "Password123!");
 
+        UserResponse userResponse = new UserResponse(
+                "USR001",
+                "EMP001",
+                "user@example.com",
+                "John Doe",
+                UserRole.ADMIN,
+                "ACTIVE",
+                false
+        );
+
         AuthResult response = new AuthResult(
                 "accessToken123",
                 "refreshToken123",
-                false,
-                UserRole.ADMIN,
-                "USR001",
-                "Authentication successful.",
-                null
+                userResponse
         );
 
         when(authService.login(any(LoginRequest.class)))
@@ -108,14 +115,20 @@ class AuthControllerTest {
                 "TempPass123!"
         );
 
+        UserResponse userResponse = new UserResponse(
+                "USR002",
+                "EMP002",
+                "user@example.com",
+                "Jane Doe",
+                UserRole.HR,
+                "ACTIVE",
+                true
+        );
+
         AuthResult response = new AuthResult(
                 "restrictedToken123",
                 null,
-                true,
-                UserRole.FRONT_DESK,
-                "USR002",
-                "First login password change is required.",
-                null
+                userResponse
         );
 
         when(authService.login(any(LoginRequest.class)))
@@ -126,7 +139,7 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId", is("USR002")))
-                .andExpect(jsonPath("$.role", is("FRONT_DESK")))
+                .andExpect(jsonPath("$.role", is("HR")))
                 .andExpect(jsonPath("$.mustChangePassword", is(true)))
                 .andExpect(header().exists(HttpHeaders.SET_COOKIE));
     }
@@ -158,14 +171,14 @@ class AuthControllerTest {
     @Test
     void testCreateUserSuccess() throws Exception {
         CreateUserRequest request =
-                new CreateUserRequest("EMP002", UserRole.FRONT_DESK);
+                new CreateUserRequest("EMP002", UserRole.HR);
 
         UserResponse response = new UserResponse(
                 "USR002",
                 "EMP002",
                 "emp2@example.com",
                 "John Doe",
-                UserRole.FRONT_DESK,
+                UserRole.HR,
                 "ACTIVE",
                 true
         );
@@ -185,7 +198,7 @@ class AuthControllerTest {
     @Test
     void testCreateUserEmployeeNotFound() throws Exception {
         CreateUserRequest request =
-                new CreateUserRequest("EMP999", UserRole.FRONT_DESK);
+                new CreateUserRequest("EMP999", UserRole.HR);
 
         when(authService.createUser(any(CreateUserRequest.class)))
                 .thenThrow(
@@ -291,14 +304,20 @@ class AuthControllerTest {
 
     @Test
     void testRefreshSuccess() throws Exception {
+        UserResponse userResponse = new UserResponse(
+                "USR001",
+                "EMP001",
+                "user@example.com",
+                "John Doe",
+                UserRole.ADMIN,
+                "ACTIVE",
+                false
+        );
+
         AuthResult authResult = new AuthResult(
                 "newAccessToken123",
                 "newRefreshToken123",
-                false,
-                UserRole.ADMIN,
-                "USR001",
-                "Authentication successful.",
-                null
+                userResponse
         );
 
         when(authService.refresh("refreshToken123"))

@@ -28,7 +28,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
@@ -119,7 +118,7 @@ public class AuthServiceImpl implements AuthService {
 
 
     @Override
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional
     public AuthResult login(LoginRequest request) {
 
         authenticationManager.authenticate(
@@ -135,7 +134,6 @@ public class AuthServiceImpl implements AuthService {
                     return new BadCredentialsException("Invalid email or password");
                 });
 
-        // Lock the user row to serialize concurrent login attempts.
         user = userRepository.findByIdForUpdate(user.getId())
                 .orElseThrow(() -> {
                     log.warn("LOGIN_FAILED reason=USER_NOT_FOUND");
@@ -152,7 +150,6 @@ public class AuthServiceImpl implements AuthService {
 
         UserResponse userResponse = userMapper.toUserResponse(user);
 
-        // First-login users receive a restricted token, not a regular session.
         if (user.isMustChangePassword()) {
             log.info(
                     "FIRST_LOGIN_PASSWORD_CHANGE_REQUIRED userId={} role={}",
@@ -168,10 +165,6 @@ public class AuthServiceImpl implements AuthService {
             return new AuthResult(
                     restrictedToken,
                     null,
-                    true,
-                    user.getRole(),
-                    user.getId(),
-                    "First login password change is required.",
                     userResponse
             );
         }
@@ -226,10 +219,6 @@ public class AuthServiceImpl implements AuthService {
         return new AuthResult(
                 accessToken,
                 rawRefreshToken,
-                false,
-                user.getRole(),
-                user.getId(),
-                "Authentication successful.",
                 userResponse
         );
     }
@@ -272,41 +261,25 @@ public class AuthServiceImpl implements AuthService {
     public void changePassword(String userId, ChangePasswordRequest request) {
 
         User user = userRepository.findById(userId).orElseThrow(() -> {
-            log.warn(
-                    "PASSWORD_CHANGE_FAILED reason=USER_NOT_FOUND userId={}",
-                    userId
-            );
+            log.warn("PASSWORD_CHANGE_FAILED reason=USER_NOT_FOUND userId={}", userId);
+
             return new ResourceNotFoundException("User not found with ID: " + userId);
         });
 
-        if (!passwordEncoder.matches(
-                request.currentPassword(),
-                user.getPasswordHash()
-        )) {
-            log.warn(
-                    "PASSWORD_CHANGE_FAILED reason=INVALID_CURRENT_PASSWORD userId={}",
-                    userId
-            );
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            log.warn("PASSWORD_CHANGE_FAILED reason=INVALID_CURRENT_PASSWORD userId={}", userId);
+
             throw new PasswordValidationException("Current password is incorrect");
         }
 
-        if (request.confirmNewPassword() == null
-                || !request.newPassword().equals(request.confirmNewPassword())) {
+        if (request.confirmNewPassword() == null || !request.newPassword().equals(request.confirmNewPassword())) {
 
-            log.warn(
-                    "PASSWORD_CHANGE_FAILED reason=PASSWORD_CONFIRMATION_MISMATCH userId={}",
-                    userId
-            );
+            log.warn("PASSWORD_CHANGE_FAILED reason=PASSWORD_CONFIRMATION_MISMATCH userId={}", userId);
 
-            throw new PasswordValidationException(
-                    "New password and confirmation password do not match"
-            );
+            throw new PasswordValidationException("New password and confirmation password do not match");
         }
 
-        validateNewPasswordPolicy(
-                request.newPassword(),
-                request.currentPassword()
-        );
+        validateNewPasswordPolicy(request.newPassword(), request.currentPassword());
 
         refreshTokenRepository.revokeAllByUserId(userId, LocalDateTime.now());
 
@@ -390,10 +363,6 @@ public class AuthServiceImpl implements AuthService {
         return new AuthResult(
                 newAccessToken,
                 newRawRefreshToken,
-                false,
-                user.getRole(),
-                user.getId(),
-                "Authentication successful.",
                 userResponse
         );
     }

@@ -42,11 +42,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        // Read the access token from the HttpOnly cookie.
         final String jwt = getAccessTokenFromCookie(request);
 
-        // No access token: continue and let Spring Security
-        // decide whether the endpoint requires authentication.
         if (jwt == null || jwt.isBlank()) {
             filterChain.doFilter(request, response);
             return;
@@ -86,7 +83,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             } else if (JwtService.STATE_AUTHENTICATED.equals(state)) {
 
-                if (!"ADMIN".equals(role) && !"FRONT_DESK".equals(role)) {
+                if (!"ADMIN".equals(role) && !"HR".equals(role)) {
                     SecurityContextHolder.clearContext();
                     filterChain.doFilter(request, response);
                     return;

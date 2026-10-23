@@ -6,18 +6,18 @@ import com.adminvisitor.auth.dto.requestdto.ForgotPasswordRequest;
 import com.adminvisitor.auth.dto.requestdto.LoginRequest;
 import com.adminvisitor.auth.dto.requestdto.ResetPasswordRequest;
 import com.adminvisitor.auth.dto.requestdto.VerifyOtpRequest;
-import com.adminvisitor.auth.dto.responsedto.AuthResponse;
 import com.adminvisitor.auth.dto.responsedto.AuthResult;
 import com.adminvisitor.auth.dto.responsedto.UserResponse;
 import com.adminvisitor.auth.dto.responsedto.VerifyOtpResponse;
 import com.adminvisitor.auth.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +25,15 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Duration;
 import java.util.Map;
 
+/**
+ * REST controller for authentication and user account operations.
+ *
+ * @author Logeshwaran
+ */
+@Tag(
+        name = "Authentication",
+        description = "APIs for authentication, user management, and password recovery"
+)
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -37,6 +46,14 @@ public class AuthController {
     private final long refreshTokenExpiration;
     private final boolean cookieSecure;
 
+    /**
+     * Creates the authentication controller with its required dependencies and configuration.
+     *
+     * @param authService the authentication service
+     * @param accessTokenExpiration the access token lifetime in milliseconds
+     * @param refreshTokenExpiration the refresh token lifetime in milliseconds
+     * @param cookieSecure whether authentication cookies require HTTPS
+     */
     public AuthController(
             AuthService authService,
             @Value("${jwt.expiration}") long accessTokenExpiration,
@@ -49,8 +66,18 @@ public class AuthController {
         this.cookieSecure = cookieSecure;
     }
 
+    /**
+     * Authenticates a user and sets the appropriate authentication cookies.
+     *
+     * @param request the login credentials
+     * @return the authenticated user's details
+     */
+    @Operation(
+            summary = "Login",
+            description = "Authenticates a user and sets HTTP-only authentication cookies. Users required to change their password must complete that step before normal access."
+    )
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(
+    public ResponseEntity<UserResponse> login(
             @Valid @RequestBody LoginRequest request
     ) {
         AuthResult result = authService.login(request);
@@ -65,44 +92,39 @@ public class AuthController {
         ResponseEntity.BodyBuilder response = ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
-        if (result.mustChangePassword()) {
+        if (result.user().mustChangePassword()) {
             response.header(
                     HttpHeaders.SET_COOKIE,
                     clearCookie(REFRESH_COOKIE, "/api/auth").toString()
             );
+        } else {
+            ResponseCookie refreshCookie = createCookie(
+                    REFRESH_COOKIE,
+                    result.refreshToken(),
+                    "/api/auth",
+                    refreshTokenExpiration
+            );
 
-            return response.body(
-                    AuthResponse.firstLoginRequired(
-                            result.userId(),
-                            result.role(),
-                            result.user()
-                    )
+            response.header(
+                    HttpHeaders.SET_COOKIE,
+                    refreshCookie.toString()
             );
         }
 
-        ResponseCookie refreshCookie = createCookie(
-                REFRESH_COOKIE,
-                result.refreshToken(),
-                "/api/auth",
-                refreshTokenExpiration
-        );
-
-        response.header(
-                HttpHeaders.SET_COOKIE,
-                refreshCookie.toString()
-        );
-
-        return response.body(
-                AuthResponse.authenticated(
-                        result.userId(),
-                        result.role(),
-                        result.user()
-                )
-        );
+        return response.body(result.user());
     }
 
+    /**
+     * Creates a user account.
+     *
+     * @param request the user creation details
+     * @return the created user's details
+     */
+    @Operation(
+            summary = "Create user",
+            description = "Creates a new user account. Only administrators are authorized to perform this operation."
+    )
     @PostMapping("/users")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> createUser(
             @Valid @RequestBody CreateUserRequest request
     ) {
@@ -112,6 +134,17 @@ public class AuthController {
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
+
+    /**
+     * Changes the password of the currently authenticated user.
+     *
+     * @param request the password change details
+     * @return a confirmation message
+     */
+    @Operation(
+            summary = "Change password",
+            description = "Changes the password of the currently authenticated user."
+    )
 
     @PostMapping("/change-password")
     public ResponseEntity<Map<String, String>> changePassword(
@@ -124,12 +157,32 @@ public class AuthController {
 
         authService.changePassword(userId, request);
 
-        return ResponseEntity.ok(Map.of(
-                "message",
-                "Password changed successfully. Please log in with your new password."
-        ));
+        ResponseCookie clearAccessCookie =
+                clearCookie(ACCESS_COOKIE, "/api");
+
+        ResponseCookie clearRefreshCookie =
+                clearCookie(REFRESH_COOKIE, "/api/auth");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, clearAccessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, clearRefreshCookie.toString())
+                .body(Map.of(
+                        "message",
+                        "Password changed successfully. Please log in with your new password."
+                ));
     }
 
+
+    /**
+     * Initiates password recovery for the supplied email address.
+     *
+     * @param request the password recovery request
+     * @return the result message
+     */
+    @Operation(
+            summary = "Request password reset",
+            description = "Initiates password recovery and sends a verification code when the account is eligible."
+    )
     @PostMapping("/forgot-password")
     public ResponseEntity<Map<String, String>> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request
@@ -150,6 +203,16 @@ public class AuthController {
         ));
     }
 
+    /**
+     * Requests another password recovery verification code.
+     *
+     * @param request the password recovery request
+     * @return the result message
+     */
+    @Operation(
+            summary = "Resend password reset OTP",
+            description = "Requests another password recovery verification code."
+    )
     @PostMapping("/forgot-password/resend")
     public ResponseEntity<Map<String, String>> resendForgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request
@@ -170,6 +233,16 @@ public class AuthController {
         ));
     }
 
+    /**
+     * Verifies the password reset one-time password.
+     *
+     * @param request the OTP verification details
+     * @return the verification result
+     */
+    @Operation(
+            summary = "Verify password reset OTP",
+            description = "Verifies the one-time password submitted during password recovery."
+    )
     @PostMapping("/verify-reset-otp")
     public ResponseEntity<VerifyOtpResponse> verifyResetOtp(
             @Valid @RequestBody VerifyOtpRequest request
@@ -179,20 +252,51 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Resets a user's password.
+     *
+     * @param request the password reset details
+     * @return a confirmation message
+     */
+    @Operation(
+            summary = "Reset password",
+            description = "Resets the user's password using the supplied reset details."
+    )
+
     @PostMapping("/reset-password")
     public ResponseEntity<Map<String, String>> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request
     ) {
         authService.resetPassword(request);
 
-        return ResponseEntity.ok(Map.of(
-                "message",
-                "Password reset successfully. Please log in with your new password."
-        ));
+        ResponseCookie clearAccessCookie =
+                clearCookie(ACCESS_COOKIE, "/api");
+
+        ResponseCookie clearRefreshCookie =
+                clearCookie(REFRESH_COOKIE, "/api/auth");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, clearAccessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, clearRefreshCookie.toString())
+                .body(Map.of(
+                        "message",
+                        "Password reset successfully. Please log in with your new password."
+                ));
     }
 
+
+    /**
+     * Refreshes the authentication tokens using the refresh token cookie.
+     *
+     * @param refreshToken the refresh token from the cookie
+     * @return the user's details with refreshed authentication cookies
+     */
+    @Operation(
+            summary = "Refresh authentication tokens",
+            description = "Uses the refresh token cookie to issue new authentication cookies."
+    )
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refresh(
+    public ResponseEntity<UserResponse> refresh(
             @CookieValue(
                     value = REFRESH_COOKIE,
                     required = false
@@ -217,13 +321,19 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(AuthResponse.authenticated(
-                        result.userId(),
-                        result.role(),
-                        result.user()
-                ));
+                .body(result.user());
     }
 
+    /**
+     * Logs out the user and clears the authentication cookies.
+     *
+     * @param refreshToken the refresh token from the cookie, if present
+     * @return a confirmation message
+     */
+    @Operation(
+            summary = "Logout",
+            description = "Logs out the user and clears the authentication cookies."
+    )
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(
             @CookieValue(
@@ -248,6 +358,15 @@ public class AuthController {
                 ));
     }
 
+    /**
+     * Creates an HTTP-only authentication cookie.
+     *
+     * @param name the cookie name
+     * @param value the cookie value
+     * @param path the cookie path
+     * @param maxAgeMillis the cookie lifetime in milliseconds
+     * @return the configured cookie
+     */
     private ResponseCookie createCookie(
             String name,
             String value,
@@ -263,6 +382,13 @@ public class AuthController {
                 .build();
     }
 
+    /**
+     * Creates an expired authentication cookie to clear it from the client.
+     *
+     * @param name the cookie name
+     * @param path the cookie path
+     * @return the expired cookie
+     */
     private ResponseCookie clearCookie(
             String name,
             String path

@@ -15,6 +15,13 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.Context;
 
+/**
+ * Implements email delivery for user onboarding and password reset verification.
+ * Uses Thymeleaf templates to generate HTML email content and sends messages
+ * asynchronously through Spring's mail infrastructure.
+ *
+ * @author Logeshwaran
+ */
 @Service
 @Slf4j
 public class EmailServiceImpl implements EmailService {
@@ -25,6 +32,12 @@ public class EmailServiceImpl implements EmailService {
     @Value("${spring.mail.username:noreply@adminvisitor.com}")
     private String mailUsername;
 
+    /**
+     * Creates the email service with the required mail sender and template engine.
+     *
+     * @param mailSender the component responsible for sending email messages
+     * @param templateEngine the engine used to process email templates
+     */
     public EmailServiceImpl(
             JavaMailSender mailSender,
             ITemplateEngine templateEngine
@@ -33,6 +46,13 @@ public class EmailServiceImpl implements EmailService {
         this.templateEngine = templateEngine;
     }
 
+    /**
+     * Sends an asynchronous onboarding email containing the new user's account
+     * details using the onboarding email template.
+     *
+     * @param data the event containing the recipient's details and temporary password
+     * @throws EmailSendException if the email cannot be created or sent
+     */
     @Async
     @Override
     public void sendOnboardingEmail(UserCreatedEvent data) {
@@ -79,6 +99,16 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    /**
+     * Sends an asynchronous password reset email containing the recipient's
+     * one-time password and its expiration period.
+     *
+     * @param recipientEmail the email address of the recipient
+     * @param recipientName the name of the recipient
+     * @param otp the one-time password used for verification
+     * @param expirationMinutes the number of minutes until the OTP expires
+     * @throws EmailSendException if the email cannot be created or sent
+     */
     @Async
     @Override
     public void sendPasswordResetOtpEmail(

@@ -1,4 +1,4 @@
-package com.adminvisitor.auth.exception;
+package com.adminvisitor.auth.dto.responsedto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

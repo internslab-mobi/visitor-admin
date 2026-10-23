@@ -60,6 +60,8 @@ public class SecurityConfig {
                                 "/api/auth/forgot-password/resend",
                                 "/api/auth/verify-reset-otp",
                                 "/api/auth/reset-password",
+                                "/swagger-ui/**",
+                                "/favicon.ico",
                                 "/v3/api-docs",
                                 "/v3/api-docs/**"
                         ).permitAll()
@@ -67,9 +69,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/change-password").hasAnyAuthority(
                                 JwtAuthenticationFilter.INITIAL_PASSWORD_CHANGE_AUTHORITY,
                                 "ROLE_ADMIN",
-                                "ROLE_FRONT_DESK"
+                                "ROLE_HR"
                         )
-                        .anyRequest().hasAnyRole("ADMIN", "FRONT_DESK")
+                        .anyRequest().hasAnyRole("ADMIN", "HR")
                 )
                 .addFilterBefore(
                         jwtAuthenticationFilter,
@@ -108,7 +110,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12);
+        return new BCryptPasswordEncoder();
     }
 
 }

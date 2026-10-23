@@ -25,7 +25,7 @@ The Auth service acts as the central security authority. It decouples identity v
 
 ### 1.2 Core Responsibilities and Ownership Boundaries
 The application strictly owns and manages:
-- **User Identity Governance:** Storage and lifecycle management of user credentials, account activation statuses (`ACTIVE`, `INACTIVE`), and role assignments (`ADMIN`, `FRONT_DESK`).
+- **User Identity Governance:** Storage and lifecycle management of user credentials, account activation statuses (`ACTIVE`, `INACTIVE`), and role assignments (`ADMIN`, `HR`).
 - **Credential Verification:** Secure, slow-hash password matching via BCrypt.
 - **Asymmetric Token Issuance and Verification:** Creation and cryptographic signature validation of RS256 JSON Web Tokens (JWT).
 - **Session Governance:** Refresh token issuance, database persistence, row-locked rotation, concurrent session limitation (maximum 2 active sessions per user), and revocation.
@@ -420,7 +420,7 @@ sequenceDiagram
   ```json
   {
     "mustChangePassword": true,
-    "role": "FRONT_DESK",
+    "role": "HR",
     "userId": "USR-002",
     "message": "First login password change is required.",
     "user": {
@@ -428,7 +428,7 @@ sequenceDiagram
       "employeeId": "EMP-002",
       "email": "reception@example.com",
       "fullName": "Jane Doe",
-      "role": "FRONT_DESK",
+      "role": "HR",
       "status": "ACTIVE",
       "mustChangePassword": true
     }
@@ -445,7 +445,7 @@ sequenceDiagram
   ```json
   {
     "employeeId": "EMP-002",
-    "role": "FRONT_DESK"
+    "role": "HR"
   }
   ```
 - **Response (`201 Created`):**
@@ -455,7 +455,7 @@ sequenceDiagram
     "employeeId": "EMP-002",
     "email": "jane.doe@example.com",
     "fullName": "Jane Doe",
-    "role": "FRONT_DESK",
+    "role": "HR",
     "status": "ACTIVE",
     "mustChangePassword": true
   }
@@ -467,7 +467,7 @@ sequenceDiagram
 
 #### 3. Change Password (`POST /api/auth/change-password`)
 - **Purpose:** Updates current password to a new password.
-- **Authorization:** Authenticated user with `ROLE_ADMIN`, `ROLE_FRONT_DESK`, or `ROLE_INITIAL_PASSWORD_CHANGE_REQUIRED`.
+- **Authorization:** Authenticated user with `ROLE_ADMIN`, `ROLE_HR`, or `ROLE_INITIAL_PASSWORD_CHANGE_REQUIRED`.
 - **Request Body:**
   ```json
   {
@@ -574,7 +574,7 @@ JWTs are signed with a 2048-bit RSA Private Key (`SHA256withRSA`) and verified w
   - `iat`: Timestamp when issued.
   - `exp`: Timestamp when expiring (900,000 ms = 15 minutes).
 - **Custom Claims:**
-  - `role`: Role string (`ADMIN` or `FRONT_DESK`).
+  - `role`: Role string (`ADMIN` or `HR`).
   - `state`: State flag (`AUTHENTICATED` or `INITIAL_PASSWORD_CHANGE_REQUIRED`).
 
 ### 6.3 Cookie Configurations
@@ -728,7 +728,7 @@ erDiagram
    - `id`: PK, `VARCHAR(20)`.
    - `employee_id`: FK to `vms_employee(id)`, Unique (`uk_vms_user_employee`), Non-null.
    - `password_hash`: `VARCHAR(255)` storing BCrypt hash.
-   - `role`: `VARCHAR(30)` (`ADMIN`, `FRONT_DESK`).
+   - `role`: `VARCHAR(30)` (`ADMIN`, `HR`).
    - `status`: `VARCHAR(20)` (`ACTIVE`, `INACTIVE`).
    - `must_change_password`: `BOOLEAN`, default `true`.
    - `created_at`, `updated_at`: `DATETIME`.

@@ -73,12 +73,12 @@ class JwtServiceTest {
     @Test
     void testGenerateRestrictedTokenStateInitialPasswordChangeRequired() {
         String token = jwtService.generateRestrictedToken(
-                "USR002", "FRONT_DESK");
+                "USR002", "HR");
 
         assertNotNull(token);
         assertTrue(jwtService.isTokenValid(token));
         assertEquals("USR002", jwtService.extractUserId(token));
-        assertEquals("FRONT_DESK", jwtService.extractRole(token));
+        assertEquals("HR", jwtService.extractRole(token));
         assertEquals(
                 JwtService.STATE_INITIAL_PASSWORD_CHANGE_REQUIRED,
                 jwtService.extractState(token)

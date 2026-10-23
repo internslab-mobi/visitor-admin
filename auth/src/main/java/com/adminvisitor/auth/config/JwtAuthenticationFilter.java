@@ -70,7 +70,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 } else if (JwtService.STATE_AUTHENTICATED.equals(state)) {
 
-                    if (!"ADMIN".equals(role) && !"FRONT_DESK".equals(role)) {
+                    if (!"ADMIN".equals(role) && !"HR".equals(role)) {
                         SecurityContextHolder.clearContext();
                         filterChain.doFilter(request, response);
                         return;

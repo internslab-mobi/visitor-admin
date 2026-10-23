@@ -1,6 +1,8 @@
 
 package com.adminvisitor.auth.exception;
 
+import com.adminvisitor.auth.dto.responsedto.ErrorResponse;
+import com.adminvisitor.auth.dto.responsedto.ErrorResponseFactory;
 import com.adminvisitor.auth.enums.AuthErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -111,11 +113,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             AuthenticationException exception,
             HttpServletRequest request) {
 
-        log.warn(
+        log.error(
                 "Authentication failed. method={} path={} exceptionType={}",
                 request.getMethod(),
                 request.getRequestURI(),
-                exception.getClass().getSimpleName()
+                exception.getClass().getSimpleName(),
+                exception
         );
 
         return respond(
