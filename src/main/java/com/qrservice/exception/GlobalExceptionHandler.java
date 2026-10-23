@@ -39,6 +39,6 @@ public class GlobalExceptionHandler {
             IllegalStateException exception) {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "QR processing failed"));
+                .body(Map.of("error", exception.getMessage()));
     }
 }

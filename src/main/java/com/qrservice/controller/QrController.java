@@ -1,16 +1,16 @@
 package com.qrservice.controller;
 
-
-import com.qrservice.dto.QrGenerateRequest;
-import com.qrservice.dto.QrGenerateResponse;
+import com.qrservice.dto.CheckoutBadgeInvalidationRequest;
+import com.qrservice.dto.QrBadgeRequest;
+import com.qrservice.dto.QrBadgeResponse;
+import com.qrservice.dto.QrScanResponse;
 import com.qrservice.service.QrService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
-
+@Slf4j
 @RestController
 @RequestMapping("/api/qr")
 @RequiredArgsConstructor
@@ -18,31 +18,37 @@ public class QrController {
 
     private final QrService qrService;
 
-    @PostMapping("/token")
-    public ResponseEntity<Map<String, String>> generateToken() {
-
-        String token = qrService.generateToken();
+    @PostMapping("/generate-badge")
+    public ResponseEntity<QrBadgeResponse> generateQrBadge(
+            @Valid @RequestBody QrBadgeRequest request) {
 
         return ResponseEntity.ok(
-                Map.of("token", token)
+                qrService.generateQrBadge(request)
         );
     }
 
-    @PostMapping("/generate")
-    public ResponseEntity<QrGenerateResponse> generateQrCode(
-            @Valid @RequestBody QrGenerateRequest request
+    @PostMapping("/process-scan")
+    public ResponseEntity<QrScanResponse> processScan(
+            @RequestParam String token) {
+        log.info(
+                "QR scan input: length={}, startsWithTokenPrefix={}, containsEquals={}",
+                token == null ? 0 : token.length(),
+                token != null && token.startsWith("http"),
+                token != null && token.contains("=")
+        );
+
+        return ResponseEntity.ok(
+                qrService.processScan(token)
+        );
+    }
+
+
+    @PostMapping("/invalidate-badge")
+    public ResponseEntity<Void> invalidateBadgeOnCheckout(
+            @RequestBody CheckoutBadgeInvalidationRequest request
     ) {
-
-        String qrCode = qrService.generateQrCode(
-                request.payload()
-        );
-
-        QrGenerateResponse response = new QrGenerateResponse(
-                request.payload(),
-                qrCode
-        );
-
-        return ResponseEntity.ok(response);
+        qrService.invalidateBadgeOnCheckout(request);
+        return ResponseEntity.noContent().build();
     }
-}
 
+}
