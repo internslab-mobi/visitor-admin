@@ -18,15 +18,34 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Spring Security filter executed once per request to authenticate incoming HTTP requests using JWT cookies.
+ * <p>
+ * Extracts the access token from the {@code ACCESS_TOKEN} cookie, validates its cryptographic RS256 signature,
+ * verifies that the user is active in the database, maps authorities based on the token state (e.g., standard
+ * roles vs restricted first-login password change), and populates the {@link SecurityContextHolder}.
+ * </p>
+ *
+ * @author Logeshwaran
+ */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    /**
+     * Special authority granted to users authenticated with a restricted token who must complete an initial password change.
+     */
     public static final String INITIAL_PASSWORD_CHANGE_AUTHORITY =
             "ROLE_INITIAL_PASSWORD_CHANGE_REQUIRED";
 
     private final JwtService jwtService;
     private final UserRepository userRepository;
 
+    /**
+     * Constructs the JWT authentication filter with required JWT service and user repository dependencies.
+     *
+     * @param jwtService service used to validate tokens and parse JWT claims
+     * @param userRepository repository used to verify account existence and active status
+     */
     public JwtAuthenticationFilter(
             JwtService jwtService,
             UserRepository userRepository
@@ -35,6 +54,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Filters each incoming HTTP request, extracting the JWT access token cookie and establishing
+     * the security context authentication if the token is valid and the user account is active.
+     *
+     * @param request the HTTP servlet request
+     * @param response the HTTP servlet response
+     * @param filterChain the remaining filter chain to execute
+     * @throws ServletException if a servlet error occurs during processing
+     * @throws IOException if an I/O error occurs during processing
+     */
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -124,6 +153,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Extracts the raw JWT access token string from the {@code ACCESS_TOKEN} cookie on the incoming request.
+     *
+     * @param request the HTTP servlet request
+     * @return the access token string, or {@code null} if the cookie is not present
+     */
     private String getAccessTokenFromCookie(HttpServletRequest request) {
 
         Cookie[] cookies = request.getCookies();

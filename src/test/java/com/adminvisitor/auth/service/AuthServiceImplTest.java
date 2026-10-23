@@ -178,7 +178,7 @@ class AuthServiceImplTest {
         AuthResult response = authService.login(request);
 
         assertNotNull(response);
-        assertTrue(response.mustChangePassword());
+        assertTrue(response.user().mustChangePassword());
         assertEquals("restrictedJwtToken", response.accessToken());
         assertNull(response.refreshToken());
     }
@@ -196,7 +196,7 @@ class AuthServiceImplTest {
         AuthResult response = authService.login(request);
 
         assertNotNull(response);
-        assertFalse(response.mustChangePassword());
+        assertFalse(response.user().mustChangePassword());
         assertEquals("normalJwtToken", response.accessToken());
         assertNotNull(response.refreshToken());
         verify(refreshTokenRepository, times(1)).save(any(RefreshToken.class));

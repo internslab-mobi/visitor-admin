@@ -5,6 +5,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Utility for generating cryptographically secure temporary passwords.
+ * <p>
+ * Guarantees that generated passwords contain at least one uppercase letter, one lowercase letter,
+ * one numeric digit, and one special character, shuffled with {@link SecureRandom} to prevent predictable character positioning.
+ * </p>
+ *
+ * @author Logeshwaran
+ */
 public class PasswordGenerator {
 
     private static final String LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
@@ -16,10 +25,24 @@ public class PasswordGenerator {
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int DEFAULT_LENGTH = 12;
 
+    /**
+     * Generates a randomized temporary password of default length (12 characters).
+     *
+     * @return the generated temporary password meeting complexity criteria
+     */
     public static String generateTemporaryPassword() {
         return generateTemporaryPassword(DEFAULT_LENGTH);
     }
 
+    /**
+     * Generates a randomized temporary password of the specified length.
+     * <p>
+     * If the specified length is less than 8, a minimum length of 8 is enforced.
+     * </p>
+     *
+     * @param length the desired length of the temporary password (minimum 8)
+     * @return the generated temporary password meeting complexity criteria
+     */
     public static String generateTemporaryPassword(int length) {
         if (length < 8) {
             length = 8;

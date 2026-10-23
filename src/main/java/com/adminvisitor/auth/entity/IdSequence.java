@@ -9,6 +9,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Entity managing persistent identifier sequences for unique ID generation.
+ * <p>
+ * Mapped to the database table {@code vms_id_sequence}, storing monotonically incrementing
+ * sequence counters per entity prefix (e.g., {@code USR}, {@code EMP}) under pessimistic locking.
+ * </p>
+ *
+ * @author Logeshwaran
+ */
 @Entity
 @Table(name = "vms_id_sequence")
 @Getter

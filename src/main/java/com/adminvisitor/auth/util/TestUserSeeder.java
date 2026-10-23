@@ -12,6 +12,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 
+/**
+ * Startup configuration runner that initializes default administrator credentials upon application startup.
+ * <p>
+ * Ensures that an initial employee ({@code EMP-001}) and system administrator user ({@code USR-001})
+ * exist with credentials {@code admin@adminvisitor.com} / {@code Admin@123} if not previously seeded.
+ * </p>
+ *
+ * @author Logeshwaran
+ */
 @Configuration
 public class TestUserSeeder {
 
@@ -19,6 +28,13 @@ public class TestUserSeeder {
     private final EmployeeRepository employeeRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Constructs the test user seeder with required repository and encoder dependencies.
+     *
+     * @param userRepository the user repository for checking and persisting the admin user
+     * @param employeeRepository the employee repository for persisting the admin employee profile
+     * @param passwordEncoder the password encoder for hashing the default admin password
+     */
     public TestUserSeeder(
             UserRepository userRepository,
             EmployeeRepository employeeRepository,
@@ -29,6 +45,11 @@ public class TestUserSeeder {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Creates a {@link CommandLineRunner} bean executed on startup to seed the default administrator.
+     *
+     * @return the command line runner instance
+     */
     @Bean
     CommandLineRunner createTestUser() {
         return args -> {

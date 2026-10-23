@@ -2,6 +2,12 @@ package com.adminvisitor.auth.enums;
 
 import org.springframework.http.HttpStatus;
 
+/**
+ * Enumeration of application error codes defining machine-readable error identifiers,
+ * mapped HTTP response statuses, and default user-facing diagnostic messages.
+ *
+ * @author Logeshwaran
+ */
 public enum AuthErrorCode {
 
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Requested resource was not found."),
@@ -28,15 +34,31 @@ public enum AuthErrorCode {
     private final HttpStatus httpStatus;
     private final String defaultMessage;
 
+    /**
+     * Constructs an error code constant associated with an HTTP status and default message.
+     *
+     * @param httpStatus the HTTP response status mapped to this error
+     * @param defaultMessage the default human-readable message describing the error
+     */
     AuthErrorCode(HttpStatus httpStatus, String defaultMessage) {
         this.httpStatus = httpStatus;
         this.defaultMessage = defaultMessage;
     }
 
+    /**
+     * Retrieves the HTTP status associated with this error code.
+     *
+     * @return the {@link HttpStatus}
+     */
     public HttpStatus getHttpStatus() {
         return httpStatus;
     }
 
+    /**
+     * Retrieves the default human-readable error message.
+     *
+     * @return the default message string
+     */
     public String getDefaultMessage() {
         return defaultMessage;
     }

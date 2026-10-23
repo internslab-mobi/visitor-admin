@@ -24,6 +24,15 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Centralized exception handling advice intercepting controller exceptions across the application.
+ * <p>
+ * Translates domain authentication exceptions, validation failures, access denial errors,
+ * bad credentials, and unhandled runtime exceptions into standardized {@link ErrorResponse} payloads.
+ * </p>
+ *
+ * @author Logeshwaran
+ */
 @RestControllerAdvice
 @Slf4j
 @RequiredArgsConstructor
@@ -31,6 +40,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private final ErrorResponseFactory errorResponseFactory;
 
+    /**
+     * Handles domain-specific {@link AuthException}s and its subclasses, translating
+     * the underlying {@link AuthErrorCode} into the appropriate HTTP status and response payload.
+     *
+     * @param exception the intercepted domain authentication exception
+     * @param request the current HTTP servlet request
+     * @return a {@link ResponseEntity} wrapping the standardized {@link ErrorResponse}
+     */
     @ExceptionHandler(AuthException.class)
     public ResponseEntity<ErrorResponse> handleAuthException(
             AuthException exception,
@@ -66,6 +83,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
+    /**
+     * Handles invalid argument exceptions originating from parameter validation or bad input.
+     *
+     * @param exception the illegal argument exception
+     * @param request the current HTTP servlet request
+     * @return a {@link ResponseEntity} wrapping the standardized {@link ErrorResponse} with BAD_REQUEST status
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(
             IllegalArgumentException exception,
@@ -87,6 +111,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
+    /**
+     * Handles bad credentials exceptions when user authentication fails due to incorrect passwords or emails.
+     *
+     * @param exception the bad credentials exception
+     * @param request the current HTTP servlet request
+     * @return a {@link ResponseEntity} wrapping the standardized {@link ErrorResponse} with UNAUTHORIZED status
+     */
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentials(
             BadCredentialsException exception,
@@ -108,6 +139,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
+    /**
+     * Handles generic Spring Security authentication exceptions.
+     *
+     * @param exception the authentication exception
+     * @param request the current HTTP servlet request
+     * @return a {@link ResponseEntity} wrapping the standardized {@link ErrorResponse} with UNAUTHORIZED status
+     */
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> handleAuthenticationException(
             AuthenticationException exception,
@@ -130,6 +168,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
+    /**
+     * Handles authorization denial exceptions when an authenticated user lacks requisite privileges.
+     *
+     * @param exception the access denied exception
+     * @param request the current HTTP servlet request
+     * @return a {@link ResponseEntity} wrapping the standardized {@link ErrorResponse} with FORBIDDEN status
+     */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(
             AccessDeniedException exception,
@@ -151,6 +196,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
+    /**
+     * Handles unexpected or unhandled general exceptions, returning a generic 500 error response.
+     *
+     * @param exception the unhandled exception
+     * @param request the current HTTP servlet request
+     * @return a {@link ResponseEntity} wrapping the standardized {@link ErrorResponse} with INTERNAL_SERVER_ERROR status
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpectedException(
             Exception exception,
@@ -172,6 +224,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
+    /**
+     * Handles bean validation constraint failures occurring on {@code @Valid} annotated controller request bodies.
+     *
+     * @param exception the method argument not valid exception
+     * @param headers the HTTP headers for the response
+     * @param status the HTTP status code
+     * @param request the current web request
+     * @return a {@link ResponseEntity} wrapping the {@link ErrorResponse} populated with field validation details
+     */
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException exception,
@@ -215,6 +276,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(errorResponse);
     }
 
+    /**
+     * Handles standard Spring MVC framework exceptions, mapping known HTTP statuses to application error codes.
+     *
+     * @param exception the internal framework exception
+     * @param body the response body
+     * @param headers the response headers
+     * @param statusCode the HTTP status code
+     * @param request the current web request
+     * @return a {@link ResponseEntity} wrapping the configured {@link ErrorResponse}
+     */
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(
             Exception exception,
@@ -279,8 +350,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(errorResponse);
     }
 
-    // ---------- Helpers ----------
-
+    /**
+     * Helper method to build a {@link ResponseEntity} enclosing an {@link ErrorResponse}.
+     *
+     * @param status the HTTP response status
+     * @param code the machine-readable error code
+     * @param message the descriptive error message
+     * @param path the request URI path
+     * @param fieldErrors optional field-level validation errors
+     * @return the constructed {@link ResponseEntity}
+     */
     private ResponseEntity<ErrorResponse> respond(
             HttpStatus status,
             String code,
@@ -299,12 +378,24 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(status).body(response);
     }
 
+    /**
+     * Extracts the request URI path from the given {@link WebRequest}.
+     *
+     * @param request the web request
+     * @return the request URI, or empty string if unavailable
+     */
     private String pathOf(WebRequest request) {
         return request instanceof ServletWebRequest servletWebRequest
                 ? servletWebRequest.getRequest().getRequestURI()
                 : "";
     }
 
+    /**
+     * Extracts the HTTP method name from the given {@link WebRequest}.
+     *
+     * @param request the web request
+     * @return the HTTP method name, or {@code "UNKNOWN"} if unavailable
+     */
     private String methodOf(WebRequest request) {
         return request instanceof ServletWebRequest servletWebRequest
                 ? servletWebRequest.getRequest().getMethod()

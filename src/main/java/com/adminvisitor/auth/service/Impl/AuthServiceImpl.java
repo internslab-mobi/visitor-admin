@@ -34,6 +34,17 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+/**
+ * Service implementation managing user lifecycle, authentication, token issuance,
+ * session governance, and password recovery for the Visitor Management System.
+ * <p>
+ * Handles password hashing with BCrypt, RS256 JWT access token generation, SHA-256 hashed
+ * refresh token management with token rotation, concurrent session limitation (maximum 2 active sessions),
+ * time-bounded 6-digit OTP password reset workflows, and asynchronous onboarding email notifications.
+ * </p>
+ *
+ * @author Logeshwaran
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -52,6 +63,20 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserMapper userMapper;
 
+    /**
+     * Provisions a new user account for an existing, active employee.
+     * <p>
+     * Verifies employee existence and active status, verifies that no account already exists
+     * for the employee's email, generates a unique user ID and temporary password, persists
+     * the new user with {@code mustChangePassword = true}, and dispatches an onboarding email.
+     * </p>
+     *
+     * @param request the user creation request containing employee ID and assigned role
+     * @return the created user details DTO
+     * @throws ResourceNotFoundException if no employee exists with the supplied ID
+     * @throws ResourceAlreadyExistsException if a user account already exists for the employee
+     * @throws IllegalArgumentException if the employee is not active
+     */
     @Override
     @Transactional
     public UserResponse createUser(CreateUserRequest request) {
@@ -117,6 +142,20 @@ public class AuthServiceImpl implements AuthService {
     }
 
 
+    /**
+     * Authenticates a user against provided credentials and issues appropriate security tokens.
+     * <p>
+     * Delegates credential validation to {@link AuthenticationManager}, checks active account status,
+     * and evaluates {@code mustChangePassword}. If an initial password change is required, a restricted
+     * JWT is issued without a refresh token. Otherwise, verifies that active sessions do not exceed the
+     * concurrent limit (2 active sessions), generates a standard RS256 access token, and stores a hashed
+     * opaque refresh token.
+     * </p>
+     *
+     * @param request the login request containing email and plaintext password
+     * @return an {@link AuthResult} containing access and refresh tokens along with user details
+     * @throws BadCredentialsException if credentials are invalid, account is inactive, or max sessions reached
+     */
     @Override
     @Transactional
     public AuthResult login(LoginRequest request) {
@@ -169,7 +208,6 @@ public class AuthServiceImpl implements AuthService {
             );
         }
 
-        // Count active, unrevoked, unexpired refresh-token sessions.
         long activeSessions =
                 refreshTokenRepository
                         .countByUser_IdAndRevokedAtIsNullAndExpiresAtAfter(
@@ -224,6 +262,15 @@ public class AuthServiceImpl implements AuthService {
     }
 
 
+    /**
+     * Terminates an active session by revoking the provided refresh token.
+     * <p>
+     * Computes the SHA-256 hash of the token, looks up the persistent record in {@code vms_refresh_token},
+     * and sets its revocation timestamp if currently active.
+     * </p>
+     *
+     * @param rawRefreshToken the raw refresh token string to revoke
+     */
     @Override
     @Transactional
     public void logout(String rawRefreshToken) {
@@ -256,6 +303,19 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    /**
+     * Updates the password for the specified user and revokes all existing refresh tokens.
+     * <p>
+     * Validates that the current password matches, verifies confirmation equality, ensures the new password
+     * complies with complexity policies, invalidates all existing refresh token sessions, updates the BCrypt
+     * hash, and sets {@code mustChangePassword = false}.
+     * </p>
+     *
+     * @param userId the user identifier
+     * @param request the password change request details
+     * @throws ResourceNotFoundException if the user is not found
+     * @throws PasswordValidationException if current password fails, confirmation mismatches, or complexity fails
+     */
     @Override
     @Transactional
     public void changePassword(String userId, ChangePasswordRequest request) {
@@ -291,6 +351,18 @@ public class AuthServiceImpl implements AuthService {
         log.info("PASSWORD_CHANGED userId={}", userId);
     }
 
+    /**
+     * Rotates an existing refresh token and issues a new access token.
+     * <p>
+     * Acquires a pessimistic write lock on the refresh token row, verifies that the token is unrevoked,
+     * unexpired, and belongs to an active user, updates the token hash with a newly generated opaque token,
+     * and returns the rotated token pair.
+     * </p>
+     *
+     * @param rawRefreshToken the raw refresh token supplied by the client
+     * @return an {@link AuthResult} containing rotated access and refresh tokens
+     * @throws InvalidTokenException if the token is missing, not found, revoked, expired, or user is inactive
+     */
     @Override
     @Transactional
     public AuthResult refresh(String rawRefreshToken) {
@@ -367,6 +439,18 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 
+    /**
+     * Initiates the self-service password recovery flow by generating and emailing a 6-digit numeric OTP.
+     * <p>
+     * Verifies that the account exists and is active, enforces a 60-second cooldown between requests,
+     * restricts total dispatches to 3 per 15-minute rolling window, invalidates prior reset tokens,
+     * persists a hashed OTP with a 5-minute lifespan, and sends the OTP email asynchronously.
+     * </p>
+     *
+     * @param request the forgot password request containing the target email address
+     * @return {@code true} if the request was accepted and OTP sent; {@code false} if account not found or inactive
+     * @throws OtpRateLimitException if cooldown period is active or maximum attempts in the window are exceeded
+     */
     @Override
     @Transactional
     public boolean forgotPassword(ForgotPasswordRequest request) {
@@ -460,6 +544,18 @@ public class AuthServiceImpl implements AuthService {
         return true;
     }
 
+    /**
+     * Verifies a submitted 6-digit password reset OTP and generates a single-use reset authorization token.
+     * <p>
+     * Validates that the OTP has not expired, enforces a maximum of 5 verification attempts, verifies the
+     * hash of the submitted code, and issues a 10-minute reset authorization token upon success.
+     * </p>
+     *
+     * @param request the OTP verification request containing the email and 6-digit code
+     * @return a {@link VerifyOtpResponse} containing the issued reset authorization token
+     * @throws InvalidOtpException if the user is not found, no active OTP exists, OTP has expired, or code is wrong
+     * @throws OtpRateLimitException if maximum failed verification attempts (5) are reached
+     */
     @Override
     @Transactional(noRollbackFor = {
             InvalidOtpException.class,
@@ -584,6 +680,18 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 
+    /**
+     * Resets a user's password using a verified single-use reset authorization token.
+     * <p>
+     * Validates confirmation match, checks that the reset token is unexpired, unrevoked, and previously verified,
+     * enforces password complexity policies, marks the reset token as used, updates the BCrypt password hash,
+     * clears {@code mustChangePassword}, and revokes all active refresh tokens for the user.
+     * </p>
+     *
+     * @param request the reset password request containing the reset token and new password
+     * @throws PasswordValidationException if confirmation mismatches or password fails complexity rules
+     * @throws InvalidTokenException if reset token is invalid, expired, already used, unverified, or user inactive
+     */
     @Override
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
@@ -679,6 +787,17 @@ public class AuthServiceImpl implements AuthService {
         log.info("RESET_PASSWORD_SUCCESS userId={}", user.getId());
     }
 
+    /**
+     * Enforces password complexity rules and prevents reuse of the current password.
+     * <p>
+     * Requires at least 8 characters, disallows equality with the current password, and mandates at least
+     * one uppercase letter, one lowercase letter, one numeric digit, and one special character.
+     * </p>
+     *
+     * @param newPassword the proposed new plaintext password
+     * @param currentPassword the user's current password for comparison, or {@code null} during reset
+     * @throws PasswordValidationException if any complexity or reuse criteria are violated
+     */
     private void validateNewPasswordPolicy(
             String newPassword,
             String currentPassword) {

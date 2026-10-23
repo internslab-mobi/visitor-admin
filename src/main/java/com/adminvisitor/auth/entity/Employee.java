@@ -5,6 +5,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Entity representing an employee within the Visitor Management System.
+ * <p>
+ * Mapped to the database table {@code vms_employee}, storing personal details,
+ * organizational designation, and employment status. Each employee can be associated
+ * with at most one authentication user account.
+ * </p>
+ *
+ * @author Logeshwaran
+ */
 @Entity
 @Table(name = "vms_employee")
 @Getter
