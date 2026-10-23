@@ -1,6 +1,5 @@
 package com.adminvisitor.service;
 
-import com.adminvisitor.dto.requestdto.AddVisitorToBlacklistRequest;
 import com.adminvisitor.dto.requestdto.BlacklistRequest;
 import com.adminvisitor.dto.responsedto.BlacklistResponse;
 import com.adminvisitor.enums.ProofType;
@@ -15,7 +14,7 @@ public interface BlacklistService {
 
     BlacklistResponse addExistingVisitorToBlacklist(
             String visitorId,
-            AddVisitorToBlacklistRequest request
+            BlacklistRequest request
     );
 
     BlacklistResponse removeFromBlacklist(

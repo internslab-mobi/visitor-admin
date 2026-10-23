@@ -1,31 +1,20 @@
 spring:
   application:
     name: vms
-
   profiles:
     default: local
-
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
 
-
-  smtp:
-      auth: true
-      starttls:
-      enable: true
-      required: true
-      connectiontimeout: 10000
-      timeout: 10000
-      writetimeout: 10000
+springdotenv:
+  filename: .env
 
 jwt:
   public-key-path: ${JWT_PUBLIC_KEY_PATH}
 
-crypto:
-  aes:
-    key: ${CRYPTO_AES_KEY}
+
 
 vms:
   security:
@@ -57,6 +46,13 @@ management:
     metrics:
       export:
         enabled: false
+
+notification:
+  outbox:
+    max-attempts: 3
+    batch-size: 50
+    retry-delay-seconds: 30
+    polling-delay-ms: 5000
 
 springdoc:
   swagger-ui:

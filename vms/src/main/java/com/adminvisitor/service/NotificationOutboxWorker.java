@@ -1,6 +1,6 @@
-package com.adminvisitor.service;
-
-public interface NotificationOutboxWorker {
-
-    void processPendingNotifications();
-}
+//package com.adminvisitor.service;
+//
+//public interface NotificationOutboxWorker {
+//
+//    void processPendingNotifications();
+//}

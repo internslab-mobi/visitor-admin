@@ -1,14 +1,36 @@
 package com.adminvisitor.dto.responsedto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@Getter
-@AllArgsConstructor
-public class DepartmentResponse {
+@Schema(description = "Response containing department details")
+public record DepartmentResponse(
 
-    private String id;
-    private String departmentCode;
-    private String departmentName;
-    private String status;
+        @Schema(
+                description = "Unique identifier of the department",
+                example = "DT-001",
+                requiredMode = Schema.RequiredMode.REQUIRED
+        )
+        String id,
+
+        @Schema(
+                description = "Unique code assigned to the department",
+                example = "IT",
+                requiredMode = Schema.RequiredMode.REQUIRED
+        )
+        String departmentCode,
+
+        @Schema(
+                description = "Name of the department",
+                example = "Information Technology",
+                requiredMode = Schema.RequiredMode.REQUIRED
+        )
+        String departmentName,
+
+        @Schema(
+                description = "Current status of the department",
+                example = "ACTIVE",
+                requiredMode = Schema.RequiredMode.REQUIRED
+        )
+        String status
+) {
 }

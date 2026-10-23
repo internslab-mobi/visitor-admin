@@ -16,7 +16,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-
+/**
+ * Implements employee creation and retrieval operations.
+ *
+ * @author Nethra
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -26,12 +30,21 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final DepartmentRepository departmentRepository;
     private final IdGeneratorService idGeneratorService;
 
+    /**
+     * Creates an employee after checking email uniqueness and validating the department.
+     * Generates an employee ID, assigns the department, and sets the initial status to ACTIVE.
+     *
+     * @param request the employee details to create
+     * @return the response containing the saved employee and department details
+     * @throws ResourceAlreadyExistsException if the employee email already exists
+     * @throws ResourceNotFoundException if the specified department does not exist
+     */
     @Transactional
     public EmployeeResponse createEmployee(
             EmployeeCreateRequest request
     ) {
 
-        String email = request.getEmail().trim();
+        String email = request.email().trim();
 
         if (employeeRepository.existsByEmail(email)) {
             throw new ResourceAlreadyExistsException(
@@ -41,7 +54,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Department department =
                 departmentRepository.findById(
-                        request.getDepartmentId().trim()
+                        request.departmentId().trim()
                 ).orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Department not found"
@@ -58,23 +71,23 @@ public class EmployeeServiceImpl implements EmployeeService {
         );
 
         employee.setFirstName(
-                request.getFirstName().trim()
+                request.firstName().trim()
         );
 
         employee.setLastName(
-                request.getLastName().trim()
+                request.lastName().trim()
         );
 
         employee.setEmail(email);
 
         employee.setMobileNumber(
-                request.getMobileNumber().trim()
+                request.mobileNumber().trim()
         );
 
         employee.setDepartment(department);
 
         employee.setDesignation(
-                request.getDesignation().trim()
+                request.designation().trim()
         );
 
         employee.setStatus("ACTIVE");
@@ -102,6 +115,12 @@ public class EmployeeServiceImpl implements EmployeeService {
         );
     }
 
+    /**
+     * Retrieves all employees and converts them into response objects,
+     * including their associated department details.
+     *
+     * @return a list of employee responses, or an empty list if no employees exist
+     */
     @Transactional(readOnly = true)
     public List<EmployeeResponse> getEmployees() {
 
