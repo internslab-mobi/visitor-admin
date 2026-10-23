@@ -167,40 +167,100 @@ class AuthServiceImplTest {
         assertThrows(EmailSendException.class, () -> authService.createUser(request));
     }
 
+
     @Test
     void testLoginFirstTimeUserReturnsRestrictedToken() {
-        LoginRequest request = new LoginRequest("john.doe@example.com", "tempPassword");
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
-        when(userRepository.findByEmployeeEmail("john.doe@example.com")).thenReturn(Optional.of(user));
-        when(userRepository.findByIdForUpdate("USR002")).thenReturn(Optional.of(user));
-        when(jwtService.generateRestrictedToken("USR002", "HR")).thenReturn("restrictedJwtToken");
+        LoginRequest request = new LoginRequest(
+                "john.doe@example.com",
+                "tempPassword"
+        );
+
+        when(authenticationManager.authenticate(
+                any(UsernamePasswordAuthenticationToken.class)
+        )).thenReturn(null);
+
+        when(userRepository.findByEmployeeEmail("john.doe@example.com"))
+                .thenReturn(Optional.of(user));
+
+        when(userRepository.findByIdForUpdate("USR002"))
+                .thenReturn(Optional.of(user));
+
+        when(userMapper.toUserResponse(any(User.class)))
+                .thenReturn(new UserResponse(
+                        "USR002",
+                        "EMP002",
+                        "john.doe@example.com",
+                        "John Doe",
+                        UserRole.HR,
+                        "ACTIVE",
+                        true
+                ));
+
+        when(jwtService.generateRestrictedToken("USR002", "HR"))
+                .thenReturn("restrictedJwtToken");
 
         AuthResult response = authService.login(request);
 
         assertNotNull(response);
+        assertNotNull(response.user());
         assertTrue(response.user().mustChangePassword());
         assertEquals("restrictedJwtToken", response.accessToken());
         assertNull(response.refreshToken());
     }
 
+
+
     @Test
     void testLoginNormalUserReturnsTokens() {
         user.setMustChangePassword(false);
-        LoginRequest request = new LoginRequest("john.doe@example.com", "Password@123");
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
-        when(userRepository.findByEmployeeEmail("john.doe@example.com")).thenReturn(Optional.of(user));
-        when(userRepository.findByIdForUpdate("USR002")).thenReturn(Optional.of(user));
-        when(jwtService.generateToken("USR002", "HR")).thenReturn("normalJwtToken");
-        when(jwtService.getRefreshExpiration()).thenReturn(2700000L);
+
+        LoginRequest request = new LoginRequest(
+                "john.doe@example.com",
+                "Password@123"
+        );
+
+        when(authenticationManager.authenticate(
+                any(UsernamePasswordAuthenticationToken.class)
+        )).thenReturn(null);
+
+        when(userRepository.findByEmployeeEmail("john.doe@example.com"))
+                .thenReturn(Optional.of(user));
+
+        when(userRepository.findByIdForUpdate("USR002"))
+                .thenReturn(Optional.of(user));
+
+        when(userMapper.toUserResponse(any(User.class)))
+                .thenReturn(new UserResponse(
+                        "USR002",
+                        "EMP002",
+                        "john.doe@example.com",
+                        "John Doe",
+                        UserRole.HR,
+                        "ACTIVE",
+                        false
+                ));
+
+        when(jwtService.generateToken("USR002", "HR"))
+                .thenReturn("normalJwtToken");
+
+        when(jwtService.getRefreshExpiration())
+                .thenReturn(2700000L);
+
+        when(idGeneratorService.generateId("REFRESH_TOKEN", "RTK-"))
+                .thenReturn("RTK-001");
 
         AuthResult response = authService.login(request);
 
         assertNotNull(response);
+        assertNotNull(response.user());
         assertFalse(response.user().mustChangePassword());
         assertEquals("normalJwtToken", response.accessToken());
         assertNotNull(response.refreshToken());
-        verify(refreshTokenRepository, times(1)).save(any(RefreshToken.class));
+
+        verify(refreshTokenRepository, times(1))
+                .save(any(RefreshToken.class));
     }
+
 
     @Test
     void testLoginInactiveUserThrowsException() {
