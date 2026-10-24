@@ -161,6 +161,8 @@ public class VisitorLogController {
             @Parameter(description = "Visit ID", required = true)
             @PathVariable String visitId
     ) {
+
+        System.out.println("Time tracking endpoint reached: " + visitId);
         return ResponseEntity.ok(
                 visitManagementService.getVisitTimeTracking(visitId)
         );

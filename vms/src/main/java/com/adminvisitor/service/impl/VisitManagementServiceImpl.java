@@ -7,9 +7,9 @@ import com.adminvisitor.entity.*;
 import com.adminvisitor.enums.*;
 import com.adminvisitor.exception.BusinessRuleException;
 import com.adminvisitor.mapper.VisitMapper;
-import com.adminvisitor.repository.MetaTimeTrackingRepository;
 import com.adminvisitor.repository.VendorRepository;
 import com.adminvisitor.repository.VisitRepository;
+import com.adminvisitor.repository.VisitTrackingQueryRepository;
 import com.adminvisitor.service.*;
 import com.adminvisitor.specification.VisitSpecification;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +49,7 @@ public class VisitManagementServiceImpl implements VisitManagementService{
     private final VisitMapper visitMapper;
     private final EmailService emailService;
     private final DocumentService documentService;
-  private MetaTimeTrackingRepository metaTimeTrackingRepository;
+    private final VisitTrackingQueryRepository visitTrackingQueryRepository;
     private final NdaService ndaService;
 
     private double elapsedMillis(long startNanos) {
@@ -573,27 +573,28 @@ public class VisitManagementServiceImpl implements VisitManagementService{
 
 
     @Override
-    @Transactional(readOnly = true)
+
     public VisitTimeTrackingResponse getVisitTimeTracking(String visitId) {
 
         if (!visitRepository.existsById(visitId)) {
-            throw new BusinessRuleException("Visit not found with id: " + visitId);
+            throw new BusinessRuleException(
+                    "Visit not found with id: " + visitId
+            );
         }
 
         LocalDateTime referenceTime = LocalDateTime.now();
 
-        List<MetaTimeTracking> trackingRecords =
-                metaTimeTrackingRepository.findByVisitIdOrderByInTimeAsc(visitId);
-
         List<VisitTimeTrackingResponse.SessionResponse> sessions =
-                trackingRecords.stream()
-                        .map(tracking ->
-                                visitMapper.toTrackingSessionResponse(
-                                        tracking, referenceTime))
-                        .toList();
+                visitTrackingQueryRepository
+                        .findByVisitIdOrderByInTimeAsc(
+                                visitId,
+                                referenceTime
+                        );
 
         long totalDurationSeconds = sessions.stream()
-                .mapToLong(VisitTimeTrackingResponse.SessionResponse::durationSeconds)
+                .mapToLong(
+                        VisitTimeTrackingResponse.SessionResponse::durationSeconds
+                )
                 .sum();
 
         return VisitTimeTrackingResponse.builder()

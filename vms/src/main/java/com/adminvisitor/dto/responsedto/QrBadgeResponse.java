@@ -2,7 +2,7 @@
 package com.adminvisitor.dto.responsedto;
 
 public record QrBadgeResponse(
-        String token,
+//        String token,
         String qrCode
 ) {
 }
