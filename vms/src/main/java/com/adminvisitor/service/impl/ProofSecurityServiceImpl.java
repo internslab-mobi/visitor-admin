@@ -122,7 +122,7 @@ public class ProofSecurityServiceImpl implements ProofSecurityService {
 
         boolean valid = switch (nationality) {
 
-            case DOMESTIC ->
+            case INDIA ->
                     proofType == ProofType.AADHAAR
                             || proofType == ProofType.PAN;
 
@@ -150,22 +150,22 @@ public class ProofSecurityServiceImpl implements ProofSecurityService {
 
         switch (nationality) {
 
-            case DOMESTIC -> {
+            case INDIA -> {
                 if (aadharNumber == null || aadharNumber.isBlank()) {
                     throw new IllegalArgumentException(
-                            "Aadhaar number is required for domestic visitors"
+                            "Aadhaar number is required for INDIA visitors"
                     );
                 }
 
                 if (panNumber == null || panNumber.isBlank()) {
                     throw new IllegalArgumentException(
-                            "PAN number is required for domestic visitors"
+                            "PAN number is required for INDIA visitors"
                     );
                 }
 
                 if (passportNumber != null && !passportNumber.isBlank()) {
                     throw new IllegalArgumentException(
-                            "Passport is not allowed for domestic visitors"
+                            "Passport is not allowed for INDIA visitors"
                     );
                 }
             }

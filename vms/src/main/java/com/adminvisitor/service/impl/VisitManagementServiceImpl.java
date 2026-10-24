@@ -533,7 +533,7 @@ public class VisitManagementServiceImpl implements VisitManagementService{
         boolean identityMatches;
 
         switch (nationality) {
-            case DOMESTIC -> {
+            case INDIA -> {
                 boolean aadhaarMatches =
                         documentService.verifyIdentityProof(
                                 visitor,

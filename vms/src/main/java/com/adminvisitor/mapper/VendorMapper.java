@@ -4,6 +4,7 @@ import com.adminvisitor.dto.responsedto.VendorEditResponse;
 import com.adminvisitor.dto.responsedto.VendorResponse;
 import com.adminvisitor.dto.responsedto.VisitorEditResponse;
 import com.adminvisitor.entity.Vendor;
+import com.adminvisitor.entity.Visitor;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -64,4 +65,17 @@ public interface VendorMapper {
             VisitorEditResponse visitorEdit,
             List<VendorEditResponse.NdaInfo> ndas
     );
+
+
+
+
+        @Mapping(target = "id", source = "vendorId")
+        @Mapping(target = "visitor", source = "visitor")
+        @Mapping(target = "firstName", source = "visitor.firstName")
+        @Mapping(target = "lastName", source = "visitor.lastName")
+        @Mapping(target = "email", source = "visitor.email")
+        @Mapping(target = "mobileNumber", source = "visitor.mobileNumber")
+        @Mapping(target = "companyName", source = "visitor.companyName")
+        Vendor toEntity(Visitor visitor, String vendorId);
+
 }

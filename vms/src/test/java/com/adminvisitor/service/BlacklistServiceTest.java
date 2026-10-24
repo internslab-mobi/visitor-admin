@@ -190,7 +190,7 @@
 //        Visitor visitor = new Visitor();
 //
 //        Document document = new Document();
-//        document.setNationality(Nationality.DOMESTIC);
+//        document.setNationality(Nationality.INDIA);
 //
 //        when(visitorRepository.findById("VTR-001"))
 //                .thenReturn(Optional.of(visitor));

@@ -5,6 +5,9 @@ import com.adminvisitor.dto.responsedto.*;
 import com.adminvisitor.entity.*;
 import com.adminvisitor.enums.*;
 import com.adminvisitor.exception.*;
+import com.adminvisitor.mapper.VendorMapper;
+import com.adminvisitor.mapper.VisitMapper;
+import com.adminvisitor.mapper.VisitorMapper;
 import com.adminvisitor.repository.*;
 import com.adminvisitor.service.*;
 import com.adminvisitor.util.VisitReferenceUtil;
@@ -40,7 +43,9 @@ public class VisitServiceImpl implements VisitService {
     private final DocumentService documentService;
     private final ProofSecurityService proofSecurityService;
     private final VisitManagementServiceImpl visitManagementService;
-
+    private final VendorMapper vendorMapper;
+    private final VisitMapper visitMapper;
+    private final VisitorMapper visitorMapper;
     @Transactional
     @Override
     public RegistrationResponse register(RegistrationRequest request) {
@@ -95,7 +100,7 @@ public class VisitServiceImpl implements VisitService {
 
                 switch (request.nationality()) {
 
-                    case DOMESTIC -> {
+                    case INDIA -> {
                         boolean aadhaarMatches =
                                 documentService.verifyIdentityProof(
                                         visitor,
@@ -252,26 +257,11 @@ public class VisitServiceImpl implements VisitService {
                     savedVisit.getStatus()
             );
 
-            return RegistrationResponse.builder()
-                    .visitId(savedVisit.getId())
-                    .visitReference(savedVisit.getVisitReference())
-                    .visitorId(visitor.getId())
-                    .firstName(visitor.getFirstName())
-                    .lastName(visitor.getLastName())
-                    .email(visitor.getEmail())
-                    .mobileNumber(visitor.getMobileNumber())
-                    .companyName(visitor.getCompanyName())
-                    .visitorType(savedVisit.getVisitorType())
-                    .registrationType(savedVisit.getRegistrationType())
-                    .purpose(savedVisit.getPurpose())
-                    .hostId(savedVisit.getHost().getId())
-                    .expectedArrivalAt(savedVisit.getExpectedArrivalAt())
-                    .expectedDepartureAt(savedVisit.getExpectedDepartureAt())
-                    .remarks(savedVisit.getRemarks())
-                    .status(savedVisit.getStatus())
-                    .message(getSuccessMessage(request.registrationType()))
-                    .build();
-
+            return visitMapper.toRegistrationResponse(
+                    savedVisit,
+                    visitor,
+                    getSuccessMessage(request.registrationType())
+            );
         } catch (BusinessRuleException | ResourceAlreadyExistsException exception) {
 
             log.warn(
@@ -348,13 +338,9 @@ public class VisitServiceImpl implements VisitService {
             );
         }
 
-        Visitor newVisitor = new Visitor();
-        newVisitor.setId(idGeneratorService.generateId("VISITOR", "VTR"));
-        newVisitor.setFirstName(request.firstName());
-        newVisitor.setLastName(request.lastName());
-        newVisitor.setEmail(email);
-        newVisitor.setMobileNumber(mobileNumber);
-        newVisitor.setCompanyName(request.companyName());
+        String visitorId = idGeneratorService.generateId("VISITOR", "VTR");
+
+        Visitor newVisitor = visitorMapper.toEntity(request, visitorId);
 
         Visitor savedVisitor = visitorRepository.save(newVisitor);
 
@@ -420,14 +406,10 @@ public class VisitServiceImpl implements VisitService {
             return;
         }
 
-        Vendor vendor = new Vendor();
-        vendor.setId(idGeneratorService.generateId("VENDOR", "VND"));
-        vendor.setVisitor(visitor);
-        vendor.setFirstName(visitor.getFirstName());
-        vendor.setLastName(visitor.getLastName());
-        vendor.setEmail(visitor.getEmail());
-        vendor.setMobileNumber(visitor.getMobileNumber());
-        vendor.setCompanyName(visitor.getCompanyName());
+        String vendorId = idGeneratorService.generateId("VENDOR", "VND");
+
+        Vendor vendor = vendorMapper.toEntity(visitor, vendorId);
+
 
         vendorRepository.save(vendor);
 
@@ -450,7 +432,7 @@ public class VisitServiceImpl implements VisitService {
 
         switch (request.nationality()) {
 
-            case DOMESTIC -> {
+            case INDIA -> {
 
                 boolean aadhaarBlacklisted =
                         blacklistService.isBlacklistedByProof(
