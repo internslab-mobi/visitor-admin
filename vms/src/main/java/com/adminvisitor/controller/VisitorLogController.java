@@ -13,6 +13,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.adminvisitor.dto.responsedto.VisitTimeTrackingResponse;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.time.LocalDate;
 
@@ -137,5 +139,30 @@ public class VisitorLogController {
                 );
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Retrieves the QR scan IN/OUT session history for a specific visit.
+     *
+     * <p>Returns each recorded session with its IN time, OUT time, and duration,
+     * along with the total recorded duration for the visit. An ongoing session
+     * has a {@code null} OUT time, and its duration is calculated up to the
+     * current time.</p>
+     *
+     * @param visitId the unique identifier of the visit
+     * @return the visit's time-tracking history and total recorded duration
+     */
+    @Operation(summary = "Get QR scan IN/OUT history for a visit")
+    @GetMapping(
+            value = "/{visitId}/time-tracking",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<VisitTimeTrackingResponse> getVisitTimeTracking(
+            @Parameter(description = "Visit ID", required = true)
+            @PathVariable String visitId
+    ) {
+        return ResponseEntity.ok(
+                visitManagementService.getVisitTimeTracking(visitId)
+        );
     }
 }

@@ -154,7 +154,7 @@ public record RegistrationRequest(
 
         @Size(max = 50, message = "Aadhaar number cannot exceed 50 characters")
         @Schema(
-                description = "Aadhaar number for domestic visitors, if provided",
+                description = "Aadhaar number for DOMESTIC visitors, if provided",
                 example = "123456789012",
                 maxLength = 50,
                 requiredMode = Schema.RequiredMode.NOT_REQUIRED
@@ -165,7 +165,7 @@ public record RegistrationRequest(
 
         @Size(max = 50, message = "PAN number cannot exceed 50 characters")
         @Schema(
-                description = "PAN number for domestic visitors, if provided",
+                description = "PAN number for DOMESTIC visitors, if provided",
                 example = "ABCDE1234F",
                 maxLength = 50,
                 requiredMode = Schema.RequiredMode.NOT_REQUIRED

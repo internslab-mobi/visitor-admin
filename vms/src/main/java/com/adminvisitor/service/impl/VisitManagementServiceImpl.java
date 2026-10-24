@@ -20,12 +20,16 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.adminvisitor.dto.responsedto.VisitTimeTrackingResponse;
+import com.adminvisitor.entity.MetaTimeTracking;
+import com.adminvisitor.repository.MetaTimeTrackingRepository;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
@@ -49,6 +53,7 @@ public class VisitManagementServiceImpl implements VisitManagementService{
     private final DocumentService documentService;
     private final VisitBadgeService visitBadgeService;
     private final NdaService ndaService;
+    private final MetaTimeTrackingRepository metaTimeTrackingRepository;
 
     private double elapsedMillis(long startNanos) {
         return (System.nanoTime() - startNanos) / 1_000_000.0;
@@ -558,5 +563,36 @@ public class VisitManagementServiceImpl implements VisitManagementService{
                     "Identity verification failed"
             );
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public VisitTimeTrackingResponse getVisitTimeTracking(String visitId) {
+
+        if (!visitRepository.existsById(visitId)) {
+            throw new BusinessRuleException("Visit not found with id: " + visitId);
+        }
+
+        LocalDateTime referenceTime = LocalDateTime.now();
+
+        List<MetaTimeTracking> trackingRecords =
+                metaTimeTrackingRepository.findByVisitIdOrderByInTimeAsc(visitId);
+
+        List<VisitTimeTrackingResponse.SessionResponse> sessions =
+                trackingRecords.stream()
+                        .map(tracking ->
+                                visitMapper.toTrackingSessionResponse(
+                                        tracking, referenceTime))
+                        .toList();
+
+        long totalDurationSeconds = sessions.stream()
+                .mapToLong(VisitTimeTrackingResponse.SessionResponse::durationSeconds)
+                .sum();
+
+        return VisitTimeTrackingResponse.builder()
+                .visitId(visitId)
+                .sessions(sessions)
+                .totalDurationSeconds(totalDurationSeconds)
+                .build();
     }
 }

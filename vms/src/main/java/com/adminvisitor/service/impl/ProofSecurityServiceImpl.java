@@ -153,19 +153,19 @@ public class ProofSecurityServiceImpl implements ProofSecurityService {
             case DOMESTIC -> {
                 if (aadharNumber == null || aadharNumber.isBlank()) {
                     throw new IllegalArgumentException(
-                            "Aadhaar number is required for domestic visitors"
+                            "Aadhaar number is required for DOMESTIC visitors"
                     );
                 }
 
                 if (panNumber == null || panNumber.isBlank()) {
                     throw new IllegalArgumentException(
-                            "PAN number is required for domestic visitors"
+                            "PAN number is required for DOMESTIC visitors"
                     );
                 }
 
                 if (passportNumber != null && !passportNumber.isBlank()) {
                     throw new IllegalArgumentException(
-                            "Passport is not allowed for domestic visitors"
+                            "Passport is not allowed for DOMESTIC visitors"
                     );
                 }
             }

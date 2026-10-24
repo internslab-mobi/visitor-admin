@@ -195,22 +195,22 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/visitors"
-                        ).hasAnyRole("ADMIN","FRONT_DESK")
+                        ).hasAnyRole("ADMIN","HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/visitors/*"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/visitors/*/edit"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/visitors/*"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -220,36 +220,36 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/visits"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.PATCH,
                                 "/api/visits/*/check-in"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.PATCH, "/api/visits/*/check-out"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.PATCH,
                                 "/api/visits/*/cancel"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/visit-badges/*"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/visit-badges/validate"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/documents/visitor/*"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.POST,
@@ -259,43 +259,43 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/documents/*/nda/download"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/documents/*/nda/all"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/vendors"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/vendors/*"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/employees"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/departments"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/blacklist/visitor/*/status"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/blacklist",
                                 "/api/blacklist/*"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.POST,
@@ -306,18 +306,24 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/qr-scan"
-                  ).hasAnyRole("ADMIN", "FRONT_DESK")
+                  ).hasAnyRole("ADMIN", "HR")
 
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/vms/summary-export"
-                        ).hasAnyRole("ADMIN", "FRONT_DESK")
+                        ).hasAnyRole("ADMIN", "HR")
 
 
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/blacklist/*/remove"
                         ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/visitor-log",
+                                "/api/visitor-log/*/time-tracking"
+                        ).hasAnyRole("ADMIN", "HR")
 
                         .anyRequest().authenticated()
                 )
@@ -352,7 +358,7 @@ public class SecurityConfig {
 
             String role = jwt.getClaimAsString("role");
 
-            if (!"ADMIN".equals(role) && !"FRONT_DESK".equals(role)) {
+            if (!"ADMIN".equals(role) && !"HR".equals(role)) {
                 throw new BadCredentialsException("Invalid role in JWT");
             }
 
