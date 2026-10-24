@@ -5,6 +5,7 @@ import com.adminvisitor.auth.entity.User;
 import com.adminvisitor.auth.enums.UserRole;
 import com.adminvisitor.auth.repository.EmployeeRepository;
 import com.adminvisitor.auth.repository.UserRepository;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,24 +47,39 @@ public class TestUserSeeder {
                         emp.setMobileNumber("1234567890");
                         emp.setDesignation("Administrator");
                         emp.setStatus("ACTIVE");
+
                         return employeeRepository.save(emp);
                     });
 
-            user.setId("USR001");
-            user.setEmployee(employee);
+            // Check whether another user already uses this employee
+            User existingUser = userRepository
+                    .findByEmployee_Id("EMP-001")
+                    .orElse(null);
 
+            if (existingUser != null
+                    && !existingUser.getId().equals("USR-001")) {
+                throw new IllegalStateException(
+                        "Employee EMP-001 is already assigned to user "
+                                + existingUser.getId()
+                );
+            }
+
+            // Configure the admin user
+            user.setId("USR-001");
+            user.setEmployee(employee);
             user.setPasswordHash(
                     passwordEncoder.encode("Admin@123")
             );
-
             user.setRole(UserRole.ADMIN);
             user.setStatus("ACTIVE");
             user.setMustChangePassword(false);
 
             LocalDateTime now = LocalDateTime.now();
+
             if (user.getCreatedAt() == null) {
                 user.setCreatedAt(now);
             }
+
             user.setUpdatedAt(now);
 
             userRepository.save(user);

@@ -6,6 +6,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 jwt:
-  secret: ${JWT_SECRET:TestOnlyJwtSecretKeyForUnitTests123456789012345678901234567890}
   expiration: 900000
-  refresh-expiration: 2700000
+  refresh-expiration: 43200000
+  private-key-path: ${JWT_PRIVATE_KEY_PATH}
+  public-key-path: ${JWT_PUBLIC_KEY_PATH}

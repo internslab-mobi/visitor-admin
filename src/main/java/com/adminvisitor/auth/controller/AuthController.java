@@ -117,6 +117,7 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> changePassword(
             @Valid @RequestBody ChangePasswordRequest request
     ) {
+
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 

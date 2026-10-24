@@ -36,5 +36,6 @@ server:
 
 jwt:
   expiration: 900000
-  refresh-expiration: 2700000
-  secret: ${JWT_SECRET}
+  refresh-expiration: 43200000
+  private-key-path: ${JWT_PRIVATE_KEY_PATH}
+  public-key-path: ${JWT_PUBLIC_KEY_PATH}

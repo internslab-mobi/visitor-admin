@@ -86,14 +86,14 @@ class AuthServiceImplTest {
         user.setId("USR002");
         user.setEmployee(employee);
         user.setPasswordHash("hashedPassword123");
-        user.setRole(UserRole.FRONT_DESK);
+        user.setRole(UserRole.HR);
         user.setStatus("ACTIVE");
         user.setMustChangePassword(true);
     }
 
     @Test
     void testCreateUserSuccess() {
-        CreateUserRequest request = new CreateUserRequest("EMP002", UserRole.FRONT_DESK);
+        CreateUserRequest request = new CreateUserRequest("EMP002", UserRole.HR);
 
         when(employeeRepository.findById("EMP002")).thenReturn(Optional.of(employee));
         when(userRepository.findByEmployeeEmail("john.doe@example.com")).thenReturn(Optional.empty());
@@ -111,7 +111,7 @@ class AuthServiceImplTest {
 
     @Test
     void testCreateUserEmployeeNotFound() {
-        CreateUserRequest request = new CreateUserRequest("EMP999", UserRole.FRONT_DESK);
+        CreateUserRequest request = new CreateUserRequest("EMP999", UserRole.HR);
         when(employeeRepository.findById("EMP999")).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> authService.createUser(request));
@@ -119,7 +119,7 @@ class AuthServiceImplTest {
 
     @Test
     void testCreateUserAlreadyExists() {
-        CreateUserRequest request = new CreateUserRequest("EMP002", UserRole.FRONT_DESK);
+        CreateUserRequest request = new CreateUserRequest("EMP002", UserRole.HR);
         when(employeeRepository.findById("EMP002")).thenReturn(Optional.of(employee));
         when(userRepository.findByEmployeeEmail("john.doe@example.com")).thenReturn(Optional.of(user));
 
@@ -129,7 +129,7 @@ class AuthServiceImplTest {
     @Test
     void testCreateUserInactiveEmployeeThrowsException() {
         employee.setStatus("INACTIVE");
-        CreateUserRequest request = new CreateUserRequest("EMP002", UserRole.FRONT_DESK);
+        CreateUserRequest request = new CreateUserRequest("EMP002", UserRole.HR);
         when(employeeRepository.findById("EMP002")).thenReturn(Optional.of(employee));
 
         assertThrows(IllegalArgumentException.class, () -> authService.createUser(request));
@@ -137,7 +137,7 @@ class AuthServiceImplTest {
 
     @Test
     void testCreateUserEmailFailThrowsException() {
-        CreateUserRequest request = new CreateUserRequest("EMP002", UserRole.FRONT_DESK);
+        CreateUserRequest request = new CreateUserRequest("EMP002", UserRole.HR);
         when(employeeRepository.findById("EMP002")).thenReturn(Optional.of(employee));
         when(userRepository.findByEmployeeEmail("john.doe@example.com")).thenReturn(Optional.empty());
         when(passwordEncoder.encode(any())).thenReturn("hashedTempPassword");
@@ -152,7 +152,7 @@ class AuthServiceImplTest {
         LoginRequest request = new LoginRequest("john.doe@example.com", "tempPassword");
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
         when(userRepository.findByEmployeeEmail("john.doe@example.com")).thenReturn(Optional.of(user));
-        when(jwtService.generateRestrictedToken("USR002", "FRONT_DESK")).thenReturn("restrictedJwtToken");
+        when(jwtService.generateRestrictedToken("USR002", "HR")).thenReturn("restrictedJwtToken");
 
         AuthResult response = authService.login(request);
 
@@ -168,7 +168,7 @@ class AuthServiceImplTest {
         LoginRequest request = new LoginRequest("john.doe@example.com", "Password@123");
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
         when(userRepository.findByEmployeeEmail("john.doe@example.com")).thenReturn(Optional.of(user));
-        when(jwtService.generateToken("USR002", "FRONT_DESK")).thenReturn("normalJwtToken");
+        when(jwtService.generateToken("USR002", "HR")).thenReturn("normalJwtToken");
         when(jwtService.getRefreshExpiration()).thenReturn(2700000L);
 
         AuthResult response = authService.login(request);
@@ -244,7 +244,7 @@ class AuthServiceImplTest {
         refreshToken.setExpiresAt(LocalDateTime.now().plusMinutes(40));
 
         when(refreshTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(refreshToken));
-        when(jwtService.generateToken("USR002", "FRONT_DESK")).thenReturn("newAccessToken");
+        when(jwtService.generateToken("USR002", "HR")).thenReturn("newAccessToken");
         when(jwtService.getRefreshExpiration()).thenReturn(2700000L);
 
         AuthResult response = authService.refresh(rawToken);
