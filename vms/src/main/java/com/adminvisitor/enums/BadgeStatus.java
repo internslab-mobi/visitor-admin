@@ -1,6 +1,6 @@
-package com.adminvisitor.enums;
-
-public enum BadgeStatus {
-    ACTIVE,
-    INVALID
-}
+//package com.adminvisitor.enums;
+//
+//public enum BadgeStatus {
+//    ACTIVE,
+//    INVALID
+//}

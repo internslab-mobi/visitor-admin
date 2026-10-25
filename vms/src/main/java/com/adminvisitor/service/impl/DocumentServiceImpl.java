@@ -33,7 +33,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
+/**
+ * Service implementation for managing visitor documents and identity proofs.
+ *
+ * <p>Handles visitor photo uploads, identity proof storage and verification,
+ * proof document uploads, document retrieval, and document deletion.</p>
+ *
+ * <p>Coordinates document persistence, metadata management, file storage,
+ * identifier generation, and secure identity proof indexing.</p>
+ *
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -48,14 +57,41 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentStorageService documentStorageService;
     private final ProofSecurityService proofSecurityService;
 
+    /**
+     * Maximum permitted size for an uploaded document, set to 5 MB.
+     */
     private static final long MAX_FILE_SIZE = 5L * 1024 * 1024;
 
+    /**
+     * Configured directory for storing visitor proof documents.
+     */
     @Value("${vms.document.upload-dir}")
     private String documentUploadDir;
 
+
+    /**
+     * Configured directory for storing visitor photos.
+     */
     @Value("${vms.document.photo-upload-dir}")
     private String photoUploadDir;
 
+
+    /**
+     * Uploads and saves a photo associated with a visitor and a specific visit.
+     *
+     * <p>Validates the visitor, visit ownership, file size, and image content
+     * type before storing the file and saving its metadata.</p>
+     *
+     * @param visitorId the unique identifier of the visitor
+     * @param visitId the unique identifier of the visit
+     * @param file the visitor photo to upload
+     * @return the saved visitor photo metadata
+     * @throws IllegalArgumentException if the file is missing, is not an image,
+     *                                  or the visit does not belong to the visitor
+     * @throws ResourceNotFoundException if the visitor, visit, or associated
+     *                                   identity document cannot be found
+     * @throws RuntimeException if an I/O error occurs while saving the photo
+     */
     @Transactional
     @Override
     public DocumentMetadata uploadVisitorPhoto(
@@ -125,13 +161,6 @@ public class DocumentServiceImpl implements DocumentService {
                     metadataId
             );
 
-//            DocumentMetadata metadata = new DocumentMetadata();
-//
-//            metadata.setId(metadataId);
-//            metadata.setDocument(document);
-//            metadata.setVisit(visit);
-//            metadata.setDocumentType(DocumentType.VISITOR_PHOTO);
-//            metadata.setDocumentPath(filePath.toString());
 
             DocumentMetadata metadata =
                     documentMapper.toVisitorPhotoMetadata(
@@ -163,6 +192,15 @@ public class DocumentServiceImpl implements DocumentService {
         }
     }
 
+
+    /**
+     * Retrieves the latest photo metadata associated with a visitor.
+     *
+     * @param visitorId the unique identifier of the visitor
+     * @return the latest visitor photo metadata
+     * @throws ResourceNotFoundException if no visitor photo is found
+     */
+
     @Transactional(readOnly = true)
     public DocumentMetadata getLatestVisitorPhoto(String visitorId) {
 
@@ -178,6 +216,20 @@ public class DocumentServiceImpl implements DocumentService {
                 );
     }
 
+    /**
+     * Saves a visitor's identity proof details.
+     *
+     * <p>Generates a document identifier, creates blind indexes for the
+     * supplied Aadhaar, PAN, and passport numbers when present, maps the
+     * details to a document entity, and persists the entity.</p>
+     *
+     * @param visitor the visitor associated with the identity proofs
+     * @param nationality the visitor's nationality category
+     * @param aadharNumber the Aadhaar number, if provided
+     * @param panNumber the PAN number, if provided
+     * @param passportNumber the passport number, if provided
+     * @return the saved identity proof document
+     */
     @Transactional
     public Document saveIdentityProofs(
             Visitor visitor,
@@ -227,11 +279,25 @@ public class DocumentServiceImpl implements DocumentService {
 
         return savedDocument;
     }
-
+    /**
+     * Checks whether a string contains a non-null, non-blank value.
+     *
+     * @param value the string to check
+     * @return {@code true} if the value is not null or blank; otherwise,
+     *         {@code false}
+     */
     private boolean hasValue(String value) {
         return value != null && !value.isBlank();
     }
 
+
+    /**
+     * Retrieves the most recently created identity document for a visitor.
+     *
+     * @param visitorId the unique identifier of the visitor
+     * @return the latest identity document
+     * @throws ResourceNotFoundException if no identity document is found
+     */
     public Document getLatestIdentityDocument(String visitorId) {
 
         return documentRepository
@@ -243,6 +309,19 @@ public class DocumentServiceImpl implements DocumentService {
                 );
     }
 
+
+    /**
+     * Verifies an identity proof by comparing its generated blind index
+     * with the stored index for the specified visitor and proof type.
+     *
+     * @param visitor the visitor whose identity proof is being verified
+     * @param proofType the type of identity proof to verify
+     * @param proofNumber the identity proof number supplied for verification
+     * @return {@code true} if a matching identity proof exists; otherwise,
+     *         {@code false}
+     * @throws IllegalArgumentException if the visitor, proof type, or proof
+     *                                  number is null or invalid
+     */
     public boolean verifyIdentityProof(
             Visitor visitor,
             ProofType proofType,
@@ -288,7 +367,13 @@ public class DocumentServiceImpl implements DocumentService {
         };
     }
 
-
+    /**
+     * Retrieves the latest visitor photo metadata associated with a visit.
+     *
+     * @param visitId the unique identifier of the visit
+     * @return the latest photo metadata for the visit
+     * @throws ResourceNotFoundException if no photo is found for the visit
+     */
     @Override
     public DocumentMetadata getVisitPhoto(String visitId) {
 
@@ -304,7 +389,16 @@ public class DocumentServiceImpl implements DocumentService {
                 );
     }
 
-
+    /**
+     * Retrieves the document details associated with a visitor.
+     *
+     * <p>Validates that the visitor exists, retrieves document metadata
+     * records without a specific document type, and maps them to response DTOs.</p>
+     *
+     * @param visitorId the unique identifier of the visitor
+     * @return the list of document response details for the visitor
+     * @throws ResourceNotFoundException if the visitor does not exist
+     */
     public List<DocumentResponse> getAllDocuments(
             String visitorId
     ) {
@@ -330,6 +424,21 @@ public class DocumentServiceImpl implements DocumentService {
         return documents;
     }
 
+    /**
+     * Uploads one or more proof documents for a visitor.
+     *
+     * <p>Validates the visitor identifier, uploaded files, and visitor
+     * existence before storing each file and saving its metadata.</p>
+     *
+     * @param visitorId the unique identifier of the visitor
+     * @param files the proof document files to upload
+     * @return the list of saved proof document metadata records
+     * @throws IllegalArgumentException if the visitor identifier is missing
+     *                                  or no files are provided
+     * @throws ResourceNotFoundException if the visitor or associated
+     *                                   identity document cannot be found
+     * @throws RuntimeException if an I/O error occurs while saving the files
+     */
     @Transactional
     public List<DocumentMetadata> uploadProofDocuments(
             String visitorId,
@@ -362,84 +471,6 @@ public class DocumentServiceImpl implements DocumentService {
                         )
                 );
 
-//        List<DocumentMetadata> existingDocuments =
-//                documentMetadataRepository
-//                        .findByDocumentId(document.getId());
-//
-//        final long MAX_FILE_SIZE = 5 * 1024 * 1024;
-//
-//        for (MultipartFile file : files) {
-//
-//            if (file == null || file.isEmpty()) {
-//
-//                throw new IllegalArgumentException(
-//                        "Proof document cannot be empty"
-//                );
-//            }
-//
-//            if (file.getSize() > MAX_FILE_SIZE) {
-//
-//                throw new IllegalArgumentException(
-//                        "Proof document '"
-//                                + file.getOriginalFilename()
-//                                + "' exceeds the maximum size of 5 MB"
-//                );
-//            }
-//        }
-//
-//        Path visitorDirectory =
-//                Paths.get(
-//                        documentUploadDir,
-//                        visitorId
-//                );
-//
-//        try {
-//
-//            List<DocumentMetadata> uploadedDocuments =
-//                    new java.util.ArrayList<>();
-//
-//            for (MultipartFile file : files) {
-//
-//                String metadataId = idGeneratorService.generateId(
-//                        "DOCUMENT_METADATA",
-//                        "DMD"
-//                );
-//
-//                Path filePath = documentStorageService.store(
-//                        file,
-//                        documentUploadDir,
-//                        visitorId,
-//                        metadataId
-//                );
-//
-//                DocumentMetadata metadata = new DocumentMetadata();
-//
-//                metadata.setId(metadataId);
-//                metadata.setDocument(document);
-//                metadata.setDocumentPath(filePath.toString());
-//
-//                DocumentMetadata savedMetadata =
-//                        documentMetadataRepository.save(metadata);
-//
-//                uploadedDocuments.add(savedMetadata);
-//            }
-//
-//            log.info(
-//                    "PROOF_DOCUMENTS_UPLOADED visitorId={} documentId={} documentCount={}",
-//                    visitorId,
-//                    document.getId(),
-//                    uploadedDocuments.size()
-//            );
-//
-//            return uploadedDocuments;
-//
-//        } catch (IOException exception) {
-//
-//            throw new RuntimeException(
-//                    "Failed to save proof documents",
-//                    exception
-//            );
-//        }
 
         files.forEach(file -> validateFile(file, "Proof document"));
 
@@ -489,20 +520,14 @@ public class DocumentServiceImpl implements DocumentService {
         }
     }
 
-//    private void validateProofDocument(MultipartFile file) {
-//        if (file == null || file.isEmpty()) {
-//            throw new IllegalArgumentException(
-//                    "Proof document cannot be empty"
-//            );
-//        }
-//
-//        if (file.getSize() > 5L * 1024 * 1024) {
-//            throw new IllegalArgumentException(
-//                    "Proof document '" + file.getOriginalFilename()
-//                            + "' exceeds the maximum size of 5 MB"
-//            );
-//        }
-
+    /**
+     * Validates an uploaded file for presence and maximum permitted size.
+     *
+     * @param file the uploaded file to validate
+     * @param fileDescription the description used in validation error messages
+     * @throws IllegalArgumentException if the file is null, empty, or larger
+     * than the maximum permitted size
+     */
     private void validateFile(MultipartFile file, String fileDescription) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException(
@@ -517,7 +542,13 @@ public class DocumentServiceImpl implements DocumentService {
         }
     }
 
-
+    /**
+     * Retrieves document metadata by its unique identifier.
+     *
+     * @param documentId the unique identifier of the document metadata record
+     * @return the requested document metadata
+     * @throws ResourceNotFoundException if no document metadata is found
+     */
     @Transactional(readOnly = true)
     public DocumentMetadata getDocumentMetadata(String documentId) {
 
@@ -529,7 +560,16 @@ public class DocumentServiceImpl implements DocumentService {
                         )
                 );
     }
-
+    /**
+     * Deletes a document and its associated file, if the file exists.
+     *
+     * <p>Retrieves the document metadata, deletes the file from storage
+     * when a path is available, and then deletes the metadata record.</p>
+     *
+     * @param metadataId the unique identifier of the document metadata record
+     * @throws ResourceNotFoundException if the document metadata is not found
+     * @throws RuntimeException if an I/O error occurs while deleting the file
+     */
     @Transactional
     public void deleteDocument(String metadataId) {
 

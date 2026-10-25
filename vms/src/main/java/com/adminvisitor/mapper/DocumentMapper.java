@@ -2,6 +2,7 @@
 package com.adminvisitor.mapper;
 
 import com.adminvisitor.dto.responsedto.DocumentResponse;
+import com.adminvisitor.dto.responsedto.IdentityProofResponse;
 import com.adminvisitor.entity.Document;
 import com.adminvisitor.entity.DocumentMetadata;
 import com.adminvisitor.entity.Visit;
@@ -79,4 +80,16 @@ public interface DocumentMapper {
             Document document,
             String documentPath
     );
+
+
+    @Mapping(source = "id", target = "documentId")
+    @Mapping(source = "visitor.id", target = "visitorId")
+    @Mapping(
+            expression = "java(document.getNationality() == null ? null : document.getNationality().name())",
+            target = "nationality"
+    )
+    @Mapping(target = "aadharNumber", ignore = true)
+    @Mapping(target = "panNumber", ignore = true)
+    @Mapping(target = "passportNumber", ignore = true)
+    IdentityProofResponse toResponse(Document document);
 }

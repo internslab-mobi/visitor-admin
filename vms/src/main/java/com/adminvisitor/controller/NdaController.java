@@ -20,6 +20,20 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 import java.util.List;
 
+
+/**
+ * REST controller for managing visitor NDA documents.
+ *
+ * <p>Provides APIs for uploading new NDA documents, extending NDA
+ * validity, retrieving the latest NDA document, and accessing the
+ * document history for a specified visitor.</p>
+ *
+ * <p>Delegates NDA-related business operations to {@link NdaService}
+ * and converts document metadata into response DTOs using
+ * {@link DocumentMapper}.</p>
+ *
+ * @author Anisha Z
+ */
 @RestController
 @RequestMapping("/api/nda")
 @RequiredArgsConstructor

@@ -16,6 +16,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
+/**
+ * REST controller for managing visitor information.
+ *
+ * <p>Provides APIs for retrieving individual visitor details,
+ * retrieving all visitors, updating visitor information, and
+ * retrieving the details required to populate the visitor edit page.</p>
+ *
+ * @author Anisha Z
+ */
 @RestController
 @RequestMapping("/api/visitors")
 @RequiredArgsConstructor
@@ -28,6 +38,13 @@ public class VisitorController {
 
     private final VisitorService visitorService;
 
+
+    /**
+     * Retrieves the details of a specific visitor using the visitor ID.
+     *
+     * @param visitorId the unique identifier of the visitor
+     * @return the visitor details with HTTP status 200
+     */
     @GetMapping(
             value = "/{visitorId}",
             produces = MediaType.APPLICATION_JSON_VALUE
@@ -51,6 +68,16 @@ public class VisitorController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Updates the information of an existing visitor.
+     *
+     * <p>Validates the incoming request body and delegates the update
+     * operation to the visitor service using the specified visitor ID.</p>
+     *
+     * @param visitorId the unique identifier of the visitor to update
+     * @param request the request containing the updated visitor information
+     * @return the updated visitor details with HTTP status 200
+     */
     @PutMapping(
             value = "/{visitorId}",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -77,6 +104,11 @@ public class VisitorController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Retrieves the list of all visitors available in the VMS application.
+     *
+     * @return the list of visitor details with HTTP status 200
+     */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Get all visitors",
@@ -91,6 +123,16 @@ public class VisitorController {
         return ResponseEntity.ok(response);
     }
 
+
+    /**
+     * Retrieves the visitor information required to populate the edit page.
+     *
+     * <p>Returns the edit-specific response for the visitor identified
+     * by the supplied visitor ID.</p>
+     *
+     * @param visitorId the unique identifier of the visitor
+     * @return the visitor edit details with HTTP status 200
+     */
     @GetMapping(
             value = "/{visitorId}/edit",
             produces = MediaType.APPLICATION_JSON_VALUE

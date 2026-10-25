@@ -9,8 +9,8 @@ import com.adminvisitor.enums.DocumentType;
 import com.adminvisitor.enums.Nationality;
 import com.adminvisitor.enums.VisitorType;
 import com.adminvisitor.exception.*;
+import com.adminvisitor.mapper.VisitorMapper;
 import com.adminvisitor.repository.*;
-import com.adminvisitor.service.VisitService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,6 +22,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Service implementation for managing visitor-related operations.
+ *
+ * <p>Provides functionality to retrieve visitor details, list all visitors,
+ * update visitor information, and retrieve the details required for editing
+ * a visitor profile.</p>
+ *
+ * <p>Coordinates with visitor, vendor, document, blacklist, and visit
+ * repositories to assemble visitor information and maintain synchronized
+ * details between visitors and their associated vendor records.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -34,7 +45,14 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
     private final BlacklistRepository blacklistRepository;
     private final VisitRepository visitRepository;
     private final VisitManagementServiceImpl visitManagementService;
-
+    private final VisitorMapper visitorMapper;
+    /**
+     * Retrieves a visitor by their unique identifier.
+     *
+     * @param visitorId the unique identifier of the visitor
+     * @return the visitor response containing visitor details and latest visit information
+     * @throws ResourceNotFoundException if no visitor exists with the given ID
+     */
     
     public VisitorResponse getVisitor(String visitorId) {
 
@@ -48,6 +66,14 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
         return toVisitorResponse(visitor);
     }
 
+    /**
+     * Retrieves all visitors along with their latest visit information.
+     *
+     * <p>Fetches the visitors and retrieves their latest visit details in a
+     * batch to avoid querying the latest visit separately for each visitor.</p>
+     *
+     * @return a list of visitor responses, or an empty list if no visitors exist
+     */
     
     public List<VisitorResponse> getAllVisitors() {
 
@@ -96,6 +122,21 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
 
         return responses;
     }
+
+    /**
+     * Updates an existing visitor's information and synchronizes the
+     * corresponding vendor details when the visitor is associated with a vendor.
+     *
+     * <p>Validates that the requested email address and mobile number are not
+     * already assigned to another visitor before saving the changes.</p>
+     *
+     * @param visitorId the unique identifier of the visitor to update
+     * @param request the request containing the updated visitor information
+     * @return the updated visitor response
+     * @throws ResourceNotFoundException if no visitor exists with the given ID
+     * @throws ResourceAlreadyExistsException if the email or mobile number
+     *         belongs to another visitor
+     */
 
     @Transactional
     public VisitorResponse updateVisitor(
@@ -169,28 +210,57 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
         return toVisitorResponse(updatedVisitor);
     }
 
+    /**
+     * Maps a visitor entity to a response DTO and includes the latest visit
+     * type and expected arrival time when visit information is available.
+     *
+     * @param visitor the visitor entity to map
+     * @return the visitor response containing visitor and latest visit information
+     */
+//    private VisitorResponse toVisitorResponse(Visitor visitor) {
+//
+//        Visit latestVisit = visitRepository
+//                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
+//                .orElse(null);
+//
+//        return new VisitorResponse(
+//                visitor.getId(),
+//                visitor.getFirstName(),
+//                visitor.getLastName(),
+//                visitor.getEmail(),
+//                visitor.getMobileNumber(),
+//                visitor.getCompanyName(),
+//                latestVisit != null
+//                        ? latestVisit.getVisitorType().name()
+//                        : null,
+//                latestVisit != null
+//                        ? latestVisit.getExpectedArrivalAt()
+//                        : null
+//        );
+//    }
+
+
     private VisitorResponse toVisitorResponse(Visitor visitor) {
 
         Visit latestVisit = visitRepository
                 .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
                 .orElse(null);
 
-        return new VisitorResponse(
-                visitor.getId(),
-                visitor.getFirstName(),
-                visitor.getLastName(),
-                visitor.getEmail(),
-                visitor.getMobileNumber(),
-                visitor.getCompanyName(),
-                latestVisit != null
-                        ? latestVisit.getVisitorType().name()
-                        : null,
-                latestVisit != null
-                        ? latestVisit.getExpectedArrivalAt()
-                        : null
-        );
+        return visitorMapper.toResponse(visitor, latestVisit);
     }
 
+    /**
+     * Retrieves the details required to edit a visitor profile.
+     *
+     * <p>Collects visitor information, the latest visit type, nationality,
+     * associated vendor information, eligible document metadata, visit history,
+     * and current blacklist information.</p>
+     *
+     * @param visitorId the unique identifier of the visitor
+     * @return the visitor edit response containing visitor, vendor, document,
+     *         visit history, and blacklist details
+     * @throws ResourceNotFoundException if no visitor exists with the given ID
+     */
     
     public VisitorEditResponse getVisitorEditDetails(String visitorId) {
 

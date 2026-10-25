@@ -18,38 +18,38 @@ public interface VendorMapper {
     VendorResponse toResponse(Vendor vendor);
 
     // Vendor information for the edit response
-    @Mapping(source = "id", target = "vendorId")
-    @Mapping(source = "visitor.id", target = "visitorId")
-    VendorEditResponse.VendorInfo toVendorInfo(Vendor vendor);
+//    @Mapping(source = "id", target = "vendorId")
+//    @Mapping(source = "visitor.id", target = "visitorId")
+//    VendorEditResponse.VendorInfo toVendorInfo(Vendor vendor);
 
     // Visitor information
-    VendorEditResponse.VisitorInfo toVisitorInfo(
-            VisitorEditResponse.VisitorInfo visitor
-    );
+//    VendorEditResponse.VisitorInfo toVisitorInfo(
+//            VisitorEditResponse.VisitorInfo visitor
+//    );
 
     // Document mapping
-    @Mapping(target = "documentPath", ignore = true)
-    VendorEditResponse.DocumentInfo toDocumentInfo(
-            VisitorEditResponse.DocumentInfo document
-    );
-
-    List<VendorEditResponse.DocumentInfo> toDocumentInfoList(
-            List<VisitorEditResponse.DocumentInfo> documents
-    );
-
-    // Visit mapping
-    VendorEditResponse.VisitInfo toVisitInfo(
-            VisitorEditResponse.VisitInfo visit
-    );
-
-    List<VendorEditResponse.VisitInfo> toVisitInfoList(
-            List<VisitorEditResponse.VisitInfo> visits
-    );
+//    @Mapping(target = "documentPath", ignore = true)
+//    VendorEditResponse.DocumentInfo toDocumentInfo(
+//            VisitorEditResponse.DocumentInfo document
+//    );
+//
+//    List<VendorEditResponse.DocumentInfo> toDocumentInfoList(
+//            List<VisitorEditResponse.DocumentInfo> documents
+//    );
+//
+//    // Visit mapping
+//    VendorEditResponse.VisitInfo toVisitInfo(
+//            VisitorEditResponse.VisitInfo visit
+//    );
+//
+//    List<VendorEditResponse.VisitInfo> toVisitInfoList(
+//            List<VisitorEditResponse.VisitInfo> visits
+//    );
 
     // Blacklist mapping
-    VendorEditResponse.BlacklistInfo toBlacklistInfo(
-            VisitorEditResponse.BlacklistInfo blacklist
-    );
+//    VendorEditResponse.BlacklistInfo toBlacklistInfo(
+//            VisitorEditResponse.BlacklistInfo blacklist
+//    );
 
 
 

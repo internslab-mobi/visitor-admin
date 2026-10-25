@@ -24,6 +24,20 @@ import org.springframework.http.MediaType;
 
 import java.util.List;
 
+
+/**
+ * REST controller for managing visitor documents.
+ *
+ * <p>Provides APIs for viewing and downloading NDA documents,
+ * retrieving visitor document records, uploading proof documents,
+ * retrieving visitor photos, viewing individual documents, and
+ * deleting document metadata records.</p>
+ *
+ * <p>Delegates document operations to {@link DocumentService}
+ * and NDA-related file retrieval to {@link NdaService}.</p>
+ *
+ * @author Anisha Z
+ */
 @RestController
 @RequestMapping("/api/documents")
 @RequiredArgsConstructor

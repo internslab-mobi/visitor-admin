@@ -19,6 +19,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * REST controller for managing vendor information.
+ *
+ * <p>Provides APIs for retrieving all registered vendors,
+ * retrieving an individual vendor by ID, and obtaining the
+ * information required to populate the vendor edit page.</p>
+ *
+ * @author Anisha Z
+ */
 @RestController
 @RequestMapping("/api/vendors")
 @RequiredArgsConstructor
@@ -29,6 +38,12 @@ import java.util.List;
 public class VendorController {
 
     private final VendorService vendorService;
+
+    /**
+     * Retrieves all vendors registered in the VMS application.
+     *
+     * @return the list of vendor details with HTTP status 200
+     */
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
@@ -47,6 +62,13 @@ public class VendorController {
                 .body(vendors);
     }
 
+
+    /**
+     * Retrieves the details of a specific vendor using its unique identifier.
+     *
+     * @param id the unique identifier of the vendor
+     * @return the vendor details with HTTP status 200
+     */
     @GetMapping(
             value = "/{id}",
             produces = MediaType.APPLICATION_JSON_VALUE
@@ -76,6 +98,16 @@ public class VendorController {
                 .body(vendor);
     }
 
+
+    /**
+     * Retrieves the vendor information required to populate the vendor edit page.
+     *
+     * <p>Returns the edit-specific response for the vendor identified
+     * by the supplied vendor ID.</p>
+     *
+     * @param id the unique identifier of the vendor
+     * @return the vendor edit details with HTTP status 200
+     */
     @GetMapping(
             value = "/{id}/edit",
             produces = MediaType.APPLICATION_JSON_VALUE

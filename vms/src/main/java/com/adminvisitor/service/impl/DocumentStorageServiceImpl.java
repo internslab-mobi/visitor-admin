@@ -10,11 +10,40 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * Service implementation for storing uploaded visitor documents.
+ *
+ * <p>Creates visitor-specific directories, extracts a valid file extension
+ * from the original filename, and stores uploaded files using their
+ * document metadata identifiers as filenames.</p>
+ *
+ * <p>Uses the configured base directory and visitor identifier to organize
+ * files and logs successful storage operations for debugging purposes.</p>
+ *
+ * @author Anisha Z
+ */
 @Service
 @Slf4j
 public class DocumentStorageServiceImpl
         implements DocumentStorageService {
 
+
+
+    /**
+     * Stores an uploaded document in a visitor-specific directory.
+     *
+     * <p>Creates the visitor directory if it does not exist, extracts the
+     * file extension from the original filename when it matches the accepted
+     * format, and saves the file using the supplied metadata identifier.</p>
+     *
+     * @param file the uploaded file to store
+     * @param baseDirectory the base directory in which visitor files are stored
+     * @param visitorId the unique identifier of the visitor
+     * @param metadataId the unique identifier used as the stored filename
+     * @return the path to the stored file
+     * @throws IOException if an I/O error occurs while creating directories
+     *                     or writing the uploaded file
+     */
     @Override
     public Path store(
             MultipartFile file,
