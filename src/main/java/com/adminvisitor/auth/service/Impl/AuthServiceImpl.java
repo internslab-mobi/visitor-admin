@@ -204,25 +204,8 @@ public class AuthServiceImpl implements AuthService {
             return new AuthResult(
                     restrictedToken,
                     null,
-                    userResponse
-            );
-        }
-
-        long activeSessions =
-                refreshTokenRepository
-                        .countByUser_IdAndRevokedAtIsNullAndExpiresAtAfter(
-                                user.getId(),
-                                LocalDateTime.now()
-                        );
-
-        if (activeSessions >= 2) {
-            log.warn(
-                    "LOGIN_REJECTED reason=MAX_ACTIVE_SESSIONS userId={}",
-                    user.getId()
-            );
-
-            throw new BadCredentialsException(
-                    "Maximum of 2 active sessions reached. Please log out from another device."
+                    userResponse,
+                    null
             );
         }
 
@@ -257,7 +240,8 @@ public class AuthServiceImpl implements AuthService {
         return new AuthResult(
                 accessToken,
                 rawRefreshToken,
-                userResponse
+                userResponse,
+                refreshToken.getExpiresAt()
         );
     }
 
@@ -413,9 +397,6 @@ public class AuthServiceImpl implements AuthService {
         String newRawRefreshToken = TokenUtils.generateOpaqueToken();
 
         refreshToken.setTokenHash(TokenUtils.hashToken(newRawRefreshToken));
-        refreshToken.setExpiresAt(
-                now.plusSeconds(jwtService.getRefreshExpiration() / 1000)
-        );
 
         refreshTokenRepository.save(refreshToken);
 
@@ -435,7 +416,8 @@ public class AuthServiceImpl implements AuthService {
         return new AuthResult(
                 newAccessToken,
                 newRawRefreshToken,
-                userResponse
+                userResponse,
+                refreshToken.getExpiresAt()
         );
     }
 

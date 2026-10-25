@@ -6,19 +6,14 @@
                     source="spring.application.name"
                     defaultValue="auth"/>
 
-    <springProperty scope="context"
-                    name="logLevel"
-                    source="logging.level.root"
-                    defaultValue="INFO"/>
-
     <property name="LOG_PATH" value="D:/VMS/logs"/>
     <property name="LOG_FILE" value="${LOG_PATH}/${appName}.log"/>
 
     <property name="CONSOLE_LOG_PATTERN"
-              value="%cyan(%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}) %highlight(%-5level) %gray(---) %blue([${appName}]) %gray([%thread]) %yellow([traceId=%X{traceId:-N/A}]) %yellow([spanId=%X{spanId:-N/A}]) %cyan(%-40.40logger{39}) : %msg%n"/>
+              value="%cyan(%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}) %highlight(%-5level){ERROR=red, WARN=yellow, INFO=green, DEBUG=cyan, TRACE=blue} %gray(---) %blue([${appName}]) %magenta([PID:${PID:-N/A}]) %gray([%thread]) %yellow([traceId=%X{traceId:-N/A}]) %yellow([spanId=%X{spanId:-N/A}]) %cyan(%-40.40logger{39}) : %msg%n"/>
 
     <property name="FILE_LOG_PATTERN"
-              value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level --- [${appName}] [%thread] [traceId=%X{traceId:-N/A}] [spanId=%X{spanId:-N/A}] %-40.40logger{39} : %msg%n"/>
+              value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level --- [${appName}] [PID:${PID:-N/A}] [%thread] [traceId=%X{traceId:-N/A}] [spanId=%X{spanId:-N/A}] %-40.40logger{39} : %msg%n"/>
 
     <appender name="CONSOLE"
               class="ch.qos.logback.core.ConsoleAppender">
@@ -31,10 +26,12 @@
     <appender name="FILE"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_FILE}</file>
+
         <encoder>
             <pattern>${FILE_LOG_PATTERN}</pattern>
             <charset>UTF-8</charset>
         </encoder>
+
         <rollingPolicy
                 class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}/${appName}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
@@ -44,11 +41,9 @@
         </rollingPolicy>
     </appender>
 
-    <root level="${logLevel}">
+    <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </root>
-
-    <logger name="com.adminvisitor.auth" level="DEBUG"/>
 
 </configuration>

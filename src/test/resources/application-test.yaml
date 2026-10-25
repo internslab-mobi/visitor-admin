@@ -19,3 +19,11 @@ jwt:
   public-key-path: ${JWT_PUBLIC_KEY_PATH:src/test/resources/jwt/test-public.pem}
   expiration: 900000
   refresh-expiration: 2700000
+
+app:
+  cors:
+    allowed-origins: http://localhost:4200,http://localhost:8094
+
+auth:
+  cookie:
+    secure: false

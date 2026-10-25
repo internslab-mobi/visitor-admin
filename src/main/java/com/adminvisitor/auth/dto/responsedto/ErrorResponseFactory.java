@@ -9,8 +9,8 @@ import java.time.Instant;
 import java.util.Map;
 
 /**
- * Factory component responsible for creating standardized {@link ErrorResponse} instances
- * populated with current timestamps and distributed tracing identifiers.
+ * Factory component responsible for creating standardized {@link ErrorResponse}
+ * instances with the current timestamp and distributed tracing identifier.
  *
  * @author Logeshwaran
  */
@@ -21,14 +21,17 @@ public class ErrorResponseFactory {
     private final TraceIdProvider traceIdProvider;
 
     /**
-     * Creates an {@link ErrorResponse} populated with the specified status, error code, message,
-     * request path, and optional field validation errors.
+     * Creates a standardized {@link ErrorResponse} using the supplied error details.
+     *
+     * <p>Includes the current timestamp and the trace ID available from
+     * {@link TraceIdProvider}. Field-level validation errors can be supplied
+     * when applicable.</p>
      *
      * @param status the HTTP response status
-     * @param code the machine-readable error code string
-     * @param message the descriptive error message
-     * @param path the request URI path
-     * @param fieldErrors optional map of field-level validation errors
+     * @param code the machine-readable error code
+     * @param message the human-readable error message
+     * @param path the request URI path where the error occurred
+     * @param fieldErrors the field-level validation errors, if applicable
      * @return a populated {@link ErrorResponse} instance
      */
     public ErrorResponse create(

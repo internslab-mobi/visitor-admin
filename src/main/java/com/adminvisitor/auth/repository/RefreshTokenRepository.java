@@ -47,30 +47,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Stri
             """)
     int revokeAllByUserId(@Param("userId") String userId, @Param("revokedAt") LocalDateTime revokedAt);
 
-    /**
-     * Counts the number of active, unexpired, and unrevoked refresh tokens associated with a user.
-     * <p>
-     * Used to enforce maximum concurrent active session policies.
-     * </p>
-     *
-     * @param userId the user identifier
-     * @param now the current reference timestamp
-     * @return count of active concurrent sessions
-     */
-    long countByUser_IdAndRevokedAtIsNullAndExpiresAtAfter(
-            String userId,
-            LocalDateTime now
-    );
 
-    /**
-     * Finds a refresh token by its hash while acquiring a pessimistic write lock ({@code PESSIMISTIC_WRITE}).
-     * <p>
-     * Prevents race conditions during concurrent token rotation operations.
-     * </p>
-     *
-     * @param tokenHash the SHA-256 hash of the token
-     * @return an {@link Optional} containing the locked refresh token, or empty if not found
-     */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
                 SELECT r

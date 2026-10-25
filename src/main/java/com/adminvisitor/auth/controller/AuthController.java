@@ -23,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
@@ -311,11 +312,16 @@ public class AuthController {
                 accessTokenExpiration
         );
 
+        long remainingMillis = Duration.between(
+                LocalDateTime.now(),
+                result.refreshTokenExpiresAt()
+        ).toMillis();
+
         ResponseCookie refreshCookie = createCookie(
                 REFRESH_COOKIE,
                 result.refreshToken(),
                 "/api/auth",
-                refreshTokenExpiration
+                Math.max(0, remainingMillis)
         );
 
         return ResponseEntity.ok()

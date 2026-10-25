@@ -26,6 +26,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.LocalDateTime;
+
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -90,7 +92,8 @@ class AuthControllerTest {
         AuthResult response = new AuthResult(
                 "accessToken123",
                 "refreshToken123",
-                userResponse
+                userResponse,
+                LocalDateTime.now().plusHours(8)
         );
 
         when(authService.login(any(LoginRequest.class)))
@@ -128,7 +131,8 @@ class AuthControllerTest {
         AuthResult response = new AuthResult(
                 "restrictedToken123",
                 null,
-                userResponse
+                userResponse,
+                null
         );
 
         when(authService.login(any(LoginRequest.class)))
@@ -317,7 +321,8 @@ class AuthControllerTest {
         AuthResult authResult = new AuthResult(
                 "newAccessToken123",
                 "newRefreshToken123",
-                userResponse
+                userResponse,
+                LocalDateTime.now().plusHours(2)
         );
 
         when(authService.refresh("refreshToken123"))
@@ -332,7 +337,10 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.userId", is("USR001")))
                 .andExpect(jsonPath("$.role", is("ADMIN")))
                 .andExpect(jsonPath("$.mustChangePassword", is(false)))
-                .andExpect(header().exists(HttpHeaders.SET_COOKIE));
+                .andExpect(header().string(
+                        HttpHeaders.SET_COOKIE,
+                        containsString("Max-Age=")
+                ));
 
         verify(authService).refresh("refreshToken123");
     }

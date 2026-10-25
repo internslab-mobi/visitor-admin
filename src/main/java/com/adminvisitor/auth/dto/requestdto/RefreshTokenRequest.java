@@ -1,15 +1,26 @@
 package com.adminvisitor.auth.dto.requestdto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * Data transfer object representing a request containing a raw refresh token string.
+ * Request DTO containing a refresh token submitted for validation or rotation.
  *
- * @param refreshToken the plaintext refresh token string submitted for rotation or validation
+ * @param refreshToken the raw refresh token submitted by the client
  * @author Logeshwaran
  */
+@Schema(
+        name = "RefreshTokenRequest",
+        description = "Request payload containing a refresh token"
+)
 public record RefreshTokenRequest(
-        @NotBlank
+
+        @Schema(
+                description = "Refresh token submitted for validation or rotation",
+                requiredMode = Schema.RequiredMode.REQUIRED
+        )
+        @NotBlank(message = "Refresh token is required")
         String refreshToken
+
 ) {
 }

@@ -51,7 +51,6 @@ public class AuthController {
     }
 
     @PostMapping("/users")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> createUser(
             @Valid @RequestBody CreateUserRequest request
     ) {

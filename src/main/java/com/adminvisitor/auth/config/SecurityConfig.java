@@ -95,7 +95,7 @@ public class SecurityConfig {
                                 "ROLE_ADMIN",
                                 "ROLE_HR"
                         )
-                        .anyRequest().hasAnyRole("ADMIN", "HR")
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(
                         jwtAuthenticationFilter,
@@ -121,6 +121,7 @@ public class SecurityConfig {
         );
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();

@@ -329,10 +329,10 @@ class AuthServiceImplTest {
         refreshToken.setTokenHash(tokenHash);
         refreshToken.setCreatedAt(LocalDateTime.now().minusMinutes(5));
         refreshToken.setExpiresAt(LocalDateTime.now().plusMinutes(40));
+        LocalDateTime originalExpiry = refreshToken.getExpiresAt();
 
         when(refreshTokenRepository.findByTokenHashForUpdate(tokenHash)).thenReturn(Optional.of(refreshToken));
         when(jwtService.generateToken("USR002", "HR")).thenReturn("newAccessToken");
-        when(jwtService.getRefreshExpiration()).thenReturn(2700000L);
 
         AuthResult response = authService.refresh(rawToken);
 
@@ -341,6 +341,7 @@ class AuthServiceImplTest {
         assertNotNull(response.refreshToken());
         assertNotEquals(rawToken, response.refreshToken());
         assertEquals(TokenUtils.hashToken(response.refreshToken()), refreshToken.getTokenHash());
+        assertEquals(originalExpiry, refreshToken.getExpiresAt());
         verify(refreshTokenRepository, times(1)).save(refreshToken);
     }
 
