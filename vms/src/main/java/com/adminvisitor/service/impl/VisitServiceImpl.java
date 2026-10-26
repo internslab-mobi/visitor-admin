@@ -8,6 +8,7 @@ import com.adminvisitor.exception.*;
 import com.adminvisitor.mapper.VendorMapper;
 import com.adminvisitor.mapper.VisitMapper;
 import com.adminvisitor.mapper.VisitorMapper;
+import com.adminvisitor.mapper.VisitMapper;
 import com.adminvisitor.repository.*;
 import com.adminvisitor.service.*;
 import com.adminvisitor.util.VisitReferenceUtil;
@@ -22,11 +23,21 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Implements visitor registration and visit-related operations.
+ * Coordinates visitor identity verification, blacklist validation,
+ * host validation, visit scheduling, vendor creation, and confirmation email delivery.
+ *
+ * @author Nethra
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class VisitServiceImpl implements VisitService {
 
+    /**
+     * Visit statuses considered when checking for overlapping visits.
+     */
     private static final List<VisitStatus> OVERLAP_STATUSES = List.of(
             VisitStatus.REGISTERED,
             VisitStatus.CHECKED_IN
@@ -46,6 +57,18 @@ public class VisitServiceImpl implements VisitService {
     private final VendorMapper vendorMapper;
     private final VisitMapper visitMapper;
     private final VisitorMapper visitorMapper;
+    private final VisitMapper visitMapper;
+
+    /**
+     * Registers a visitor's visit after validating identity proofs, blacklist status,
+     * visit timing, visitor identity, host eligibility, and scheduling conflicts.
+     * Saves the visit and sends a confirmation email after successful registration.
+     *
+     * @param request the visitor registration details and visit information
+     * @return the registration response containing the saved visit and visitor details
+     * @throws BusinessRuleException if a business validation rule is violated
+     * @throws ResourceAlreadyExistsException if the email or mobile number is already associated with another visitor
+     */
     @Transactional
     @Override
     public RegistrationResponse register(RegistrationRequest request) {
@@ -296,7 +319,13 @@ public class VisitServiceImpl implements VisitService {
         }
     }
 
-    // FIND OR CREATE VISITOR
+    /**
+     * Finds an existing visitor using email and mobile number, or creates a new visitor.
+     *
+     * @param request the registration details used to identify or create the visitor
+     * @return the existing visitor or the newly saved visitor
+     * @throws ResourceAlreadyExistsException if the email or mobile number belongs to a different visitor
+     */
     private Visitor findOrCreateVisitor(RegistrationRequest request) {
 
         String email = request.email();
@@ -352,7 +381,12 @@ public class VisitServiceImpl implements VisitService {
         return savedVisitor;
     }
 
-    // VISIT TIMING AND MESSAGES
+    /**
+     * Validates that the expected departure time is later than the expected arrival time.
+     *
+     * @param request the registration details containing the visit date and expected times
+     * @throws BusinessRuleException if departure is not after arrival
+     */
     private void validateVisitTiming(RegistrationRequest request) {
 
         if (!request.expectedDepartureTime().isAfter(request.expectedArrivalTime())) {
@@ -370,6 +404,12 @@ public class VisitServiceImpl implements VisitService {
         }
     }
 
+    /**
+     * Returns a success message based on the registration type.
+     *
+     * @param registrationType the type of registration performed
+     * @return the corresponding registration success message
+     */
     private String getSuccessMessage(RegistrationType registrationType) {
         return switch (registrationType) {
             case PRE_REGISTRATION ->
@@ -380,11 +420,23 @@ public class VisitServiceImpl implements VisitService {
         };
     }
 
+    /**
+     * Calculates the elapsed time since the supplied start time.
+     *
+     * @param startNanos the start time measured using {@link System#nanoTime()}
+     * @return elapsed time in milliseconds
+     */
     private double elapsedMillis(long startNanos) {
         return (System.nanoTime() - startNanos) / 1_000_000.0;
     }
 
-    // VENDOR
+    /**
+     * Creates a vendor record when the visitor's type is VENDOR.
+     * Skips creation if a vendor record already exists for the visitor.
+     *
+     * @param visitor the visitor associated with the vendor
+     * @param request the registration details
+     */
     private void createVendorIfRequired(
             Visitor visitor,
             RegistrationRequest request
@@ -420,7 +472,13 @@ public class VisitServiceImpl implements VisitService {
         );
     }
 
-    // PROOF AND BLACKLIST VALIDATION
+    /**
+     * Validates identity proof details and checks whether the supplied proof
+     * belongs to a blacklisted person.
+     *
+     * @param request the registration details containing nationality and identity proofs
+     * @throws BusinessRuleException if an identity proof is invalid or matches a blacklist record
+     */
     private void validateProofAndBlacklist(RegistrationRequest request) {
 
         proofSecurityService.validate(
@@ -476,6 +534,14 @@ public class VisitServiceImpl implements VisitService {
         }
     }
 
+    /**
+     * Retrieves the visitor photo path for a visit and verifies that the file exists
+     * and is readable.
+     *
+     * @param visitId the unique identifier of the visit
+     * @return the validated visitor photo file path
+     * @throws ResourceNotFoundException if the photo file does not exist or cannot be read
+     */
     @Override
     @Transactional(readOnly = true)
     public String getVisitPhotoPath(String visitId) {

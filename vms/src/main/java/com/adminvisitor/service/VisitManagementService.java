@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
+import com.adminvisitor.dto.responsedto.VisitTimeTrackingResponse;
 
 public interface VisitManagementService {
 
@@ -50,4 +51,6 @@ public interface VisitManagementService {
 
     VisitDetailResponse checkOut(String visitId);
     VisitTimeTrackingResponse getVisitTimeTracking(String visitId);
+
+
 }

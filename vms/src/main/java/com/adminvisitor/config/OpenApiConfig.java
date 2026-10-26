@@ -15,7 +15,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .servers(List.of(
                         new Server()
-                                .url("http://localhost:8094/api/vms")
+                                .url("http://localhost:8092/api/vms")
                                 .description("API Gateway")
                 ));
     }

@@ -14,6 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Implements department creation and retrieval operations.
+ *
+ * @author Nethra
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -22,13 +27,21 @@ public class DepartmentServiceImpl implements DepartmentService {
     private final DepartmentRepository departmentRepository;
     private final IdGeneratorService idGeneratorService;
 
+    /**
+     * Creates a department after checking that its code and name are unique.
+     * Generates a department ID, sets its initial status to ACTIVE, and saves it.
+     *
+     * @param request the department details to create
+     * @return the response containing the saved department details
+     * @throws ResourceAlreadyExistsException if the department code or name already exists
+     */
     @Transactional
     public DepartmentResponse createDepartment(
             DepartmentCreateRequest request
     ) {
 
         if (departmentRepository.existsByDepartmentCode(
-                request.getDepartmentCode().trim()
+                request.departmentCode().trim()
         )) {
             throw new ResourceAlreadyExistsException(
                     "Department code already exists"
@@ -36,7 +49,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         }
 
         if (departmentRepository.existsByDepartmentName(
-                request.getDepartmentName().trim()
+                request.departmentName().trim()
         )) {
             throw new ResourceAlreadyExistsException(
                     "Department name already exists"
@@ -50,11 +63,11 @@ public class DepartmentServiceImpl implements DepartmentService {
         );
 
         department.setDepartmentCode(
-                request.getDepartmentCode().trim()
+                request.departmentCode().trim()
         );
 
         department.setDepartmentName(
-                request.getDepartmentName().trim()
+                request.departmentName().trim()
         );
 
         department.setStatus("ACTIVE");
@@ -76,6 +89,11 @@ public class DepartmentServiceImpl implements DepartmentService {
         );
     }
 
+    /**
+     * Retrieves all departments and converts them into response objects.
+     *
+     * @return a list of department responses, or an empty list if no departments exist
+     */
     @Transactional(readOnly = true)
     public List<DepartmentResponse> getDepartments() {
 

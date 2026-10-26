@@ -319,6 +319,12 @@ public class SecurityConfig {
                                 "/api/blacklist/*/remove"
                         ).hasRole("ADMIN")
 
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/visitor-log",
+                                "/api/visitor-log/*/time-tracking"
+                        ).hasAnyRole("ADMIN", "HR")
+
                         .anyRequest().authenticated()
                 )
 

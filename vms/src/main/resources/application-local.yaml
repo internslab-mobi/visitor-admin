@@ -48,6 +48,7 @@ summary-export:
   service:
     export-url: http://localhost:8063
 
+
 notification:
   service:
     base-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8094}

@@ -1,10 +1,8 @@
 
 package com.adminvisitor.mapper;
 
-import com.adminvisitor.dto.requestdto.BlacklistRequest;
 import com.adminvisitor.dto.responsedto.BlacklistResponse;
 import com.adminvisitor.entity.Blacklist;
-import com.adminvisitor.entity.Visitor;
 import com.adminvisitor.enums.ProofType;
 import com.adminvisitor.enums.VisitorType;
 import org.mapstruct.Mapper;
@@ -14,15 +12,6 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface BlacklistMapper {
-
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "visitor", source = "visitor")
-    @Mapping(target = "nationality", source = "request.nationality")
-    @Mapping(target = "reason", source = "request.reason")
-    @Mapping(target = "createdBy", source = "request.createdBy")
-    @Mapping(target = "status", ignore = true)
-    @Mapping(target = "proofs", ignore = true)
-    Blacklist toEntity(BlacklistRequest request, Visitor visitor);
 
     @Mapping(target = "id", source = "blacklist.id")
     @Mapping(target = "visitorId", source = "blacklist.visitor.id")

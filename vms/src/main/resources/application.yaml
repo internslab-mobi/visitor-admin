@@ -36,6 +36,13 @@ management:
       export:
         enabled: false
 
+notification:
+  outbox:
+    max-attempts: 3
+    batch-size: 50
+    retry-delay-seconds: 30
+    polling-delay-ms: 5000
+
 springdoc:
   swagger-ui:
     csrf:

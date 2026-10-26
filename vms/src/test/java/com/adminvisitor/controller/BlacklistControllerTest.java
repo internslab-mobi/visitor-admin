@@ -1,7 +1,7 @@
 
 package com.adminvisitor.controller;
 
-import com.adminvisitor.dto.requestdto.AddVisitorToBlacklistRequest;
+import com.adminvisitor.dto.requestdto.BlacklistRequest;
 import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.service.BlacklistService;
 import org.junit.jupiter.api.Test;
@@ -80,7 +80,7 @@ class BlacklistControllerTest {
 
         verify(blacklistService).addExistingVisitorToBlacklist(
                 eq("VTR-001"),
-                any(AddVisitorToBlacklistRequest.class)
+                any(BlacklistRequest.class)
         );
     }
 
