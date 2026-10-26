@@ -1,6 +1,5 @@
 package com.adminvisitor.service;
 
-import com.adminvisitor.dto.requestdto.CheckoutBadgeInvalidationRequest;
 import com.adminvisitor.dto.requestdto.QrBadgeRequest;
 import com.adminvisitor.dto.responsedto.QrBadgeResponse;
 
