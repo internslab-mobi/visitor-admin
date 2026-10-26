@@ -460,6 +460,14 @@ public class VisitManagementServiceImpl implements VisitManagementService{
 
         LocalDateTime checkedOutAt = LocalDateTime.now();
 
+        // Close any active QR time-tracking session.
+        metaTimeTrackingRepository
+                .findTopByVisitIdAndOutTimeIsNullOrderByInTimeDesc(visitId)
+                .ifPresent(tracking -> {
+                    tracking.setOutTime(checkedOutAt);
+                    metaTimeTrackingRepository.save(tracking);
+                });
+
         visit.setCheckedOutAt(checkedOutAt);
         visit.setStatus(VisitStatus.CHECKED_OUT);
 

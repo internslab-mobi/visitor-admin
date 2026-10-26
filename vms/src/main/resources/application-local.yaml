@@ -29,7 +29,7 @@ vms:
   document:
     nda-upload-dir: D:/VMS/NDA
     upload-dir: D:/VMS/Proof
-    photo-upload-dir: D:/VMS/VisitorPhotos
+    photo-upload-dir: C:/VMS/VisitorPhotos
 
 qr:
   service:
@@ -42,7 +42,7 @@ summary-export:
 
 notification:
   service:
-    base-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8094}
+    base-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8095}
   test-recipient: ${NOTIFICATION_TEST_EMAIL}
 
 

@@ -1,3 +1,4 @@
+
 package com.adminvisitor.service;
 
 import com.adminvisitor.dto.requestdto.BlacklistRequest;
@@ -5,11 +6,10 @@ import com.adminvisitor.dto.responsedto.BlacklistResponse;
 import com.adminvisitor.entity.Blacklist;
 import com.adminvisitor.entity.BlacklistProof;
 import com.adminvisitor.entity.Document;
-import com.adminvisitor.entity.Visit;
 import com.adminvisitor.entity.Visitor;
 import com.adminvisitor.enums.BlacklistStatus;
+import com.adminvisitor.enums.Nationality;
 import com.adminvisitor.enums.ProofType;
-import com.adminvisitor.enums.VisitorType;
 import com.adminvisitor.exception.BlacklistAlreadyRemovedException;
 import com.adminvisitor.exception.BusinessRuleException;
 import com.adminvisitor.exception.ResourceAlreadyExistsException;
@@ -20,8 +20,6 @@ import com.adminvisitor.repository.BlacklistRepository;
 import com.adminvisitor.repository.DocumentRepository;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.repository.VisitorRepository;
-import com.adminvisitor.service.IdGeneratorService;
-import com.adminvisitor.service.ProofSecurityService;
 import com.adminvisitor.service.impl.BlacklistServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +36,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for {@link BlacklistServiceImpl}.
+ *
+ * <p>Verifies blacklist lookup, creation, removal, and retrieval behavior
+ * using mocked repositories and collaborators.</p>
+ */
 @ExtendWith(MockitoExtension.class)
 class BlacklistServiceImplTest {
 
@@ -73,19 +77,21 @@ class BlacklistServiceImplTest {
     private BlacklistRequest request;
     private BlacklistResponse response;
 
+    /**
+     * Creates common test data before each test.
+     *
+     * <p>Shared setup deliberately avoids Mockito stubbing so each test only
+     * defines the interactions it actually needs.</p>
+     */
     @BeforeEach
     void setUp() {
-        visitor = Visitor.builder()
-                .id("VTR-001")
-                .build();
+        visitor = new Visitor();
+        visitor.setId("VTR-001");
 
-        domesticDocument = Document.builder()
-                .nationality(
-                        com.adminvisitor.enums.Nationality.DOMESTIC
-                )
-                .aadharNumber("AADHAAR-INDEX-001")
-                .panNumber("PAN-INDEX-001")
-                .build();
+        domesticDocument = new Document();
+        domesticDocument.setNationality(Nationality.DOMESTIC);
+        domesticDocument.setAadharNumber("AADHAAR-INDEX-001");
+        domesticDocument.setPanNumber("PAN-INDEX-001");
 
         request = new BlacklistRequest(
                 "Security violation",
@@ -93,25 +99,11 @@ class BlacklistServiceImplTest {
         );
 
         response = mock(BlacklistResponse.class);
-
-        when(blacklistMapper.toResponse(
-                any(Blacklist.class),
-                nullable(VisitorType.class),
-                anyList()
-        )).thenReturn(response);
-
-        lenient().when(idGeneratorService.generateId(
-                anyString(),
-                anyString()
-        )).thenAnswer(invocation ->
-                invocation.getArgument(1) + "-001"
-        );
     }
 
-    // --------------------------------------------------
-    // isBlacklisted()
-    // --------------------------------------------------
-
+    /**
+     * Verifies that an active blacklist record makes the visitor blacklisted.
+     */
     @Test
     void isBlacklisted_whenActiveRecordExists_returnsTrue() {
         when(blacklistRepository.findByVisitorIdAndStatus(
@@ -121,6 +113,9 @@ class BlacklistServiceImplTest {
         assertTrue(blacklistService.isBlacklisted("VTR-001"));
     }
 
+    /**
+     * Verifies that a visitor without an active blacklist record is not blacklisted.
+     */
     @Test
     void isBlacklisted_whenNoActiveRecordExists_returnsFalse() {
         when(blacklistRepository.findByVisitorIdAndStatus(
@@ -130,10 +125,9 @@ class BlacklistServiceImplTest {
         assertFalse(blacklistService.isBlacklisted("VTR-001"));
     }
 
-    // --------------------------------------------------
-    // isBlacklistedByProof()
-    // --------------------------------------------------
-
+    /**
+     * Verifies that a matching active proof index identifies a blacklisted visitor.
+     */
     @Test
     void isBlacklistedByProof_whenMatchingActiveProofExists_returnsTrue() {
         when(proofSecurityService.generateBlindIndex(
@@ -152,6 +146,9 @@ class BlacklistServiceImplTest {
         ));
     }
 
+    /**
+     * Verifies that a proof without a matching active record is not blacklisted.
+     */
     @Test
     void isBlacklistedByProof_whenNoMatchingProofExists_returnsFalse() {
         when(proofSecurityService.generateBlindIndex(
@@ -170,10 +167,9 @@ class BlacklistServiceImplTest {
         ));
     }
 
-    // --------------------------------------------------
-    // addExistingVisitorToBlacklist()
-    // --------------------------------------------------
-
+    /**
+     * Verifies that adding a nonexistent visitor to the blacklist throws not found.
+     */
     @Test
     void addExistingVisitor_whenVisitorDoesNotExist_throwsNotFound() {
         when(visitorRepository.findById("VTR-001"))
@@ -190,6 +186,9 @@ class BlacklistServiceImplTest {
         verify(blacklistRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that a visitor without a document cannot be blacklisted.
+     */
     @Test
     void addExistingVisitor_whenDocumentDoesNotExist_throwsNotFound() {
         when(visitorRepository.findById("VTR-001"))
@@ -209,6 +208,9 @@ class BlacklistServiceImplTest {
         verify(blacklistRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that an already actively blacklisted visitor cannot be added again.
+     */
     @Test
     void addExistingVisitor_whenAlreadyActivelyBlacklisted_throwsConflict() {
         when(visitorRepository.findById("VTR-001"))
@@ -232,6 +234,10 @@ class BlacklistServiceImplTest {
         verify(blacklistRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that a domestic proof already used by an active blacklist record
+     * causes a conflict.
+     */
     @Test
     void addExistingVisitor_whenDomesticProofAlreadyBlacklisted_throwsConflict() {
         when(visitorRepository.findById("VTR-001"))
@@ -262,13 +268,13 @@ class BlacklistServiceImplTest {
         verify(blacklistRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that a domestic document without valid proof details is rejected.
+     */
     @Test
     void addExistingVisitor_whenNoValidProofExists_throwsBusinessRuleException() {
-        Document documentWithoutProofs = Document.builder()
-                .nationality(
-                        com.adminvisitor.enums.Nationality.DOMESTIC
-                )
-                .build();
+        Document documentWithoutProofs = new Document();
+        documentWithoutProofs.setNationality(Nationality.DOMESTIC);
 
         when(visitorRepository.findById("VTR-001"))
                 .thenReturn(Optional.of(visitor));
@@ -291,8 +297,16 @@ class BlacklistServiceImplTest {
         verify(blacklistRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that a visitor with available domestic proofs can be blacklisted.
+     */
     @Test
     void addExistingVisitor_whenDomesticProofsAreAvailable_savesBlacklist() {
+        when(idGeneratorService.generateId(anyString(), anyString()))
+                .thenAnswer(invocation ->
+                        invocation.getArgument(1) + "-001"
+                );
+
         when(visitorRepository.findById("VTR-001"))
                 .thenReturn(Optional.of(visitor));
 
@@ -314,6 +328,10 @@ class BlacklistServiceImplTest {
         when(blacklistRepository.save(any(Blacklist.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
+        when(blacklistMapper.toResponse(
+                any(Blacklist.class), isNull(), anyList()
+        )).thenReturn(response);
+
         BlacklistResponse result =
                 blacklistService.addExistingVisitorToBlacklist(
                         "VTR-001", request
@@ -327,14 +345,19 @@ class BlacklistServiceImplTest {
         ));
     }
 
+    /**
+     * Verifies that an international visitor's passport is added as the proof.
+     */
     @Test
     void addExistingVisitor_whenInternationalPassportExists_savesPassportProof() {
-        Document internationalDocument = Document.builder()
-                .nationality(
-                        com.adminvisitor.enums.Nationality.INTERNATIONAL
-                )
-                .passportNumber("PASSPORT-INDEX-001")
-                .build();
+        when(idGeneratorService.generateId(anyString(), anyString()))
+                .thenAnswer(invocation ->
+                        invocation.getArgument(1) + "-001"
+                );
+
+        Document internationalDocument = new Document();
+        internationalDocument.setNationality(Nationality.INTERNATIONAL);
+        internationalDocument.setPassportNumber("PASSPORT-INDEX-001");
 
         when(visitorRepository.findById("VTR-001"))
                 .thenReturn(Optional.of(visitor));
@@ -357,6 +380,10 @@ class BlacklistServiceImplTest {
         when(blacklistRepository.save(any(Blacklist.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
+        when(blacklistMapper.toResponse(
+                any(Blacklist.class), isNull(), anyList()
+        )).thenReturn(response);
+
         blacklistService.addExistingVisitorToBlacklist(
                 "VTR-001", request
         );
@@ -368,10 +395,9 @@ class BlacklistServiceImplTest {
         ));
     }
 
-    // --------------------------------------------------
-    // removeFromBlacklist()
-    // --------------------------------------------------
-
+    /**
+     * Verifies that removing a nonexistent blacklist record throws not found.
+     */
     @Test
     void removeFromBlacklist_whenRecordDoesNotExist_throwsNotFound() {
         when(blacklistRepository.findById("BL-001"))
@@ -387,6 +413,9 @@ class BlacklistServiceImplTest {
         verify(blacklistRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that a blacklist record already removed cannot be removed again.
+     */
     @Test
     void removeFromBlacklist_whenAlreadyRemoved_throwsConflict() {
         Blacklist blacklist = Blacklist.builder()
@@ -409,6 +438,9 @@ class BlacklistServiceImplTest {
         verify(blacklistRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that removing an active record changes its status and updater.
+     */
     @Test
     void removeFromBlacklist_whenActiveRecordExists_marksAsRemoved() {
         Blacklist blacklist = Blacklist.builder()
@@ -424,6 +456,10 @@ class BlacklistServiceImplTest {
         when(blacklistRepository.save(any(Blacklist.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
+        when(blacklistMapper.toResponse(
+                eq(blacklist), isNull(), anyList()
+        )).thenReturn(response);
+
         BlacklistResponse result =
                 blacklistService.removeFromBlacklist(
                         "BL-001", "EMP-001"
@@ -436,10 +472,10 @@ class BlacklistServiceImplTest {
         verify(blacklistRepository).save(blacklist);
     }
 
-    // --------------------------------------------------
-    // getAllBlacklistRecords()
-    // --------------------------------------------------
-
+    /**
+     * Verifies that retrieving all blacklist records returns an empty list
+     * when no records exist.
+     */
     @Test
     void getAllBlacklistRecords_whenNoRecordsExist_returnsEmptyList() {
         when(blacklistRepository.findAll()).thenReturn(List.of());
@@ -454,10 +490,9 @@ class BlacklistServiceImplTest {
         verifyNoInteractions(blacklistProofRepository);
     }
 
-    // --------------------------------------------------
-    // getBlacklistById()
-    // --------------------------------------------------
-
+    /**
+     * Verifies that retrieving a nonexistent blacklist record throws not found.
+     */
     @Test
     void getBlacklistById_whenRecordDoesNotExist_throwsNotFound() {
         when(blacklistRepository.findById("BL-001"))
@@ -469,6 +504,9 @@ class BlacklistServiceImplTest {
         );
     }
 
+    /**
+     * Verifies that an existing blacklist record is mapped to its response.
+     */
     @Test
     void getBlacklistById_whenRecordExists_returnsMappedResponse() {
         Blacklist blacklist = Blacklist.builder()
@@ -487,6 +525,10 @@ class BlacklistServiceImplTest {
         when(visitRepository
                 .findTopByVisitorIdOrderByCreatedAtDesc("VTR-001"))
                 .thenReturn(Optional.empty());
+
+        when(blacklistMapper.toResponse(
+                eq(blacklist), isNull(), anyList()
+        )).thenReturn(response);
 
         BlacklistResponse result =
                 blacklistService.getBlacklistById("BL-001");

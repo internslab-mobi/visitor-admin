@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-@EnableJpaAuditing
+@EnableJpaAuditing(auditorAwareRef = "auditorAwareConfig")
 @EnableAsync
 public class VMSApplication {
 

@@ -24,14 +24,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Map;
-
 /**
  * Implements notification outbox operations, including enqueueing notifications,
  * claiming records for processing, tracking delivery results, and scheduling retries.
  * A scheduled worker retrieves pending notifications and delegates email delivery
  * to the notification client service.
  *
- * @author VMS Development Team
+ * @author Nethra
  */
 @Service
 @RequiredArgsConstructor
