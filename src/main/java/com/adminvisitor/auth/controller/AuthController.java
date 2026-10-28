@@ -9,6 +9,7 @@ import com.adminvisitor.auth.dto.requestdto.VerifyOtpRequest;
 import com.adminvisitor.auth.dto.responsedto.AuthResult;
 import com.adminvisitor.auth.dto.responsedto.UserResponse;
 import com.adminvisitor.auth.dto.responsedto.VerifyOtpResponse;
+import com.adminvisitor.auth.exception.AuthException;
 import com.adminvisitor.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +22,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -46,6 +49,9 @@ public class AuthController {
     private final long accessTokenExpiration;
     private final long refreshTokenExpiration;
     private final boolean cookieSecure;
+
+    private static final Logger log =
+            LoggerFactory.getLogger(AuthController.class);
 
     /**
      * Creates the authentication controller with its required dependencies and configuration.
@@ -81,38 +87,44 @@ public class AuthController {
     public ResponseEntity<UserResponse> login(
             @Valid @RequestBody LoginRequest request
     ) {
-        AuthResult result = authService.login(request);
+        try {
+            AuthResult result = authService.login(request);
 
-        ResponseCookie accessCookie = createCookie(
-                ACCESS_COOKIE,
-                result.accessToken(),
-                "/api",
-                accessTokenExpiration
-        );
-
-        ResponseEntity.BodyBuilder response = ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString());
-
-        if (result.user().mustChangePassword()) {
-            response.header(
-                    HttpHeaders.SET_COOKIE,
-                    clearCookie(REFRESH_COOKIE, "/api/auth").toString()
-            );
-        } else {
-            ResponseCookie refreshCookie = createCookie(
-                    REFRESH_COOKIE,
-                    result.refreshToken(),
-                    "/api/auth",
-                    refreshTokenExpiration
+            ResponseCookie accessCookie = createCookie(
+                    ACCESS_COOKIE,
+                    result.accessToken(),
+                    "/api",
+                    accessTokenExpiration
             );
 
-            response.header(
-                    HttpHeaders.SET_COOKIE,
-                    refreshCookie.toString()
-            );
+            ResponseEntity.BodyBuilder response = ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, accessCookie.toString());
+
+            if (result.user().mustChangePassword()) {
+                response.header(
+                        HttpHeaders.SET_COOKIE,
+                        clearCookie(REFRESH_COOKIE, "/api/auth").toString()
+                );
+            } else {
+                ResponseCookie refreshCookie = createCookie(
+                        REFRESH_COOKIE,
+                        result.refreshToken(),
+                        "/api/auth",
+                        refreshTokenExpiration
+                );
+
+                response.header(
+                        HttpHeaders.SET_COOKIE,
+                        refreshCookie.toString()
+                );
+            }
+
+            return response.body(result.user());
+
+        } catch (RuntimeException exception) {
+            log.error("Login operation failed", exception);
+            throw exception;
         }
-
-        return response.body(result.user());
     }
 
     /**
@@ -129,11 +141,17 @@ public class AuthController {
     public ResponseEntity<UserResponse> createUser(
             @Valid @RequestBody CreateUserRequest request
     ) {
-        UserResponse response = authService.createUser(request);
+        try {
+            UserResponse response = authService.createUser(request);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(response);
+
+        } catch (RuntimeException exception) {
+            log.error("User creation operation failed", exception);
+            throw exception;
+        }
     }
 
     /**
@@ -146,33 +164,37 @@ public class AuthController {
             summary = "Change password",
             description = "Changes the password of the currently authenticated user."
     )
-
     @PostMapping("/change-password")
     public ResponseEntity<Map<String, String>> changePassword(
             @Valid @RequestBody ChangePasswordRequest request
     ) {
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+        try {
+            Authentication authentication =
+                    SecurityContextHolder.getContext().getAuthentication();
 
-        String userId = authentication.getName();
+            String userId = authentication.getName();
 
-        authService.changePassword(userId, request);
+            authService.changePassword(userId, request);
 
-        ResponseCookie clearAccessCookie =
-                clearCookie(ACCESS_COOKIE, "/api");
+            ResponseCookie clearAccessCookie =
+                    clearCookie(ACCESS_COOKIE, "/api");
 
-        ResponseCookie clearRefreshCookie =
-                clearCookie(REFRESH_COOKIE, "/api/auth");
+            ResponseCookie clearRefreshCookie =
+                    clearCookie(REFRESH_COOKIE, "/api/auth");
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, clearAccessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, clearRefreshCookie.toString())
-                .body(Map.of(
-                        "message",
-                        "Password changed successfully. Please log in with your new password."
-                ));
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, clearAccessCookie.toString())
+                    .header(HttpHeaders.SET_COOKIE, clearRefreshCookie.toString())
+                    .body(Map.of(
+                            "message",
+                            "Password changed successfully. Please log in with your new password."
+                    ));
+
+        } catch (RuntimeException exception) {
+            log.error("An unexpected error occurred during authentication operation", exception);
+            throw exception;
+        }
     }
-
 
     /**
      * Initiates password recovery for the supplied email address.
@@ -188,20 +210,26 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request
     ) {
-        boolean accepted = authService.forgotPassword(request);
+        try {
+            boolean accepted = authService.forgotPassword(request);
 
-        if (!accepted) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of(
-                            "message",
-                            "No active account found for this email. Please check your email address or contact your administrator."
-                    ));
+            if (!accepted) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of(
+                                "message",
+                                "No active account found for this email. Please check your email address or contact your administrator."
+                        ));
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "message",
+                    "Verification code sent. Please check your inbox and spam folder."
+            ));
+
+        } catch (RuntimeException exception) {
+            log.error("Password recovery operation failed", exception);
+            throw exception;
         }
-
-        return ResponseEntity.ok(Map.of(
-                "message",
-                "Verification code sent. Please check your inbox and spam folder."
-        ));
     }
 
     /**
@@ -218,20 +246,26 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> resendForgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request
     ) {
-        boolean accepted = authService.forgotPassword(request);
+        try {
+            boolean accepted = authService.forgotPassword(request);
 
-        if (!accepted) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of(
-                            "message",
-                            "No active account found for this email. Please check your email address or contact your administrator."
-                    ));
+            if (!accepted) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of(
+                                "message",
+                                "No active account found for this email. Please check your email address or contact your administrator."
+                        ));
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "message",
+                    "Verification code sent. Please check your inbox and spam folder."
+            ));
+
+        } catch (RuntimeException exception) {
+            log.error("Resending password reset OTP failed", exception);
+            throw exception;
         }
-
-        return ResponseEntity.ok(Map.of(
-                "message",
-                "Verification code sent. Please check your inbox and spam folder."
-        ));
     }
 
     /**
@@ -248,9 +282,15 @@ public class AuthController {
     public ResponseEntity<VerifyOtpResponse> verifyResetOtp(
             @Valid @RequestBody VerifyOtpRequest request
     ) {
-        VerifyOtpResponse response = authService.verifyResetOtp(request);
+        try {
+            VerifyOtpResponse response = authService.verifyResetOtp(request);
 
-        return ResponseEntity.ok(response);
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException exception) {
+            log.error("OTP verification operation failed", exception);
+            throw exception;
+        }
     }
 
     /**
@@ -263,28 +303,32 @@ public class AuthController {
             summary = "Reset password",
             description = "Resets the user's password using the supplied reset details."
     )
-
     @PostMapping("/reset-password")
     public ResponseEntity<Map<String, String>> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request
     ) {
-        authService.resetPassword(request);
+        try {
+            authService.resetPassword(request);
 
-        ResponseCookie clearAccessCookie =
-                clearCookie(ACCESS_COOKIE, "/api");
+            ResponseCookie clearAccessCookie =
+                    clearCookie(ACCESS_COOKIE, "/api");
 
-        ResponseCookie clearRefreshCookie =
-                clearCookie(REFRESH_COOKIE, "/api/auth");
+            ResponseCookie clearRefreshCookie =
+                    clearCookie(REFRESH_COOKIE, "/api/auth");
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, clearAccessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, clearRefreshCookie.toString())
-                .body(Map.of(
-                        "message",
-                        "Password reset successfully. Please log in with your new password."
-                ));
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, clearAccessCookie.toString())
+                    .header(HttpHeaders.SET_COOKIE, clearRefreshCookie.toString())
+                    .body(Map.of(
+                            "message",
+                            "Password reset successfully. Please log in with your new password."
+                    ));
+
+        }catch (RuntimeException exception) {
+            log.error("Password reset operation failed", exception);
+            throw exception;
+        }
     }
-
 
     /**
      * Refreshes the authentication tokens using the refresh token cookie.
@@ -303,31 +347,37 @@ public class AuthController {
                     required = false
             ) String refreshToken
     ) {
-        AuthResult result = authService.refresh(refreshToken);
+        try {
+            AuthResult result = authService.refresh(refreshToken);
 
-        ResponseCookie accessCookie = createCookie(
-                ACCESS_COOKIE,
-                result.accessToken(),
-                "/api",
-                accessTokenExpiration
-        );
+            ResponseCookie accessCookie = createCookie(
+                    ACCESS_COOKIE,
+                    result.accessToken(),
+                    "/api",
+                    accessTokenExpiration
+            );
 
-        long remainingMillis = Duration.between(
-                LocalDateTime.now(),
-                result.refreshTokenExpiresAt()
-        ).toMillis();
+            long remainingMillis = Duration.between(
+                    LocalDateTime.now(),
+                    result.refreshTokenExpiresAt()
+            ).toMillis();
 
-        ResponseCookie refreshCookie = createCookie(
-                REFRESH_COOKIE,
-                result.refreshToken(),
-                "/api/auth",
-                Math.max(0, remainingMillis)
-        );
+            ResponseCookie refreshCookie = createCookie(
+                    REFRESH_COOKIE,
+                    result.refreshToken(),
+                    "/api/auth",
+                    Math.max(0, remainingMillis)
+            );
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(result.user());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                    .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                    .body(result.user());
+
+        } catch (RuntimeException exception) {
+            log.error("Token refresh operation failed", exception);
+            throw exception;
+        }
     }
 
     /**
@@ -347,21 +397,27 @@ public class AuthController {
                     required = false
             ) String refreshToken
     ) {
-        authService.logout(refreshToken);
+        try {
+            authService.logout(refreshToken);
 
-        ResponseCookie clearAccessCookie =
-                clearCookie(ACCESS_COOKIE, "/api");
+            ResponseCookie clearAccessCookie =
+                    clearCookie(ACCESS_COOKIE, "/api");
 
-        ResponseCookie clearRefreshCookie =
-                clearCookie(REFRESH_COOKIE, "/api/auth");
+            ResponseCookie clearRefreshCookie =
+                    clearCookie(REFRESH_COOKIE, "/api/auth");
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, clearAccessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, clearRefreshCookie.toString())
-                .body(Map.of(
-                        "message",
-                        "Logged out successfully"
-                ));
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, clearAccessCookie.toString())
+                    .header(HttpHeaders.SET_COOKIE, clearRefreshCookie.toString())
+                    .body(Map.of(
+                            "message",
+                            "Logged out successfully"
+                    ));
+
+        } catch (RuntimeException exception) {
+            log.error("Logout operation failed", exception);
+            throw exception;
+        }
     }
 
     /**
