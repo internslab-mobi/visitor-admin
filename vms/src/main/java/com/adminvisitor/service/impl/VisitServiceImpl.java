@@ -57,7 +57,7 @@ public class VisitServiceImpl implements VisitService {
     private final VendorMapper vendorMapper;
     private final VisitMapper visitMapper;
     private final VisitorMapper visitorMapper;
-    private final VisitMapper visitMapper;
+
 
     /**
      * Registers a visitor's visit after validating identity proofs, blacklist status,

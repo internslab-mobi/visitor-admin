@@ -1,8 +1,10 @@
 package com.adminvisitor.controller;
 
+import com.adminvisitor.dto.responsedto.QrScanResponse;
 import com.adminvisitor.dto.responsedto.VisitorLogResponse;
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.enums.VisitorType;
+import com.adminvisitor.service.QrMicroserviceClient;
 import com.adminvisitor.service.VisitManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,12 +33,12 @@ import java.time.LocalDate;
         description = "APIs for searching, filtering, and retrieving visitor log records"
 )
 @RestController
-@RequestMapping("/api/visitor-log")
+//@RequestMapping({"/api/visitor-log","/api"})
 @RequiredArgsConstructor
 public class VisitorLogController {
 
     private final VisitManagementService visitManagementService;
-
+    private final QrMicroserviceClient qrMicroserviceClient;
     /**
      * Retrieves visitor log records using optional filters and pagination.
      *
@@ -56,7 +58,10 @@ public class VisitorLogController {
             description = "Retrieves paginated visitor log records with optional " +
                     "search, date range, status, visitor type, host, and sorting filters."
     )
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(
+            value = "/api/visitor-log",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
     public ResponseEntity<Page<VisitorLogResponse>> getVisitorLog(
 
             @Parameter(
@@ -154,7 +159,7 @@ public class VisitorLogController {
      */
     @Operation(summary = "Get QR scan IN/OUT history for a visit")
     @GetMapping(
-            value = "/{visitId}/time-tracking",
+            value = "/api/visitor-log/{visitId}/time-tracking",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<VisitTimeTrackingResponse> getVisitTimeTracking(
@@ -165,6 +170,29 @@ public class VisitorLogController {
         System.out.println("Time tracking endpoint reached: " + visitId);
         return ResponseEntity.ok(
                 visitManagementService.getVisitTimeTracking(visitId)
+        );
+    }
+
+
+
+    @Operation(
+            summary = "Process QR scan",
+            description = "Forwards the QR token to the QR microservice "
+                    + "for validation and IN/OUT time tracking."
+    )
+    @PostMapping(
+            value = "/api/process-scan",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<QrScanResponse> processScan(
+            @Parameter(
+                    description = "QR token to process",
+                    required = true
+            )
+            @RequestParam String token
+    ) {
+        return ResponseEntity.ok(
+                qrMicroserviceClient.processScan(token)
         );
     }
 }

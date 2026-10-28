@@ -13,14 +13,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaTypeFactory;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.MediaType;
 
 import java.util.List;
 
@@ -38,6 +36,8 @@ import java.util.List;
  *
  * @author Anisha Z
  */
+
+@Slf4j
 @RestController
 @RequestMapping("/api/documents")
 @RequiredArgsConstructor
@@ -50,6 +50,7 @@ public class DocumentController {
     private final DocumentService documentService;
     private final DocumentMapper documentMapper;
     private final NdaService ndaService;
+
 
     /**
      * Downloads or displays the NDA document for a visitor.
@@ -73,6 +74,8 @@ public class DocumentController {
 
     ) {
 
+        try{
+
         Resource resource = ndaService.getNdaFile(visitorId);
 
         return ResponseEntity.ok()
@@ -82,6 +85,19 @@ public class DocumentController {
                         "inline; filename=\"" + resource.getFilename() + "\""
                 )
                 .body(resource);
+    }catch (ResourceNotFoundException e) {
+            log.error("NDA not found for visitorId={}", visitorId);
+            throw e;
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid NDA download request: {}", e.getMessage());
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error downloading NDA for visitorId={}", visitorId, e);
+            throw e;
+        }
+
     }
 
     /**
@@ -106,10 +122,25 @@ public class DocumentController {
             @PathVariable("visitorId") String visitorId
 
     ) {
+        try {
+            return ResponseEntity.ok(
+                    documentService.getAllDocuments(visitorId)
+            );
 
-        return ResponseEntity.ok(
-                documentService.getAllDocuments(visitorId)
-        );
+        } catch (ResourceNotFoundException e) {
+            log.error("Documents not found for visitorId={}", visitorId);
+            throw e;
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid request for visitorId={}: {}",
+                    visitorId, e.getMessage());
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error retrieving documents for visitorId={}",
+                    visitorId, e);
+            throw e;
+        }
     }
 
     /**
@@ -146,17 +177,34 @@ public class DocumentController {
 
     ) {
 
-        List<DocumentMetadata> uploadedDocuments =
-                documentService.uploadProofDocuments(
-                        visitorId,
-                        files
-                );
+        try {
+            List<DocumentMetadata> uploadedDocuments =
+                    documentService.uploadProofDocuments(
+                            visitorId,
+                            files
+                    );
 
-        List<DocumentResponse> response = uploadedDocuments.stream()
-                .map(documentMapper::toResponse)
-                .toList();
+            List<DocumentResponse> response = uploadedDocuments.stream()
+                    .map(documentMapper::toResponse)
+                    .toList();
 
-        return ResponseEntity.ok(response);
+            return ResponseEntity.ok(response);
+
+        } catch (ResourceNotFoundException e) {
+            log.error("Visitor not found for proof upload: visitorId={}",
+                    visitorId);
+            throw e;
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid proof upload for visitorId={}: {}",
+                    visitorId, e.getMessage());
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error uploading proof documents for visitorId={}",
+                    visitorId, e);
+            throw e;
+        }
     }
 
     /**
@@ -180,41 +228,55 @@ public class DocumentController {
             @PathVariable("visitorId") String visitorId
 
     ) {
+        try {
+            DocumentMetadata metadata =
+                    documentService.getLatestVisitorPhoto(
+                            visitorId
+                    );
 
-        DocumentMetadata metadata =
-                documentService.getLatestVisitorPhoto(
-                        visitorId
+            Resource resource =
+                    new FileSystemResource(
+                            metadata.getDocumentPath()
+                    );
+
+            if (!resource.exists()) {
+                throw new ResourceNotFoundException(
+                        "Visitor photo file not found"
                 );
+            }
 
-        Resource resource =
-                new FileSystemResource(
-                        metadata.getDocumentPath()
-                );
+            MediaType mediaType =
+                    MediaTypeFactory
+                            .getMediaType(
+                                    resource.getFilename()
+                            )
+                            .orElse(MediaType.APPLICATION_OCTET_STREAM);
 
-        if (!resource.exists()) {
-            throw new ResourceNotFoundException(
-                    "Visitor photo file not found"
-            );
+            return ResponseEntity.ok()
+                    .contentType(mediaType)
+                    .header(
+                            HttpHeaders.CONTENT_DISPOSITION,
+                            "inline; filename=\"" +
+                                    resource.getFilename() +
+                                    "\""
+                    )
+                    .body(resource);
+
+        } catch (ResourceNotFoundException e) {
+            log.error("Visitor photo not found for visitorId={}", visitorId);
+            throw e;
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid photo request for visitorId={}: {}",
+                    visitorId, e.getMessage());
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error retrieving visitor photo for visitorId={}",
+                    visitorId, e);
+            throw e;
         }
-
-        MediaType mediaType =
-                MediaTypeFactory
-                        .getMediaType(
-                                resource.getFilename()
-                        )
-                        .orElse(MediaType.APPLICATION_OCTET_STREAM);
-
-        return ResponseEntity.ok()
-                .contentType(mediaType)
-                .header(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=\"" +
-                                resource.getFilename() +
-                                "\""
-                )
-                .body(resource);
     }
-
     /**
      * Retrieves a document by its unique document identifier.
      *
@@ -236,6 +298,7 @@ public class DocumentController {
             @PathVariable("documentId") String documentId
 
     ) {
+        try {
 
         DocumentMetadata metadata =
                 documentService.getDocumentMetadata(documentId);
@@ -265,6 +328,20 @@ public class DocumentController {
                                 "\""
                 )
                 .body(resource);
+
+        } catch (ResourceNotFoundException e) {
+            log.error("Document not found: documentId={}", documentId);
+            throw e;
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid document request for documentId={}: {}",
+                    documentId, e.getMessage());
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error viewing document: documentId={}", documentId, e);
+            throw e;
+        }
     }
 
     /**
@@ -289,8 +366,21 @@ public class DocumentController {
 
     ) {
 
+        try {
         documentService.deleteDocument(metadataId);
 
         return ResponseEntity.noContent().build();
-    }
-}
+    }catch (ResourceNotFoundException e) {
+            log.error("Document metadata not found: metadataId={}", metadataId);
+            throw e;
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid document deletion request for metadataId={}: {}",
+                    metadataId, e.getMessage());
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error deleting document: metadataId={}", metadataId, e);
+            throw e;
+        }
+}}

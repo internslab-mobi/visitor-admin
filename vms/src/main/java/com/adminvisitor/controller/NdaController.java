@@ -2,6 +2,7 @@ package com.adminvisitor.controller;
 
 import com.adminvisitor.dto.responsedto.DocumentResponse;
 import com.adminvisitor.entity.DocumentMetadata;
+import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.service.NdaService;
 import com.adminvisitor.mapper.DocumentMapper;
 
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +36,8 @@ import java.util.List;
  *
  * @author Anisha Z
  */
+
+@Slf4j
 @RestController
 @RequestMapping("/api/nda")
 @RequiredArgsConstructor
@@ -90,7 +94,7 @@ public class NdaController {
             LocalDate validUntil
 
     ) {
-
+        try {
         DocumentMetadata metadata = ndaService.uploadNewNda(
                 visitorId,
                 ndaFile,
@@ -98,6 +102,19 @@ public class NdaController {
         );
 
         return ResponseEntity.ok(documentMapper.toResponse(metadata));
+    }catch (ResourceNotFoundException e) {
+            log.error("Visitor not found for NDA upload: visitorId={}", visitorId);
+            throw e;
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid NDA upload request for visitorId={}: {}",
+                    visitorId, e.getMessage());
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error uploading NDA for visitorId={}", visitorId, e);
+            throw e;
+        }
     }
 
     /**
@@ -144,7 +161,7 @@ public class NdaController {
             LocalDate newValidUntil
 
     ) {
-
+        try {
         DocumentMetadata metadata = ndaService.extendNdaValidity(
                 visitorId,
                 supportingDocument,
@@ -152,6 +169,21 @@ public class NdaController {
         );
 
         return ResponseEntity.ok(documentMapper.toResponse(metadata));
+    }catch (ResourceNotFoundException e) {
+            log.error("Visitor or NDA not found for extension: visitorId={}",
+                    visitorId);
+            throw e;
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid NDA extension request for visitorId={}: {}",
+                    visitorId, e.getMessage());
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error extending NDA validity for visitorId={}",
+                    visitorId, e);
+            throw e;
+        }
     }
 
     /**
@@ -179,10 +211,24 @@ public class NdaController {
             @PathVariable("visitorId") String visitorId
 
     ) {
-
+        try {
         DocumentMetadata metadata = ndaService.getLatestNda(visitorId);
 
         return ResponseEntity.ok(documentMapper.toResponse(metadata));
+    }catch (ResourceNotFoundException e) {
+            log.error("Latest NDA not found for visitorId={}", visitorId);
+            throw e;
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid latest NDA request for visitorId={}: {}",
+                    visitorId, e.getMessage());
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error retrieving latest NDA for visitorId={}",
+                    visitorId, e);
+            throw e;
+        }
     }
 
     /**
@@ -210,9 +256,24 @@ public class NdaController {
             @PathVariable("visitorId") String visitorId
 
     ) {
+        try {
+            return ResponseEntity.ok(
+                    ndaService.getNdaHistory(visitorId)
+            );
 
-        return ResponseEntity.ok(
-                ndaService.getNdaHistory(visitorId)
-        );
+        } catch (ResourceNotFoundException e) {
+            log.error("NDA history not found for visitorId={}", visitorId);
+            throw e;
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid NDA history request for visitorId={}: {}",
+                    visitorId, e.getMessage());
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error retrieving NDA history for visitorId={}",
+                    visitorId, e);
+            throw e;
+        }
     }
 }

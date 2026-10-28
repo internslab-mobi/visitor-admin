@@ -44,9 +44,6 @@ qr:
     base-url: ${QR_SERVICE_BASE_URL:http://localhost:8062}
     api-key: ${QR_SERVICE_API_KEY}
 
-summary-export:
-  service:
-    export-url: http://localhost:8063
 
 
 notification:

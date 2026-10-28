@@ -3,6 +3,7 @@ package com.adminvisitor.controller;
 
 import com.adminvisitor.dto.responsedto.VendorResponse;
 import com.adminvisitor.dto.responsedto.VendorEditResponse;
+import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.service.VendorService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +30,8 @@ import java.util.List;
  *
  * @author Anisha Z
  */
+
+@Slf4j
 @RestController
 @RequestMapping("/api/vendors")
 @RequiredArgsConstructor
@@ -53,13 +57,22 @@ public class VendorController {
     )
 
     public ResponseEntity<List<VendorResponse>> getAllVendors() {
-
+        try {
         List<VendorResponse> vendors =
                 vendorService.getAllVendors();
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(vendors);
+    }catch (IllegalArgumentException e) {
+            log.error("Invalid request while retrieving vendors: {}",
+                    e.getMessage());
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error retrieving all vendors", e);
+            throw e;
+        }
     }
 
 
@@ -90,12 +103,26 @@ public class VendorController {
             @PathVariable("id") String id
 
     ) {
+
+        try {
         VendorResponse vendor =
                 vendorService.getVendorById(id);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(vendor);
+    }catch (ResourceNotFoundException e) {
+            log.error("Vendor not found for id={}", id);
+            throw e;
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid vendor ID: {}", id);
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error retrieving vendor for id={}", id, e);
+            throw e;
+        }
     }
 
 
@@ -128,9 +155,23 @@ public class VendorController {
             @PathVariable("id") String id
 
     ) {
+
+        try {
         VendorEditResponse response =
                 vendorService.getVendorEditDetails(id);
 
         return ResponseEntity.ok(response);
+    }catch (ResourceNotFoundException e) {
+            log.error("Vendor edit details not found for id={}", id);
+            throw e;
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid vendor edit request for id={}", id);
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error retrieving vendor edit details for id={}", id, e);
+            throw e;
+        }
     }
 }
