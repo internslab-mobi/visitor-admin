@@ -36,9 +36,9 @@ public class QrApiKeyFilter extends OncePerRequestFilter {
         String path = request.getServletPath();
 
         return path.equals("/actuator/health")
-                || path.startsWith("/actuator/health/")
-                || (path.equals("/api/qr/process-scan")
-                && request.getMethod().equalsIgnoreCase("POST"));
+                || path.startsWith("/actuator/health/");
+               // || (path.equals("/api/qr/process-scan")
+                //&& request.getMethod().equalsIgnoreCase("POST"));
     }
 
 
