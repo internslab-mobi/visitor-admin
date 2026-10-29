@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: vms
+  profiles:
+    default: local
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+springdotenv:
+  filename: .env
+
+
+server:
+  port: 8092
+
+logging:
+  level:
+    root: INFO
+    com.adminvisitor: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+  endpoint:
+    health:
+      show-details: never
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    metrics:
+      export:
+        enabled: false
+
+notification:
+  outbox:
+    max-attempts: 3
+    batch-size: 50
+    retry-delay-seconds: 30
+    polling-delay-ms: 5000
+
+springdoc:
+  swagger-ui:
+    csrf:
+      enabled: true
+      cookie-name: VMS-XSRF-TOKEN
+      header-name: X-VMS-XSRF-TOKEN

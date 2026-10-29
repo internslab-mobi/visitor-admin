@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Today's Expected Visitors</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f6f8; font-family:Arial,Helvetica,sans-serif; color:#263238;">
+
+<div style="max-width:680px; margin:24px auto; background-color:#ffffff; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden;">
+
+    <div style="padding:24px 28px; background-color:#17365d; color:#ffffff;">
+        <h2 style="margin:0; font-size:22px;">Today's Expected Visitors</h2>
+        <p style="margin:8px 0 0; font-size:14px; color:#dbeafe;"
+           th:text="${reminderDate}">24 Sep 2026</p>
+    </div>
+
+    <div style="padding:28px;">
+        <p style="margin-top:0; font-size:15px;"
+           th:text="'Hello ' + ${hostName} + ','">
+            Hello Host,
+        </p>
+
+        <p style="font-size:14px; line-height:1.6; color:#475569;">
+            Here is your summary of visitors scheduled to meet you today.
+        </p>
+
+        <div th:each="visit : ${visits}"
+             style="margin:20px 0; padding:18px; border:1px solid #e2e8f0; border-radius:6px;">
+
+            <p style="margin:0 0 12px; font-size:16px; font-weight:bold;"
+               th:text="${visit.visitorName}">
+                Visitor Name
+            </p>
+
+            <p style="margin:6px 0; font-size:13px; color:#475569;">
+                Reference:
+                <strong th:text="${visit.visitReference}">VIS00001</strong>
+            </p>
+
+            <p style="margin:6px 0; font-size:13px; color:#475569;">
+                Expected arrival:
+                <strong th:text="${visit.expectedArrival}">09:00 AM</strong>
+            </p>
+
+            <p style="margin:6px 0; font-size:13px; color:#475569;">
+                Expected departure:
+                <strong th:text="${visit.expectedDeparture}">10:00 AM</strong>
+            </p>
+
+            <p style="margin:6px 0; font-size:13px; color:#475569;">
+                Visitor type:
+                <strong th:text="${visit.visitorType}">GUEST</strong>
+            </p>
+
+            <p style="margin:12px 0 0; font-size:13px; line-height:1.5;">
+                <strong>Purpose:</strong>
+                <span th:text="${visit.purpose}">Meeting</span>
+            </p>
+        </div>
+
+        <p style="margin-bottom:0; font-size:13px; line-height:1.6; color:#64748b;">
+            This is an automated reminder. Visit details may change if a visit is rescheduled or cancelled.
+        </p>
+    </div>
+
+    <div style="padding:16px 28px; background-color:#f8fafc; border-top:1px solid #e2e8f0;">
+        <p style="margin:0; font-size:12px; color:#64748b;">
+            Visitor Management System
+        </p>
+    </div>
+
+</div>
+
+</body>
+</html>
+

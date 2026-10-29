@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visit Cancellation</title>
+</head>
+
+<body style="margin: 0; padding: 0; background-color: #f8f3f3; font-family: Arial, Helvetica, sans-serif; color: #243b53;">
+
+<table role="presentation"
+       width="100%"
+       cellspacing="0"
+       cellpadding="0"
+       border="0"
+       style="background-color: #f8f3f3; padding: 36px 12px;">
+
+    <tr>
+        <td align="center">
+
+            <table role="presentation"
+                   width="620"
+                   cellspacing="0"
+                   cellpadding="0"
+                   border="0"
+                   style="width: 100%; max-width: 620px; background-color: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 8px 30px rgba(100, 30, 30, 0.10);">
+
+                <!-- Header -->
+                <tr>
+                    <td style="background-color: #d9534f; padding: 34px 30px 38px; text-align: center;">
+
+                        <div style="display: inline-block; background-color: #ffffff; border-radius: 50%; width: 58px; height: 58px; line-height: 58px; font-size: 28px; margin-bottom: 14px; color: #d9534f;">
+                            ×
+                        </div>
+
+                        <h1 style="margin: 0; color: #ffffff; font-size: 25px; font-weight: 700; letter-spacing: 0.2px;">
+                            Visit Cancelled
+                        </h1>
+
+                        <p style="margin: 10px 0 0; color: #fff1f0; font-size: 14px; line-height: 1.5;">
+                            Your scheduled visit has been cancelled
+                        </p>
+
+                    </td>
+                </tr>
+
+                <!-- Main content -->
+                <tr>
+                    <td style="padding: 34px 36px 36px;">
+
+                        <p style="margin: 0 0 10px; font-size: 16px; color: #243b53;">
+                            Dear
+                            <strong th:text="${visitorName}" style="color: #b63d39;">
+                                Visitor Name
+                            </strong>,
+                        </p>
+
+                        <p style="margin: 0 0 26px; font-size: 14px; line-height: 1.7; color: #627d98;">
+                            Your scheduled visit has been cancelled. The details of the
+                            cancelled visit are provided below for your reference.
+                        </p>
+
+                        <!-- Visit reference card -->
+                        <table role="presentation"
+                               width="100%"
+                               cellspacing="0"
+                               cellpadding="0"
+                               border="0"
+                               style="margin-bottom: 30px; background-color: #fff5f4; border: 1px solid #f2cfcd; border-radius: 12px;">
+
+                            <tr>
+                                <td style="padding: 20px 22px;">
+
+                                    <p style="margin: 0 0 7px; font-size: 12px; color: #9b6865; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">
+                                        Visit Reference
+                                    </p>
+
+                                    <p th:text="${visitReference}"
+                                       style="margin: 0; font-size: 22px; font-weight: 700; color: #b63d39; letter-spacing: 0.5px;">
+                                        VIS-REFERENCE
+                                    </p>
+
+                                    <p style="margin: 8px 0 0; font-size: 12px; color: #98706d;">
+                                        This visit is no longer scheduled.
+                                    </p>
+
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <!-- Section heading -->
+                        <h2 style="margin: 0 0 16px; font-size: 18px; color: #243b53;">
+                            Cancelled Visit Details
+                        </h2>
+
+                        <!-- Visit details -->
+                        <table role="presentation"
+                               width="100%"
+                               cellspacing="0"
+                               cellpadding="0"
+                               border="0"
+                               style="border: 1px solid #eadede; border-radius: 12px; border-collapse: separate; overflow: hidden; font-size: 14px;">
+
+                            <tr>
+                                <td style="padding: 15px 18px; background-color: #fbf7f7; color: #718096; width: 42%; border-bottom: 1px solid #eadede;">
+                                    Purpose
+                                </td>
+                                <td th:text="${purpose}"
+                                    style="padding: 15px 18px; color: #243b53; font-weight: 600; border-bottom: 1px solid #eadede;">
+                                    Business Meeting
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td style="padding: 15px 18px; background-color: #fbf7f7; color: #718096; border-bottom: 1px solid #eadede;">
+                                    Expected Arrival
+                                </td>
+                                <td th:text="${expectedArrival}"
+                                    style="padding: 15px 18px; color: #243b53; border-bottom: 1px solid #eadede;">
+                                    17 Sep 2026, 10:00 AM
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td style="padding: 15px 18px; background-color: #fbf7f7; color: #718096; border-bottom: 1px solid #eadede;">
+                                    Expected Departure
+                                </td>
+                                <td th:text="${expectedDeparture}"
+                                    style="padding: 15px 18px; color: #243b53; border-bottom: 1px solid #eadede;">
+                                    17 Sep 2026, 12:00 PM
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td style="padding: 15px 18px; background-color: #fbf7f7; color: #718096;">
+                                    Host
+                                </td>
+                                <td th:text="${hostName}"
+                                    style="padding: 15px 18px; color: #243b53;">
+                                    Host Name
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <!-- Information -->
+                        <table role="presentation"
+                               width="100%"
+                               cellspacing="0"
+                               cellpadding="0"
+                               border="0"
+                               style="margin-top: 28px; background-color: #faf7f7; border-radius: 12px;">
+
+                            <tr>
+                                <td style="padding: 20px 22px;">
+
+                                    <h3 style="margin: 0 0 10px; font-size: 15px; color: #b63d39;">
+                                        What this means
+                                    </h3>
+
+                                    <p style="margin: 0; font-size: 13px; line-height: 1.7; color: #627d98;">
+                                        This visit is no longer active and the visit reference
+                                        cannot be used for check-in. If you still need to visit,
+                                        please contact your host and arrange a new visit.
+                                    </p>
+
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <p style="margin: 30px 0 0; font-size: 14px; line-height: 1.6; color: #627d98;">
+                            Thank you for your understanding.
+                        </p>
+
+                        <p style="margin: 22px 0 0; font-size: 14px; color: #243b53;">
+                            Regards,<br>
+                            <strong style="color: #b63d39;">
+                                Visitor Management System
+                            </strong>
+                        </p>
+
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td style="background-color: #faf7f7; padding: 20px 30px; text-align: center; border-top: 1px solid #eee1e0;">
+
+                        <p style="margin: 0 0 6px; color: #78909c; font-size: 12px;">
+                            This is an automated email.
+                        </p>
+
+                        <p style="margin: 0; color: #a0b3bf; font-size: 11px;">
+                            Please do not reply directly to this message.
+                        </p>
+
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+
+</table>
+
+</body>
+</html>
+
