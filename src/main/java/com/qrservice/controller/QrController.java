@@ -71,9 +71,20 @@ public class QrController {
             )
             @Valid @RequestBody QrBadgeRequest request) {
 
-        return ResponseEntity.ok(
-                qrService.generateQrBadge(request)
-        );
+        try {
+            return ResponseEntity.ok(
+                    qrService.generateQrBadge(request)
+            );
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid QR badge generation request: {}",
+                    e.getMessage());
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error generating QR badge", e);
+            throw e;
+        }
     }
 
 /**
@@ -116,9 +127,26 @@ public ResponseEntity<QrScanResponse> processScan(
                 token != null && token.contains("=")
         );
 
+    try {
+        log.info(
+                "QR scan input: length={}, startsWithTokenPrefix={}, containsEquals={}",
+                token == null ? 0 : token.length(),
+                token != null && token.startsWith("http"),
+                token != null && token.contains("=")
+        );
+
         return ResponseEntity.ok(
                 qrService.processScan(token)
         );
+
+    } catch (IllegalArgumentException e) {
+        log.error("Invalid QR scan request: {}", e.getMessage());
+        throw e;
+
+    } catch (Exception e) {
+        log.error("Error processing QR scan", e);
+        throw e;
+    }
     }
 
     /**
@@ -149,8 +177,19 @@ public ResponseEntity<QrScanResponse> processScan(
             )
             @RequestBody CheckoutBadgeInvalidationRequest request
     ) {
-        qrService.invalidateBadgeOnCheckout(request);
-        return ResponseEntity.noContent().build();
-    }
+        try {
+            qrService.invalidateBadgeOnCheckout(request);
 
+            return ResponseEntity.noContent().build();
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid QR badge invalidation request: {}",
+                    e.getMessage());
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error invalidating QR badge during checkout", e);
+            throw e;
+        }
+    }
 }
