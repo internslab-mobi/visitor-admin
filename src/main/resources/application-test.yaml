@@ -1,0 +1,7 @@
+qr:
+  security:
+    api-key: ${QR_SERVICE_API_KEY}
+
+
+springdotenv:
+  filename: .env-test

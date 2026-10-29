@@ -1,0 +1,18 @@
+qr:
+  security:
+    api-key: ${QR_SERVICE_API_KEY}
+
+springdotenv:
+  filename: .env-local
+
+
+notification:
+  service:
+    base-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8094}
+  test-recipient: ${NOTIFICATION_TEST_EMAIL}
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}

@@ -1,6 +1,14 @@
 spring:
   application:
     name: QR
+
+  profiles:
+    active: local
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
 server:
   port: 8062
 
@@ -13,6 +21,7 @@ management:
     health:
       show-details: never
 
-qr:
-  security:
-    api-key: ${QR_SERVICE_API_KEY}
+
+
+
+
