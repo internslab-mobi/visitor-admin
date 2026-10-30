@@ -4,6 +4,7 @@ package com.adminvisitor.service.impl;
 
 import com.adminvisitor.dto.requestdto.QrBadgeRequest;
 import com.adminvisitor.dto.responsedto.QrBadgeResponse;
+import com.adminvisitor.dto.responsedto.QrScanResponse;
 import com.adminvisitor.exception.ServiceUnavailableException;
 import com.adminvisitor.service.QrMicroserviceClient;
 
@@ -13,6 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -146,5 +149,73 @@ public class QrMicroserviceClientImpl implements QrMicroserviceClient {
                     ex
             );
         }
+    }
+
+
+
+//    private <T> T executeQrRequest(
+//            Supplier<T> request,
+//            String operation
+//    ) {
+//        try {
+//            return request.get();
+//
+//        } catch (RestClientResponseException ex) {
+//
+//            // QR service returned an HTTP error response.
+//            log.warn(
+//                    "QR_MICROSERVICE_HTTP_ERROR: operation={}, status={}",
+//                    operation,
+//                    ex.getStatusCode()
+//            );
+//
+//            throw new ResponseStatusException(
+//                    ex.getStatusCode(),
+//                    ex.getResponseBodyAsString()
+//            );
+//
+//        } catch (RestClientException ex) {
+//
+//            // Actual connection or communication failure.
+//            log.error(
+//                    "QR_MICROSERVICE_REQUEST_FAILED: {}",
+//                    operation,
+//                    ex
+//            );
+//
+//            throw new ServiceUnavailableException(
+//                    "QR service is currently unavailable. Please try again later.",
+//                    ex
+//            );
+//        }
+//    }
+
+
+
+    /**
+     * Requests the QR microservice to process a QR code scan.
+     *
+     * <p>Sends the QR token to the QR microservice for validation
+     * and IN/OUT time-tracking processing. Returns the response
+     * containing the scan result and visit details.</p>
+     *
+     * @param token the QR token to validate and process
+     * @return the response containing the QR scan result
+     * @throws ServiceUnavailableException if the QR microservice
+     *         request fails
+     */
+    @Override
+    public QrScanResponse processScan(String token) {
+
+        return executeQrRequest(
+                () -> restClient.post()
+                        .uri(uriBuilder -> uriBuilder
+                                .path("/api/qr/process-scan")
+                                .queryParam("token", token)
+                                .build())
+                        .retrieve()
+                        .body(QrScanResponse.class),
+                "process QR scan"
+        );
     }
 }
