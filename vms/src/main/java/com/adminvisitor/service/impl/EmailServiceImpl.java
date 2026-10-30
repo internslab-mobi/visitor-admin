@@ -23,8 +23,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -54,7 +52,7 @@ public class EmailServiceImpl implements EmailService {
                 visit.getHost().getDepartment().getDepartmentName();
 
         NotificationRequest request = new NotificationRequest(
-                UUID.randomUUID().toString(),
+                null,
                 "VISIT_CONFIRMATION",
                 visit.getVisitor().getEmail(),
                 hostEmail,
@@ -161,7 +159,7 @@ public class EmailServiceImpl implements EmailService {
             emailData.put("visitorPhotoFileName", visitorPhotoRelativePath);
 
             NotificationRequest request = new NotificationRequest(
-                    UUID.randomUUID().toString(),
+                    null,
                     "VISIT_BADGE",
                     data.visitorEmail(),
                     data.hostEmail(),
@@ -206,7 +204,7 @@ public class EmailServiceImpl implements EmailService {
             emailData.put("checkedInAt", data.checkedInAt());
 
             NotificationRequest request = new NotificationRequest(
-                    UUID.randomUUID().toString(),
+                    null,
                     "HOST_CHECK_IN",
                     data.hostEmail(),
                     null,
@@ -249,7 +247,7 @@ public class EmailServiceImpl implements EmailService {
             emailData.put("hostName", data.hostName());
 
             NotificationRequest request = new NotificationRequest(
-                    UUID.randomUUID().toString(),
+                    null,
                     "VISIT_CANCELLATION",
                     data.visitorEmail(),
                     null,
@@ -289,7 +287,7 @@ public class EmailServiceImpl implements EmailService {
             emailData.put("visits", data.visits());
 
             NotificationRequest request = new NotificationRequest(
-                    UUID.randomUUID().toString(),
+                    null,
                     "HOST_DAILY_REMINDER",
                     data.hostEmail(),
                     null,

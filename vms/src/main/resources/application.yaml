@@ -11,17 +11,6 @@ spring:
 springdotenv:
   filename: .env
 
-jwt:
-  public-key-path: ${JWT_PUBLIC_KEY_PATH}
-
-
-
-vms:
-  security:
-    cookie:
-      secure: ${VMS_COOKIE_SECURE:false}
-    hmac:
-      blind-index-key: ${VMS_HMAC_BLIND_INDEX_KEY}
 
 server:
   port: 8092

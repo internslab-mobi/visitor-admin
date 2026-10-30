@@ -6,8 +6,9 @@ import com.adminvisitor.entity.Visit;
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.repository.VisitRepository;
 import com.adminvisitor.service.EmailService;
+import com.adminvisitor.service.QrMicroserviceClient;
 import com.adminvisitor.service.VisitAutomationService;
-import com.adminvisitor.service.VisitBadgeService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,9 +27,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class VisitAutomationServiceImpl implements VisitAutomationService {
-
+private final QrMicroserviceClient qrMicroserviceClient;
     private final VisitRepository visitRepository;
-    private final VisitBadgeService visitBadgeService;
+
     private final EmailService emailService;
 
     @Scheduled(fixedRate = 300000)
@@ -77,7 +78,7 @@ public class VisitAutomationServiceImpl implements VisitAutomationService {
             visit.setCheckedOutAt(now);
             visit.setStatus(VisitStatus.CHECKED_OUT);
 
-            visitBadgeService.invalidateBadgeOnCheckout(
+            qrMicroserviceClient.invalidateBadgeOnCheckout(
                     visit.getId(),
                     now
             );

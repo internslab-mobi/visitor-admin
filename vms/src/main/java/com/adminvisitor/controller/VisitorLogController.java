@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
@@ -26,6 +27,7 @@ import java.time.LocalDate;
  *
  * @author Nethra
  */
+@Slf4j
 @Tag(
         name = "Visitor Log Management",
         description = "APIs for searching, filtering, and retrieving visitor log records"
@@ -125,20 +127,26 @@ public class VisitorLogController {
             String sortDirection
     ) {
 
-        Page<VisitorLogResponse> response =
-                visitManagementService.getVisitorLog(
-                        search,
-                        fromDate,
-                        toDate,
-                        status,
-                        visitorType,
-                        hostId,
-                        page,
-                        size,
-                        sortDirection
-                );
+        try {
+            Page<VisitorLogResponse> response =
+                    visitManagementService.getVisitorLog(
+                            search,
+                            fromDate,
+                            toDate,
+                            status,
+                            visitorType,
+                            hostId,
+                            page,
+                            size,
+                            sortDirection
+                    );
 
-        return ResponseEntity.ok(response);
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException ex) {
+            log.warn("Invalid visitor log request: {}", ex.getMessage());
+            throw ex;
+        }
     }
 
     /**
@@ -161,8 +169,18 @@ public class VisitorLogController {
             @Parameter(description = "Visit ID", required = true)
             @PathVariable String visitId
     ) {
-        return ResponseEntity.ok(
-                visitManagementService.getVisitTimeTracking(visitId)
-        );
+
+        try {
+            log.debug("Retrieving time-tracking history for visit: {}", visitId);
+
+            return ResponseEntity.ok(
+                    visitManagementService.getVisitTimeTracking(visitId)
+            );
+
+        } catch (IllegalArgumentException ex) {
+            log.warn("Invalid time-tracking request for visit {}: {}",
+                    visitId, ex.getMessage());
+            throw ex;
+        }
     }
 }

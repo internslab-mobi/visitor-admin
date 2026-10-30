@@ -6,7 +6,9 @@ import com.adminvisitor.service.NdaService;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -21,6 +23,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 @WebMvcTest(NdaController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class NdaControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -30,7 +33,8 @@ public class NdaControllerTest {
     private DocumentMapper documentMapper;
     @MockitoBean
     private ErrorResponseFactory errorResponseFactory;
-
+    @MockitoBean
+    private JpaMetamodelMappingContext jpaMappingContext;
 
 
     @Test

@@ -77,6 +77,4 @@ public interface NotificationOutboxRepository
             @Param("staleBefore") LocalDateTime staleBefore,
             @Param("error") String error
     );
-
-    boolean existsByNotificationId(String notificationId);
 }

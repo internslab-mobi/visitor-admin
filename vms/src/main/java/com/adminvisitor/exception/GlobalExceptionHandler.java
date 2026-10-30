@@ -232,4 +232,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 ? swr.getRequest().getRequestURI()
                 : "";
     }
+
+
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<Map<String, String>> handleQrServiceUnavailable(
+            ServiceUnavailableException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
 }

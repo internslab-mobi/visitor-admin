@@ -1,6 +1,7 @@
 package com.adminvisitor.service.impl;
 
 import com.adminvisitor.dto.requestdto.CheckInRequest;
+import com.adminvisitor.dto.requestdto.QrBadgeRequest;
 import com.adminvisitor.dto.responsedto.*;
 import com.adminvisitor.entity.*;
 import com.adminvisitor.enums.*;
@@ -8,6 +9,7 @@ import com.adminvisitor.exception.BusinessRuleException;
 import com.adminvisitor.mapper.VisitMapper;
 import com.adminvisitor.repository.VendorRepository;
 import com.adminvisitor.repository.VisitRepository;
+import com.adminvisitor.repository.VisitTrackingQueryRepository;
 import com.adminvisitor.service.*;
 import com.adminvisitor.specification.VisitSpecification;
 import lombok.RequiredArgsConstructor;
@@ -21,15 +23,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import com.adminvisitor.dto.responsedto.VisitTimeTrackingResponse;
-import com.adminvisitor.entity.MetaTimeTracking;
-import com.adminvisitor.repository.MetaTimeTrackingRepository;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
@@ -51,9 +51,8 @@ public class VisitManagementServiceImpl implements VisitManagementService{
     private final VisitMapper visitMapper;
     private final EmailService emailService;
     private final DocumentService documentService;
-    private final VisitBadgeService visitBadgeService;
+    private final VisitTrackingQueryRepository visitTrackingQueryRepository;
     private final NdaService ndaService;
-    private final MetaTimeTrackingRepository metaTimeTrackingRepository;
 
     private double elapsedMillis(long startNanos) {
         return (System.nanoTime() - startNanos) / 1_000_000.0;
@@ -332,6 +331,7 @@ public class VisitManagementServiceImpl implements VisitManagementService{
     }
 
     // CHECK-IN
+
     @Transactional
     public VisitDetailResponse checkIn(
             String visitId,
@@ -387,16 +387,23 @@ public class VisitManagementServiceImpl implements VisitManagementService{
 
         Visit checkedInVisit = visitRepository.save(visit);
 
-        String qrToken = qrMicroserviceClient.generateToken();
-
-        VisitBadge badge = visitBadgeService.createBadge(
-                checkedInVisit,
-                qrToken
+        // VMS requests badge creation and initial IN tracking from QR.
+        QrBadgeRequest qrRequest = new QrBadgeRequest(
+                checkedInVisit.getId(),
+                checkedInVisit.getExpectedArrivalAt(),
+                checkedInVisit.getVisitor().getId(),
+                checkedInAt
         );
 
-        String qrCode = qrMicroserviceClient.generateQrCode(
-                badge.getQrContainingToken()
-        );
+        QrBadgeResponse qrBadge =
+                qrMicroserviceClient.generateQrBadge(qrRequest);
+
+        String qrCode = qrBadge.qrCode();
+
+        LocalDateTime validUntil =
+                checkedInVisit.getExpectedArrivalAt()
+                        .toLocalDate()
+                        .atTime(23, 59, 59);
 
         BadgeEmailData emailData = new BadgeEmailData(
                 checkedInVisit.getVisitor().getFirstName()
@@ -406,8 +413,8 @@ public class VisitManagementServiceImpl implements VisitManagementService{
                 checkedInVisit.getHost().getFirstName()
                         + " " + checkedInVisit.getHost().getLastName(),
                 checkedInVisit.getHost().getEmail(),
-                badge.getIssuedAt().format(EMAIL_DATE_TIME_FORMATTER),
-                badge.getValidUntil().format(EMAIL_DATE_TIME_FORMATTER),
+                checkedInAt.format(EMAIL_DATE_TIME_FORMATTER),
+                validUntil.format(EMAIL_DATE_TIME_FORMATTER),
                 qrCode,
                 visitorPhoto.getDocumentPath()
         );
@@ -441,6 +448,7 @@ public class VisitManagementServiceImpl implements VisitManagementService{
         return visitMapper.toVisitDetailResponse(checkedInVisit);
     }
 
+
     // CHECK-OUT
     @Transactional
     public VisitDetailResponse checkOut(String visitId) {
@@ -460,20 +468,13 @@ public class VisitManagementServiceImpl implements VisitManagementService{
 
         LocalDateTime checkedOutAt = LocalDateTime.now();
 
-        // Close any active QR time-tracking session.
-        metaTimeTrackingRepository
-                .findTopByVisitIdAndOutTimeIsNullOrderByInTimeDesc(visitId)
-                .ifPresent(tracking -> {
-                    tracking.setOutTime(checkedOutAt);
-                    metaTimeTrackingRepository.save(tracking);
-                });
 
         visit.setCheckedOutAt(checkedOutAt);
         visit.setStatus(VisitStatus.CHECKED_OUT);
 
         Visit checkedOutVisit = visitRepository.save(visit);
 
-        visitBadgeService.invalidateBadgeOnCheckout(
+        qrMicroserviceClient.invalidateBadgeOnCheckout(
                 visitId,
                 checkedOutAt
         );
@@ -535,7 +536,7 @@ public class VisitManagementServiceImpl implements VisitManagementService{
         boolean identityMatches;
 
         switch (nationality) {
-            case DOMESTIC -> {
+            case INDIA -> {
                 boolean aadhaarMatches =
                         documentService.verifyIdentityProof(
                                 visitor,
@@ -573,28 +574,30 @@ public class VisitManagementServiceImpl implements VisitManagementService{
         }
     }
 
+
     @Override
-    @Transactional(readOnly = true)
+
     public VisitTimeTrackingResponse getVisitTimeTracking(String visitId) {
 
         if (!visitRepository.existsById(visitId)) {
-            throw new BusinessRuleException("Visit not found with id: " + visitId);
+            throw new BusinessRuleException(
+                    "Visit not found with id: " + visitId
+            );
         }
 
         LocalDateTime referenceTime = LocalDateTime.now();
 
-        List<MetaTimeTracking> trackingRecords =
-                metaTimeTrackingRepository.findByVisitIdOrderByInTimeAsc(visitId);
-
         List<VisitTimeTrackingResponse.SessionResponse> sessions =
-                trackingRecords.stream()
-                        .map(tracking ->
-                                visitMapper.toTrackingSessionResponse(
-                                        tracking, referenceTime))
-                        .toList();
+                visitTrackingQueryRepository
+                        .findByVisitIdOrderByInTimeAsc(
+                                visitId,
+                                referenceTime
+                        );
 
         long totalDurationSeconds = sessions.stream()
-                .mapToLong(VisitTimeTrackingResponse.SessionResponse::durationSeconds)
+                .mapToLong(
+                        VisitTimeTrackingResponse.SessionResponse::durationSeconds
+                )
                 .sum();
 
         return VisitTimeTrackingResponse.builder()

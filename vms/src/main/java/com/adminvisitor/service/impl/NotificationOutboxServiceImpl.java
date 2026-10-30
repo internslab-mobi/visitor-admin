@@ -88,27 +88,6 @@ public class NotificationOutboxServiceImpl
     @Transactional
     public void enqueue(NotificationRequest request) {
 
-        if (request == null
-                || request.notificationId() == null
-                || request.notificationId().isBlank()) {
-
-            throw new IllegalArgumentException(
-                    "Notification ID must not be blank"
-            );
-        }
-
-        if (notificationOutboxRepository
-                .existsByNotificationId(request.notificationId())) {
-
-            log.debug(
-                    "NOTIFICATION_OUTBOX_DUPLICATE_SKIPPED notificationId={} scenario={}",
-                    request.notificationId(),
-                    request.scenario()
-            );
-
-            return;
-        }
-
         NotificationOutbox outbox = new NotificationOutbox();
 
         outbox.setId(
@@ -118,7 +97,7 @@ public class NotificationOutboxServiceImpl
                 )
         );
 
-        outbox.setNotificationId(request.notificationId());
+//        outbox.setNotificationId(request.notificationId());
 
         outbox.setScenario(
                 NotificationScenario.valueOf(request.scenario())
@@ -406,7 +385,7 @@ public class NotificationOutboxServiceImpl
             );
 
             NotificationRequest request = new NotificationRequest(
-                    notification.getNotificationId(),
+                    notification.getId(),
                     notification.getScenario().name(),
                     notification.getRecipient(),
                     notification.getCc(),

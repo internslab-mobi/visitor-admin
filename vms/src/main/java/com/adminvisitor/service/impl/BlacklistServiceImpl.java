@@ -144,7 +144,7 @@ public class BlacklistServiceImpl implements BlacklistService {
 
         // 5. Add proofs based on nationality
         switch (document.getNationality()) {
-            case DOMESTIC -> {
+            case INDIA -> {
                 if (document.getAadharNumber() != null
                         && !document.getAadharNumber().isBlank()) {
 

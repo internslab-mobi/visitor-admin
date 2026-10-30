@@ -1,10 +1,15 @@
-
 package com.adminvisitor.service;
+
+import com.adminvisitor.dto.requestdto.QrBadgeRequest;
+import com.adminvisitor.dto.responsedto.QrBadgeResponse;
+
+import java.time.LocalDateTime;
 
 public interface QrMicroserviceClient {
 
-    String generateToken();
-
-    String generateQrCode(String payload);
-
+    QrBadgeResponse generateQrBadge(QrBadgeRequest request);
+    void invalidateBadgeOnCheckout(
+            String visitId,
+            LocalDateTime checkoutTime
+    );
 }

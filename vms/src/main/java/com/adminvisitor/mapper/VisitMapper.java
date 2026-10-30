@@ -9,7 +9,7 @@ import com.adminvisitor.entity.Visitor;
 import com.adminvisitor.entity.Employee;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import com.adminvisitor.entity.MetaTimeTracking;
+//import com.adminvisitor.entity.MetaTimeTracking;
 import com.adminvisitor.dto.responsedto.VisitTimeTrackingResponse;
 import java.time.LocalDateTime;
 import java.time.Duration;
@@ -147,17 +147,5 @@ public interface VisitMapper {
             String message
     );
 
-    @Mapping(target = "trackingId", source = "tracking.id")
-    @Mapping(target = "badgeId", source = "tracking.badgeId")
-    @Mapping(target = "inTime", source = "tracking.inTime")
-    @Mapping(target = "outTime", source = "tracking.outTime")
-    @Mapping(
-            target = "durationSeconds",
-            expression = "java(java.time.Duration.between(tracking.getInTime(), tracking.getOutTime() != null ? tracking.getOutTime() : referenceTime).getSeconds())"
-    )
-    VisitTimeTrackingResponse.SessionResponse toTrackingSessionResponse(
-            MetaTimeTracking tracking,
-            LocalDateTime referenceTime
-    );
-}
 
+}

@@ -13,8 +13,6 @@ import java.time.LocalDateTime;
 
 public final class VisitSpecification {
 
-    private VisitSpecification() {
-    }
 
     public static Specification<Visit> hasView(VisitView view) {
 
