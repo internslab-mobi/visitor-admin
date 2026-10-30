@@ -26,9 +26,6 @@ public class NotificationOutbox extends BaseEntity {
     @Column(name = "id", nullable = false, length = 30)
     private String id;
 
-    @Column(name = "notification_id", nullable = false, unique = true, length = 36)
-    private String notificationId;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "scenario", nullable = false, length = 50)
     private NotificationScenario scenario;

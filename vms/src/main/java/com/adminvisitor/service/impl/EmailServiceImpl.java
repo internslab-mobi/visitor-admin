@@ -10,6 +10,7 @@ import com.adminvisitor.service.NotificationOutboxService;
 import com.adminvisitor.util.DateTimeFormats;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -22,13 +23,14 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EmailServiceImpl implements EmailService {
     private final NotificationOutboxService notificationOutboxService;
+
+    @Value("${vms.document.photo-upload-dir}")
+    private String photoUploadDir;
 
     private static final long MAX_VISITOR_PHOTO_SIZE = 2 * 1024 * 1024; // 2 MB
 
@@ -50,7 +52,7 @@ public class EmailServiceImpl implements EmailService {
                 visit.getHost().getDepartment().getDepartmentName();
 
         NotificationRequest request = new NotificationRequest(
-                UUID.randomUUID().toString(),
+                null,
                 "VISIT_CONFIRMATION",
                 visit.getVisitor().getEmail(),
                 hostEmail,
@@ -131,20 +133,21 @@ public class EmailServiceImpl implements EmailService {
                 );
             }
 
-            if (!Files.isRegularFile(photoPath) || !Files.isReadable(photoPath)) {
-                throw new IllegalArgumentException(
-                        "Visitor photo does not exist or is not readable"
-                );
-            }
-
-            if (Files.size(photoPath) > 2 * 1024 * 1024) {
-                throw new IllegalArgumentException(
-                        "Visitor photo must not exceed 2 MB"
-                );
-            }
-
             // Store only the filename in the outbox payload.
-            String visitorPhotoFileName = photoPath.getFileName().toString();
+            // Store the visitor ID folder and filename as a relative path.
+            Path photoDirectory = Path.of(photoUploadDir)
+                    .toAbsolutePath()
+                    .normalize();
+
+            if (!photoPath.startsWith(photoDirectory)) {
+                throw new IllegalArgumentException(
+                        "Visitor photo is outside the configured photo directory"
+                );
+            }
+
+            String visitorPhotoRelativePath = photoDirectory
+                    .relativize(photoPath)
+                    .toString();
 
             Map<String, Object> emailData = new HashMap<>();
             emailData.put("visitorName", data.visitorName());
@@ -153,10 +156,10 @@ public class EmailServiceImpl implements EmailService {
             emailData.put("issuedAt", data.issuedAt());
             emailData.put("validUntil", data.validUntil());
             emailData.put("qrCode", data.qrCode());
-            emailData.put("visitorPhotoFileName", visitorPhotoFileName);
+            emailData.put("visitorPhotoFileName", visitorPhotoRelativePath);
 
             NotificationRequest request = new NotificationRequest(
-                    UUID.randomUUID().toString(),
+                    null,
                     "VISIT_BADGE",
                     data.visitorEmail(),
                     data.hostEmail(),
@@ -168,12 +171,12 @@ public class EmailServiceImpl implements EmailService {
             log.info(
                     "NOTIFICATION_ENQUEUED scenario=VISIT_BADGE visitReference={} photoSizeBytes={}",
                     data.visitReference(),
-                    data.visitorEmail()
+                    photoSize
             );
 
         } catch (IOException | RuntimeException exception) {
             log.error(
-                    "NOTIFICATION_ENQUEUE_FAILED scenario=VISIT_BADGE visitReference={}",
+                    "NOTIFICATION_ENQUEUE_FAILED scenario=VISIT_BADGE visitReference={} visitorEmail={}",
                     data.visitReference(),
                     data.visitorEmail(),
                     exception
@@ -201,7 +204,7 @@ public class EmailServiceImpl implements EmailService {
             emailData.put("checkedInAt", data.checkedInAt());
 
             NotificationRequest request = new NotificationRequest(
-                    UUID.randomUUID().toString(),
+                    null,
                     "HOST_CHECK_IN",
                     data.hostEmail(),
                     null,
@@ -244,7 +247,7 @@ public class EmailServiceImpl implements EmailService {
             emailData.put("hostName", data.hostName());
 
             NotificationRequest request = new NotificationRequest(
-                    UUID.randomUUID().toString(),
+                    null,
                     "VISIT_CANCELLATION",
                     data.visitorEmail(),
                     null,
@@ -284,7 +287,7 @@ public class EmailServiceImpl implements EmailService {
             emailData.put("visits", data.visits());
 
             NotificationRequest request = new NotificationRequest(
-                    UUID.randomUUID().toString(),
+                    null,
                     "HOST_DAILY_REMINDER",
                     data.hostEmail(),
                     null,

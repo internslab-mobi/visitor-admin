@@ -4,12 +4,14 @@ import com.adminvisitor.dto.responsedto.QrScanResponse;
 import com.adminvisitor.dto.responsedto.VisitorLogResponse;
 import com.adminvisitor.enums.VisitStatus;
 import com.adminvisitor.enums.VisitorType;
+import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.service.QrMicroserviceClient;
 import com.adminvisitor.service.VisitManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
@@ -32,6 +34,8 @@ import java.time.LocalDate;
         name = "Visitor Log Management",
         description = "APIs for searching, filtering, and retrieving visitor log records"
 )
+
+@Slf4j
 @RestController
 //@RequestMapping({"/api/visitor-log","/api"})
 @RequiredArgsConstructor
@@ -129,7 +133,7 @@ public class VisitorLogController {
             @RequestParam(defaultValue = "DESC")
             String sortDirection
     ) {
-
+        try {
         Page<VisitorLogResponse> response =
                 visitManagementService.getVisitorLog(
                         search,
@@ -144,7 +148,14 @@ public class VisitorLogController {
                 );
 
         return ResponseEntity.ok(response);
-    }
+    } catch (IllegalArgumentException e) {
+        log.error("Invalid visitor log request: {}", e.getMessage());
+        throw e;
+
+    } catch (Exception e) {
+        log.error("Error retrieving visitor log", e);
+        throw e;
+    }}
 
     /**
      * Retrieves the QR scan IN/OUT session history for a specific visit.
@@ -167,10 +178,27 @@ public class VisitorLogController {
             @PathVariable String visitId
     ) {
 
-        System.out.println("Time tracking endpoint reached: " + visitId);
+        try {
+            log.info("Retrieving time-tracking history for visitId={}", visitId);
+
         return ResponseEntity.ok(
                 visitManagementService.getVisitTimeTracking(visitId)
         );
+
+        } catch (ResourceNotFoundException e) {
+            log.error("Visit not found for time tracking: visitId={}", visitId);
+            throw e;
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid time-tracking request for visitId={}: {}",
+                    visitId, e.getMessage());
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error retrieving time-tracking history for visitId={}",
+                    visitId, e);
+            throw e;
+        }
     }
 
 
@@ -191,8 +219,19 @@ public class VisitorLogController {
             )
             @RequestParam String token
     ) {
+
+        try {
+            log.info("Forwarding QR scan request to QR microservice");
         return ResponseEntity.ok(
                 qrMicroserviceClient.processScan(token)
         );
+
+    } catch (IllegalArgumentException e) {
+        log.error("Invalid QR scan request: {}", e.getMessage());
+        throw e;
+
+    } catch (Exception e) {
+        log.error("Error forwarding QR scan request to QR microservice", e);
+        throw e;
     }
-}
+}}
