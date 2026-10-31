@@ -5,7 +5,6 @@ import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
-
 import com.qrservice.dto.QrBadgeRequest;
 import com.qrservice.dto.QrBadgeResponse;
 import com.qrservice.dto.QrScanResponse;
@@ -16,13 +15,10 @@ import com.qrservice.repository.MetaTimeTrackingRepository;
 import com.qrservice.repository.VisitBadgeRepository;
 import com.qrservice.service.IdGeneratorService;
 import com.qrservice.service.QrService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.io.ByteArrayOutputStream;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -66,7 +62,6 @@ public class QrServiceImpl implements QrService {
      */
     private final SecureRandom secureRandom = new SecureRandom();
 
-
     /**
      * Generates a QR badge for a visitor when the visit is checked in.
      *
@@ -74,8 +69,7 @@ public class QrServiceImpl implements QrService {
      * generates a secure token and QR code, saves the badge, and creates
      * the initial visitor time-tracking session with an IN timestamp.</p>
      *
-     * <p>The badge is initially active and its validity ends at
-     * 23:59:59 on the expected arrival date.</p>
+     * <p>The badge is initially active and its validity ends after checkout.</p>
      *
      * @param request request containing the visit ID, visitor ID,
      *                expected arrival time, and check-in time
@@ -95,12 +89,11 @@ public class QrServiceImpl implements QrService {
                 || request.visitId().isBlank()
                 || request.visitorId() == null
                 || request.visitorId().isBlank()
-                || request.expectedArrivalAt() == null
+                //|| request.expectedArrivalAt() == null
                 || request.checkedInAt() == null) {
 
             throw new IllegalArgumentException(
-                    "Visit ID, visitor ID, expected arrival time "
-                            + "and check-in time are required"
+                    "Visit ID, visitor ID and check-in time are required"
             );
         }
 
@@ -114,7 +107,6 @@ public class QrServiceImpl implements QrService {
         }
 
         LocalDateTime checkedInAt = request.checkedInAt();
-
         if (checkedInAt.isAfter(LocalDateTime.now())) {
             throw new IllegalArgumentException(
                     "Check-in time cannot be in the future"
@@ -126,17 +118,12 @@ public class QrServiceImpl implements QrService {
 
         VisitBadge badge = new VisitBadge();
 
-        badge.setId(
-                idGeneratorService.generateId("VISITBADGE", "VB")
+        badge.setId(idGeneratorService.generateId("VISITBADGE", "VB")
         );
         badge.setVisitId(visitId);
         badge.setQrContainingToken(token);
         badge.setIssuedAt(checkedInAt);
-        badge.setValidUntil(
-                request.expectedArrivalAt()
-                        .toLocalDate()
-                        .atTime(23, 59, 59)
-        );
+        badge.setValidUntil(checkedInAt.toLocalDate().atTime(23, 59, 59));
         badge.setStatus(BadgeStatus.ACTIVE);
 
         VisitBadge savedBadge = visitBadgeRepository.saveAndFlush(badge);
@@ -152,12 +139,10 @@ public class QrServiceImpl implements QrService {
 
         trackingRepository.save(tracking);
 
-        log.info(
-                "QR_BADGE_GENERATED visitId={} badgeId={}",
+        log.info("QR_BADGE_GENERATED visitId={} badgeId={}",
                 visitId,
-                savedBadge.getId()
-        );
-System.out.println(token);
+                savedBadge.getId());
+        System.out.println(token);
         return new QrBadgeResponse(token, qrCode);
     }
 
@@ -193,9 +178,15 @@ System.out.println(token);
     private String generateQrCode(String payload) {
 
         try {
+            //EncodeHintType is an enum provided by the ZXing library.
             Map<EncodeHintType, Object> hints = new HashMap<>();
             hints.put(EncodeHintType.MARGIN, 1);
 
+            //MultiFormatWriter is a class from the ZXing library.
+            //Its purpose is to encode input data into different barcode formats, such as:
+            //- QR Code
+            //- Code 128
+            //- EAN-13
             BitMatrix bitMatrix = new MultiFormatWriter().encode(
                     payload,
                     BarcodeFormat.QR_CODE,
@@ -203,7 +194,7 @@ System.out.println(token);
                     300,
                     hints
             );
-
+//ByteArrayOutputStream QR image-ah temporary-ah memory-la store pannuthu.
             ByteArrayOutputStream outputStream =
                     new ByteArrayOutputStream();
 
@@ -307,8 +298,7 @@ System.out.println(token);
                 );
 
         // 6. Reject duplicate scans within 60 seconds.
-        LocalDateTime lastScanAt =
-                latestSession.getOutTime() != null
+        LocalDateTime lastScanAt = latestSession.getOutTime() != null
                         ? latestSession.getOutTime()
                         : latestSession.getInTime();
 
@@ -323,8 +313,7 @@ System.out.println(token);
         );
 
         if (scannedAt.isBefore(cooldownEndsAt)) {
-            throw new IllegalStateException(
-                    "Duplicate scan rejected. Please wait "
+            throw new IllegalStateException("Duplicate scan rejected. Please wait "
                             + DUPLICATE_SCAN_COOLDOWN_SECONDS
                             + " seconds before scanning again."
             );
@@ -334,17 +323,13 @@ System.out.println(token);
         MetaTimeTracking openSession = trackingRepository
                 .findTopByVisitIdAndOutTimeIsNullOrderByInTimeDesc(
                         visitId
-                )
-                .orElse(null);
+                ).orElse(null);
 
         // 8. Open session exists: record OUT.
         if (openSession != null) {
-
             openSession.setOutTime(scannedAt);
             trackingRepository.save(openSession);
-
-            log.info(
-                    "QR_SCAN_RECORDED action=OUT visitId={} trackingId={}",
+            log.info("QR_SCAN_RECORDED action=OUT visitId={} trackingId={}",
                     visitId,
                     openSession.getId()
             );
@@ -358,7 +343,6 @@ System.out.println(token);
 
         // 9. No open session: create the next IN session.
         String visitorId = latestSession.getVisitorId();
-
         if (visitorId == null || visitorId.isBlank()) {
             throw new IllegalStateException(
                     "Visitor ID is missing for visit: " + visitId
@@ -373,11 +357,9 @@ System.out.println(token);
         newSession.setInTime(scannedAt);
         newSession.setOutTime(null);
 
-        MetaTimeTracking savedSession =
-                trackingRepository.save(newSession);
+        MetaTimeTracking savedSession = trackingRepository.save(newSession);
 
-        log.info(
-                "QR_SCAN_RECORDED action=IN visitId={} trackingId={}",
+        log.info("QR_SCAN_RECORDED action=IN visitId={} trackingId={}",
                 visitId,
                 savedSession.getId()
         );
@@ -425,8 +407,7 @@ System.out.println(token);
                 .orElse(null);
 
         if (badge == null) {
-            log.warn(
-                    "BADGE_INVALIDATION_SKIPPED visitId={} reason=BADGE_NOT_FOUND",
+            log.warn("BADGE_INVALIDATION_SKIPPED visitId={} reason=BADGE_NOT_FOUND",
                     visitId
             );
             return;

@@ -6,6 +6,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -30,7 +32,18 @@ public class QrApiKeyFilter extends OncePerRequestFilter {
 
         this.expectedApiKey = expectedApiKey;
     }
+    @Bean
+    public FilterRegistrationBean<QrApiKeyFilter> qrApiKeyFilterRegistration() {
 
+        FilterRegistrationBean<QrApiKeyFilter> registration =
+                new FilterRegistrationBean<>();
+
+        registration.setFilter(this);
+        registration.addUrlPatterns("/api/*");
+        registration.setOrder(1);
+
+        return registration;
+    }
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();

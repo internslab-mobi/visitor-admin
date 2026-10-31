@@ -31,11 +31,11 @@ public abstract class BaseEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @CreatedBy
-    @Column(name = "created_by")
-    private String createdBy;
-
-    @LastModifiedBy
-    @Column(name = "updated_by")
-    private String updatedBy;
+//    @CreatedBy
+//    @Column(name = "created_by")
+//    private String createdBy;
+//
+//    @LastModifiedBy
+//    @Column(name = "updated_by")
+//    private String updatedBy;
 }

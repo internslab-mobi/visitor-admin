@@ -21,6 +21,10 @@ management:
     health:
       show-details: never
 
+app:
+  cors:
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:4200}
+
 
 
 
