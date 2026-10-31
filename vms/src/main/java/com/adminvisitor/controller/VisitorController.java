@@ -18,9 +18,7 @@ import java.util.List;
 
 
 /**
- * REST controller for managing visitor information.
- *
- * <p>Provides APIs for retrieving individual visitor details,
+  * <p>Provides APIs for retrieving individual visitor details,
  * retrieving all visitors, updating visitor information, and
  * retrieving the details required to populate the visitor edit page.</p>
  *
@@ -49,10 +47,8 @@ public class VisitorController {
             value = "/{visitorId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @Operation(
-            summary = "Get visitor by ID",
-            description = "Retrieves the details of a specific visitor using the visitor ID."
-    )
+    @Operation(description = "Retrieves the details of a specific visitor " +
+            "using the visitor ID.")
 
     public ResponseEntity<VisitorResponse> getVisitor(
             @Parameter(
@@ -62,8 +58,7 @@ public class VisitorController {
                     example = "VIS001"
             )@PathVariable String visitorId) {
 
-        VisitorResponse response =
-                visitorService.getVisitor(visitorId);
+        VisitorResponse response = visitorService.getVisitor(visitorId);
 
         return ResponseEntity.ok(response);
     }
@@ -110,15 +105,11 @@ public class VisitorController {
      * @return the list of visitor details with HTTP status 200
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(
-            summary = "Get all visitors",
-            description = "Retrieves the list of visitors available in the VMS application."
-    )
+    @Operation(summary = "Get all visitors")
 
     public ResponseEntity<List<VisitorResponse>> getAllVisitors() {
 
-        List<VisitorResponse> response =
-                visitorService.getAllVisitors();
+        List<VisitorResponse> response = visitorService.getAllVisitors();
 
         return ResponseEntity.ok(response);
     }
@@ -157,6 +148,26 @@ public class VisitorController {
         );
     }
 
+    @GetMapping(
+            value = "/lookup",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @Operation(
+            summary = "Find visitor by email and mobile number",
+            description = "Retrieves an existing visitor using the supplied email and mobile number."
+    )
+    public ResponseEntity<VisitorResponse> findVisitorByContact(
+            @Parameter(description = "Visitor email address", required = true)
+            @RequestParam String email,
 
+            @Parameter(description = "Visitor mobile number", required = true)
+            @RequestParam String mobileNumber
+    ) {
+
+        VisitorResponse response =
+                visitorService.findVisitorByContact(email, mobileNumber);
+
+        return ResponseEntity.ok(response);
+    }
 
 }

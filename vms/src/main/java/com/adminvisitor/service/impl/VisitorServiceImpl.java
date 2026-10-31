@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.adminvisitor.service.VisitorService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +23,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Service implementation for managing visitor-related operations.
  *
  * <p>Provides functionality to retrieve visitor details, list all visitors,
  * update visitor information, and retrieve the details required for editing
@@ -36,7 +35,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class VisitorServiceImpl implements com.adminvisitor.service.VisitorService {
+public class VisitorServiceImpl implements VisitorService {
 
     private final VisitorRepository visitorRepository;
     private final VendorRepository vendorRepository;
@@ -57,8 +56,7 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
     public VisitorResponse getVisitor(String visitorId) {
 
         Visitor visitor = visitorRepository.findById(visitorId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
+                .orElseThrow(() ->new ResourceNotFoundException(
                                 "Visitor not found with id: " + visitorId
                         )
                 );
@@ -217,27 +215,6 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
      * @param visitor the visitor entity to map
      * @return the visitor response containing visitor and latest visit information
      */
-//    private VisitorResponse toVisitorResponse(Visitor visitor) {
-//
-//        Visit latestVisit = visitRepository
-//                .findTopByVisitorIdOrderByCreatedAtDesc(visitor.getId())
-//                .orElse(null);
-//
-//        return new VisitorResponse(
-//                visitor.getId(),
-//                visitor.getFirstName(),
-//                visitor.getLastName(),
-//                visitor.getEmail(),
-//                visitor.getMobileNumber(),
-//                visitor.getCompanyName(),
-//                latestVisit != null
-//                        ? latestVisit.getVisitorType().name()
-//                        : null,
-//                latestVisit != null
-//                        ? latestVisit.getExpectedArrivalAt()
-//                        : null
-//        );
-//    }
 
 
     private VisitorResponse toVisitorResponse(Visitor visitor) {
@@ -265,8 +242,7 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
     public VisitorEditResponse getVisitorEditDetails(String visitorId) {
 
         Visitor visitor = visitorRepository.findById(visitorId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
+                .orElseThrow(() ->new ResourceNotFoundException(
                                 "Visitor not found with id: " + visitorId
                         )
                 );
@@ -307,34 +283,34 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
             );
         }
 
-        List<Document> visitorDocuments =
-                documentRepository.findByVisitorId(visitorId);
+//        List<Document> visitorDocuments =
+//                documentRepository.findByVisitorId(visitorId);
 
-        List<String> documentIds = visitorDocuments.stream()
-                .map(Document::getId)
-                .toList();
-
-        List<VisitorEditResponse.DocumentInfo> documents =
-                documentIds.isEmpty()
-                        ? List.of()
-                        : documentMetadataRepository
-                          .findByDocumentIdIn(documentIds)
-                          .stream()
-                          .filter(metadata ->
-                                  metadata.getDocumentType() == null
-                                  || (metadata.getDocumentType() != DocumentType.NDA
-                                      && metadata.getDocumentType() != DocumentType.VISITOR_PHOTO)
-                          )
-                          .map(metadata ->
-                               new VisitorEditResponse.DocumentInfo(
-                                       metadata.getId(),
-                                       metadata.getDocumentType(),
-                                       metadata.getCreatedAt() != null
-                                       ? metadata.getCreatedAt().toString()
-                                       : null
-                               )
-                          )
-                          .toList();
+//        List<String> documentIds = visitorDocuments.stream()
+//                .map(Document::getId)
+//                .toList();
+//
+//        List<VisitorEditResponse.DocumentInfo> documents =
+//                documentIds.isEmpty()
+//                        ? List.of()
+//                        : documentMetadataRepository
+//                          .findByDocumentIdIn(documentIds)
+//                          .stream()
+//                          .filter(metadata ->
+//                                  metadata.getDocumentType() == null
+//                                  || (metadata.getDocumentType() != DocumentType.NDA
+//                                      && metadata.getDocumentType() != DocumentType.VISITOR_PHOTO)
+//                          )
+//                          .map(metadata ->
+//                               new VisitorEditResponse.DocumentInfo(
+//                                       metadata.getId(),
+//                                       metadata.getDocumentType(),
+//                                       metadata.getCreatedAt() != null
+//                                       ? metadata.getCreatedAt().toString()
+//                                       : null
+//                               )
+//                          )
+//                          .toList();
 
         // Visit history.
         List<VisitorEditResponse.VisitInfo> visits =
@@ -397,7 +373,7 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
         log.debug(
                 "VISITOR_EDIT_DETAILS_RETRIEVED visitorId={} documentCount={} visitCount={} blacklisted={}",
                 visitorId,
-                documents.size(),
+               // documents.size(),
                 visits.size(),
                 activeBlacklist.isPresent()
         );
@@ -405,10 +381,28 @@ public class VisitorServiceImpl implements com.adminvisitor.service.VisitorServi
         return new VisitorEditResponse(
                 visitorInfo,
                 vendorInfo,
-                documents,
+               // documents,
                 visits,
                 blacklistInfo,
                 activeBlacklist.isPresent()
         );
+    }
+
+
+    @Override
+    public VisitorResponse findVisitorByContact(String email, String mobileNumber) {
+
+        Visitor visitor = visitorRepository
+                .findByEmailIgnoreCaseAndMobileNumber(
+                        email.trim(),
+                        mobileNumber.trim()
+                )
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "No visitor found with the provided email and mobile number"
+                        )
+                );
+
+        return toVisitorResponse(visitor);
     }
 }

@@ -201,7 +201,7 @@ public class DocumentServiceImpl implements DocumentService {
      * @throws ResourceNotFoundException if no visitor photo is found
      */
 
-    @Transactional(readOnly = true)
+    @Transactional
     public DocumentMetadata getLatestVisitorPhoto(String visitorId) {
 
         return documentMetadataRepository

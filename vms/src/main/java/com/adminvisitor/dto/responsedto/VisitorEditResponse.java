@@ -16,7 +16,7 @@ public record VisitorEditResponse(
 
         VendorInfo vendor,
 
-        List<DocumentInfo> documents,
+       // List<DocumentInfo> documents,
 
         List<VisitInfo> visits,
 

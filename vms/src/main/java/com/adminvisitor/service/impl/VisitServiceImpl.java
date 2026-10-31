@@ -414,8 +414,8 @@ public class VisitServiceImpl implements VisitService {
             case PRE_REGISTRATION ->
                     "Visitor pre-registered successfully";
 
-            case ARRIVAL_REGISTRATION ->
-                    "Visitor arrival registered successfully";
+//            case ARRIVAL_REGISTRATION ->
+//                    "Visitor arrival registered successfully";
         };
     }
 

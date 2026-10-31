@@ -18,9 +18,9 @@ public interface VendorMapper {
     VendorResponse toResponse(Vendor vendor);
 
     // Vendor information for the edit response
-//    @Mapping(source = "id", target = "vendorId")
-//    @Mapping(source = "visitor.id", target = "visitorId")
-//    VendorEditResponse.VendorInfo toVendorInfo(Vendor vendor);
+    @Mapping(source = "id", target = "vendorId")
+    @Mapping(source = "visitor.id", target = "visitorId")
+    VendorEditResponse.VendorInfo toVendorInfo(Vendor vendor);
 
     // Visitor information
 //    VendorEditResponse.VisitorInfo toVisitorInfo(
@@ -55,15 +55,15 @@ public interface VendorMapper {
 
     @Mapping(target = "vendor", source = "vendor")
     @Mapping(target = "visitor", source = "visitorEdit.visitor")
-    @Mapping(target = "documents", source = "visitorEdit.documents")
-    @Mapping(target = "ndas", source = "ndas")
+   // @Mapping(target = "documents", source = "visitorEdit.documents")
+   // @Mapping(target = "ndas", source = "ndas")
     @Mapping(target = "visits", source = "visitorEdit.visits")
     @Mapping(target = "blacklist", source = "visitorEdit.blacklist")
     @Mapping(target = "blacklisted", source = "visitorEdit.blacklisted")
     VendorEditResponse toEditResponse(
             Vendor vendor,
-            VisitorEditResponse visitorEdit,
-            List<VendorEditResponse.NdaInfo> ndas
+            VisitorEditResponse visitorEdit
+          //  List<VendorEditResponse.NdaInfo> ndas
     );
 
 

@@ -111,22 +111,20 @@ public class VendorServiceImpl implements VendorService {
 
         String visitorId = vendor.getVisitor().getId();
 
-        VisitorEditResponse visitorEdit =
-                visitorService.getVisitorEditDetails(visitorId);
+        VisitorEditResponse visitorEdit = visitorService.getVisitorEditDetails(visitorId);
 
-        List<VendorEditResponse.NdaInfo> ndas =
-                getVendorNdas(visitorId);
+       // List<VendorEditResponse.NdaInfo> ndas = getVendorNdas(visitorId);
 
         log.debug(
                 "VENDOR_EDIT_DETAILS_RETRIEVED vendorId={} ndaCount={}",
-                vendorId,
-                ndas.size()
+                vendorId
+              //  ndas.size()
         );
 
         return vendorMapper.toEditResponse(
                 vendor,
-                visitorEdit,
-                ndas
+                visitorEdit
+               // ndas
         );
     }
 
