@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/blacklist")
 @RequiredArgsConstructor
+@Slf4j
 public class BlacklistController {
 
     private final BlacklistService blacklistService;
@@ -63,10 +65,15 @@ public class BlacklistController {
             )
             @RequestParam String removedBy) {
 
-        BlacklistResponse response =
-                blacklistService.removeFromBlacklist(id, removedBy);
-
-        return ResponseEntity.ok(response);
+        try {
+            return ResponseEntity.ok(
+                    blacklistService.removeFromBlacklist(id, removedBy)
+            );
+        } catch (IllegalArgumentException ex) {
+            log.warn("Invalid blacklist removal request. ID: {}, Removed by: {}",
+                    id, removedBy, ex);
+            throw ex;
+        }
     }
 
     /**
@@ -82,9 +89,14 @@ public class BlacklistController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<BlacklistResponse>> getAllBlacklistRecords() {
 
-        return ResponseEntity.ok(
-                blacklistService.getAllBlacklistRecords()
-        );
+        try {
+            return ResponseEntity.ok(
+                    blacklistService.getAllBlacklistRecords()
+            );
+        } catch (IllegalStateException ex) {
+            log.error("Failed to retrieve blacklist records.", ex);
+            throw ex;
+        }
     }
 
     /**
@@ -106,9 +118,14 @@ public class BlacklistController {
             )
             @PathVariable String id) {
 
-        return ResponseEntity.ok(
-                blacklistService.getBlacklistById(id)
-        );
+        try {
+            return ResponseEntity.ok(
+                    blacklistService.getBlacklistById(id)
+            );
+        } catch (IllegalArgumentException ex) {
+            log.warn("Invalid blacklist record lookup. ID: {}", id, ex);
+            throw ex;
+        }
     }
 
     /**
@@ -140,15 +157,19 @@ public class BlacklistController {
             @RequestBody
             BlacklistRequest request) {
 
-        BlacklistResponse response =
-                blacklistService.addExistingVisitorToBlacklist(
-                        visitorId,
-                        request
-                );
+        try {
+            BlacklistResponse response =
+                    blacklistService.addExistingVisitorToBlacklist(
+                            visitorId, request
+                    );
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (IllegalArgumentException ex) {
+            log.warn("Invalid blacklist creation request for visitor: {}",
+                    visitorId, ex);
+            throw ex;
+        }
     }
 
     /**
@@ -171,8 +192,14 @@ public class BlacklistController {
             )
             @PathVariable String visitorId) {
 
-        return ResponseEntity.ok(
-                blacklistService.isBlacklisted(visitorId)
-        );
+        try {
+            return ResponseEntity.ok(
+                    blacklistService.isBlacklisted(visitorId)
+            );
+        } catch (IllegalArgumentException ex) {
+            log.warn("Invalid blacklist status lookup for visitor: {}",
+                    visitorId, ex);
+            throw ex;
+        }
     }
 }

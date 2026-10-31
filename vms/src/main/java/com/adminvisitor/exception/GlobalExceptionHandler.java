@@ -11,16 +11,19 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.ErrorResponseException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 @RestControllerAdvice
 @Slf4j
 @RequiredArgsConstructor
@@ -243,4 +246,67 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(Map.of("message", ex.getMessage()));
     }
 
+//    @ExceptionHandler(ResponseStatusException.class)
+//    public ResponseEntity<Map<String, String>> handleResponseStatus(
+//            ResponseStatusException exception) {
+//
+//        return ResponseEntity
+//                .status(exception.getStatusCode())
+//                .body(Map.of(
+//                        "message",
+//                        exception.getReason() != null
+//                                ? exception.getReason()
+//                                : "QR request failed"
+//                ));
+//    }
+
+
+    @Override
+    protected ResponseEntity<Object> handleErrorResponseException(
+            ErrorResponseException exception,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request) {
+
+        String path = pathOf(request);
+
+        String method = request instanceof ServletWebRequest swr
+                ? swr.getRequest().getMethod()
+                : "UNKNOWN";
+
+        log.warn(
+                "Downstream/framework HTTP error. method={} status={} path={}",
+                method,
+                status.value(),
+                path
+        );
+
+        if (exception instanceof ResponseStatusException responseStatusException
+                && responseStatusException.getReason() != null) {
+
+            String reason = responseStatusException.getReason();
+
+            try {
+                Map<String, String> response = new ObjectMapper()
+                        .readValue(reason, new TypeReference<>() {});
+
+                return ResponseEntity
+                        .status(status)
+                        .headers(headers)
+                        .body(response);
+
+            } catch (Exception ex) {
+                log.debug("Response reason is not JSON; forwarding as message");
+            }
+
+            return ResponseEntity
+                    .status(status)
+                    .headers(headers)
+                    .body(Map.of("message", reason));
+        }
+
+        return super.handleErrorResponseException(
+                exception, headers, status, request
+        );
+    }
 }

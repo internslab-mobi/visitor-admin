@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/employees")
 @RequiredArgsConstructor
+@Slf4j
 public class EmployeeController {
 
     private final EmployeeRepository employeeRepository;
@@ -46,13 +48,17 @@ public class EmployeeController {
     )
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<EmployeeResponse>> getEmployees() {
+        try {
+            List<EmployeeResponse> employees = employeeService.getEmployees();
 
-        List<EmployeeResponse> employees =
-                employeeService.getEmployees();
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(employees);
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(employees);
+        } catch (IllegalStateException ex) {
+            log.error("Failed to retrieve employee records.", ex);
+            throw ex;
+        }
     }
 
     /**
@@ -80,11 +86,15 @@ public class EmployeeController {
             EmployeeCreateRequest request
     ) {
 
-        EmployeeResponse response =
-                employeeService.createEmployee(request);
+        try {
+            EmployeeResponse response = employeeService.createEmployee(request);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
-    }
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(response);
+
+        } catch (IllegalArgumentException ex) {
+            log.warn("Invalid employee creation request: {}", ex.getMessage(), ex);
+            throw ex;
+        }    }
 }

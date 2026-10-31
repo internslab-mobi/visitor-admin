@@ -3,9 +3,11 @@ package com.adminvisitor.controller;
 
 import com.adminvisitor.dto.requestdto.BlacklistRequest;
 import com.adminvisitor.exception.ResourceNotFoundException;
+import com.adminvisitor.exception.ErrorResponseFactory;
 import com.adminvisitor.service.BlacklistService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
@@ -22,8 +24,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import com.adminvisitor.exception.ErrorResponseFactory;
+import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 
+/**
+ * Tests the BlacklistController endpoints using MockMvc.
+ * Mocks service dependencies to test HTTP behavior independently
+ * of the database and business logic.
+ */
 @WebMvcTest(BlacklistController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class BlacklistControllerTest {
@@ -37,7 +44,13 @@ class BlacklistControllerTest {
     @MockitoBean
     private ErrorResponseFactory errorResponseFactory;
 
-    // Test 1: Get all blacklist records
+    @MockitoBean
+    private JpaMetamodelMappingContext jpaMappingContext;
+
+    /**
+     * Verifies that retrieving all blacklist records returns HTTP 200
+     * and an empty JSON array when no records exist.
+     */
     @Test
     void getAllBlacklistRecords_shouldReturnOk() throws Exception {
 
@@ -51,7 +64,9 @@ class BlacklistControllerTest {
         verify(blacklistService).getAllBlacklistRecords();
     }
 
-    // Test 2: Get a blacklist record by ID
+    /**
+     * Verifies that retrieving a blacklist record by ID returns HTTP 200.
+     */
     @Test
     void getBlacklistById_shouldReturnOk() throws Exception {
 
@@ -61,7 +76,10 @@ class BlacklistControllerTest {
         verify(blacklistService).getBlacklistById("BL-001");
     }
 
-    // Test 3: Add an existing visitor to the blacklist
+    /**
+     * Verifies that adding an existing visitor to the blacklist
+     * returns HTTP 201 Created and delegates the request to the service.
+     */
     @Test
     void addExistingVisitorToBlacklist_shouldReturnCreated()
             throws Exception {
@@ -84,7 +102,10 @@ class BlacklistControllerTest {
         );
     }
 
-    // Test 4: Remove a visitor from the blacklist
+    /**
+     * Verifies that removing a visitor from the blacklist returns HTTP 200
+     * and passes the blacklist ID and remover ID to the service.
+     */
     @Test
     void removeFromBlacklist_shouldReturnOk() throws Exception {
 
@@ -98,7 +119,10 @@ class BlacklistControllerTest {
         );
     }
 
-    // Test 5: Check whether a visitor is blacklisted
+    /**
+     * Verifies that checking a visitor's blacklist status returns HTTP 200
+     * with true when the visitor is blacklisted.
+     */
     @Test
     void isBlacklisted_shouldReturnBoolean() throws Exception {
 
@@ -114,7 +138,10 @@ class BlacklistControllerTest {
         verify(blacklistService).isBlacklisted("VTR-001");
     }
 
-
+    /**
+     * Verifies that omitting the required removedBy parameter returns
+     * HTTP 400 Bad Request without invoking the service.
+     */
     @Test
     void removeFromBlacklist_withoutRemovedBy_shouldReturnBadRequest()
             throws Exception {
@@ -125,7 +152,10 @@ class BlacklistControllerTest {
         verifyNoInteractions(blacklistService);
     }
 
-
+    /**
+     * Verifies that requesting a nonexistent blacklist record returns
+     * HTTP 404 Not Found when the service throws ResourceNotFoundException.
+     */
     @Test
     void getBlacklistById_whenRecordDoesNotExist_shouldReturnNotFound()
             throws Exception {
@@ -138,7 +168,10 @@ class BlacklistControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-
+    /**
+     * Verifies that an unexpected service exception results in
+     * HTTP 500 Internal Server Error.
+     */
     @Test
     void getAllBlacklistRecords_whenUnexpectedErrorOccurs_shouldReturnInternalServerError()
             throws Exception {

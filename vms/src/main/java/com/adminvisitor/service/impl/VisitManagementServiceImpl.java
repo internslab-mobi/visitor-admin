@@ -390,7 +390,7 @@ public class VisitManagementServiceImpl implements VisitManagementService{
         // VMS requests badge creation and initial IN tracking from QR.
         QrBadgeRequest qrRequest = new QrBadgeRequest(
                 checkedInVisit.getId(),
-                checkedInVisit.getExpectedArrivalAt(),
+                //checkedInVisit.getExpectedArrivalAt(),
                 checkedInVisit.getVisitor().getId(),
                 checkedInAt
         );
@@ -467,6 +467,7 @@ public class VisitManagementServiceImpl implements VisitManagementService{
         }
 
         LocalDateTime checkedOutAt = LocalDateTime.now();
+
 
         visit.setCheckedOutAt(checkedOutAt);
         visit.setStatus(VisitStatus.CHECKED_OUT);

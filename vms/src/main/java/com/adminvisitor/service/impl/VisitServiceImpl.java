@@ -8,7 +8,6 @@ import com.adminvisitor.exception.*;
 import com.adminvisitor.mapper.VendorMapper;
 import com.adminvisitor.mapper.VisitMapper;
 import com.adminvisitor.mapper.VisitorMapper;
-import com.adminvisitor.mapper.VisitMapper;
 import com.adminvisitor.repository.*;
 import com.adminvisitor.service.*;
 import com.adminvisitor.util.VisitReferenceUtil;
@@ -559,7 +558,4 @@ public class VisitServiceImpl implements VisitService {
 
         return photoPath;
     }
-
-
-
 }

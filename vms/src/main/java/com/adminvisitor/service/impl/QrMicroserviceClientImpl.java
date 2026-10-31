@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.function.Supplier;
 
+
 /**
  * Service implementation for communicating with the QR microservice.
  *
@@ -135,24 +136,6 @@ public class QrMicroserviceClientImpl implements QrMicroserviceClient {
      *         when the operation does not return a value
      * @throws ServiceUnavailableException if a REST client exception occurs
      */
-    private <T> T executeQrRequest(Supplier<T> request,String operation) {
-
-        try {
-            return request.get();
-
-        } catch (RestClientException ex) {
-
-            log.error("QR_MICROSERVICE_REQUEST_FAILED: {}", operation, ex);
-
-            throw new ServiceUnavailableException(
-                    "QR service is currently unavailable. Please try again later.",
-                    ex
-            );
-        }
-    }
-
-
-
 //    private <T> T executeQrRequest(
 //            Supplier<T> request,
 //            String operation
@@ -162,33 +145,76 @@ public class QrMicroserviceClientImpl implements QrMicroserviceClient {
 //
 //        } catch (RestClientResponseException ex) {
 //
-//            // QR service returned an HTTP error response.
 //            log.warn(
-//                    "QR_MICROSERVICE_HTTP_ERROR: operation={}, status={}",
+//                    "QR_MICROSERVICE_HTTP_ERROR: operation={}, status={}, response={}",
 //                    operation,
-//                    ex.getStatusCode()
-//            );
-//
-//            throw new ResponseStatusException(
 //                    ex.getStatusCode(),
 //                    ex.getResponseBodyAsString()
 //            );
 //
-//        } catch (RestClientException ex) {
+//            String errorMessage = "QR service request failed.";
 //
-//            // Actual connection or communication failure.
-//            log.error(
-//                    "QR_MICROSERVICE_REQUEST_FAILED: {}",
-//                    operation,
-//                    ex
-//            );
+//            try {
+//                Map<String, String> errorResponse =
+//                        new ObjectMapper().readValue(
+//                                ex.getResponseBodyAsString(),
+//                                new TypeReference<Map<String, String>>() {}
+//                        );
 //
-//            throw new ServiceUnavailableException(
-//                    "QR service is currently unavailable. Please try again later.",
-//                    ex
+//                errorMessage = errorResponse.getOrDefault(
+//                        "message",
+//                        errorMessage
+//                );
+//
+//            } catch (Exception parseException) {
+//                log.warn("Unable to parse QR service error response");
+//            }
+//
+//            throw new ResponseStatusException(
+//                    ex.getStatusCode(),
+//                    errorMessage
 //            );
 //        }
 //    }
+
+
+
+    private <T> T executeQrRequest(
+            Supplier<T> request,
+            String operation
+    ) {
+        try {
+            return request.get();
+
+        } catch (RestClientResponseException ex) {
+
+            // QR service returned an HTTP error response.
+            log.warn(
+                    "QR_MICROSERVICE_HTTP_ERROR: operation={}, status={}",
+                    operation,
+                    ex.getStatusCode()
+            );
+
+            throw new ResponseStatusException(
+                    ex.getStatusCode(),
+                    ex.getResponseBodyAsString()
+            );
+
+        } catch (RestClientException ex) {
+
+            // Actual connection or communication failure.
+            log.error(
+                    "QR_MICROSERVICE_REQUEST_FAILED: {}",
+                    operation,
+                    ex
+            );
+
+            throw new ServiceUnavailableException(
+                    "QR service is currently unavailable. Please try again later.",
+                    ex
+            );
+        }
+    }
 
 
 

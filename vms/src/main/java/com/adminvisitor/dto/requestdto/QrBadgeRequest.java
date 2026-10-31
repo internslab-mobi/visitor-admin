@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 public record QrBadgeRequest(
         String visitId,
-        LocalDateTime expectedArrivalAt,
+       // LocalDateTime expectedArrivalAt,
         String visitorId,
         LocalDateTime checkedInAt
 ) {
