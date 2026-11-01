@@ -78,12 +78,9 @@ class QrServiceImplTest {
 
         QrBadgeRequest request = new QrBadgeRequest(
                 "VIS001",
-                now.plusHours(2),
                 "VISITOR001",
-
                 now
         );
-
         when(visitBadgeRepository.findByVisitId("VIS001"))
                 .thenReturn(Optional.empty());
 
@@ -155,8 +152,7 @@ class QrServiceImplTest {
 
         QrBadgeRequest request = new QrBadgeRequest(
                 "VIS001",
-                now.plusHours(2),"VISITOR001",
-
+                "VISITOR001",
                 now
         );
 
