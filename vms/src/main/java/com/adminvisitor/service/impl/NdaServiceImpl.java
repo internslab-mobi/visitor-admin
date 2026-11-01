@@ -445,7 +445,8 @@ public class NdaServiceImpl implements NdaService {
         metadata.setDocumentType(documentType);
         metadata.setDocumentPath(filePath.toString());
         metadata.setEffective_validity(validFrom);
-        metadata.setValidUntil(validUntil.atTime(LocalTime.MAX));
+//        metadata.setValidUntil(validUntil.atTime(LocalTime.MAX));
+        metadata.setValidUntil(validUntil.plusDays(1).atStartOfDay().minusNanos(1000));
         metadata.setOverwrittenBy(null);
         metadata.setStatus(NdaStatus.ACTIVE);
 
