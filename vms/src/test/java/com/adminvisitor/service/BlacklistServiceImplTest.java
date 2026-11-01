@@ -73,7 +73,7 @@ class BlacklistServiceImplTest {
     private BlacklistServiceImpl blacklistService;
 
     private Visitor visitor;
-    private Document domesticDocument;
+    private Document INDIADocument;
     private BlacklistRequest request;
     private BlacklistResponse response;
 
@@ -88,10 +88,10 @@ class BlacklistServiceImplTest {
         visitor = new Visitor();
         visitor.setId("VTR-001");
 
-        domesticDocument = new Document();
-        domesticDocument.setNationality(Nationality.DOMESTIC);
-        domesticDocument.setAadharNumber("AADHAAR-INDEX-001");
-        domesticDocument.setPanNumber("PAN-INDEX-001");
+        INDIADocument = new Document();
+        INDIADocument.setNationality(Nationality.INDIA);
+        INDIADocument.setAadharNumber("AADHAAR-INDEX-001");
+        INDIADocument.setPanNumber("PAN-INDEX-001");
 
         request = new BlacklistRequest(
                 "Security violation",
@@ -218,7 +218,7 @@ class BlacklistServiceImplTest {
 
         when(documentRepository
                 .findTopByVisitorIdOrderByCreatedAtDesc("VTR-001"))
-                .thenReturn(Optional.of(domesticDocument));
+                .thenReturn(Optional.of(INDIADocument));
 
         when(blacklistRepository.findByVisitorIdAndStatus(
                 "VTR-001", BlacklistStatus.ACTIVE
@@ -235,17 +235,17 @@ class BlacklistServiceImplTest {
     }
 
     /**
-     * Verifies that a domestic proof already used by an active blacklist record
+     * Verifies that a INDIA proof already used by an active blacklist record
      * causes a conflict.
      */
     @Test
-    void addExistingVisitor_whenDomesticProofAlreadyBlacklisted_throwsConflict() {
+    void addExistingVisitor_whenINDIAProofAlreadyBlacklisted_throwsConflict() {
         when(visitorRepository.findById("VTR-001"))
                 .thenReturn(Optional.of(visitor));
 
         when(documentRepository
                 .findTopByVisitorIdOrderByCreatedAtDesc("VTR-001"))
-                .thenReturn(Optional.of(domesticDocument));
+                .thenReturn(Optional.of(INDIADocument));
 
         when(blacklistRepository.findByVisitorIdAndStatus(
                 "VTR-001", BlacklistStatus.ACTIVE
@@ -269,12 +269,12 @@ class BlacklistServiceImplTest {
     }
 
     /**
-     * Verifies that a domestic document without valid proof details is rejected.
+     * Verifies that a INDIA document without valid proof details is rejected.
      */
     @Test
     void addExistingVisitor_whenNoValidProofExists_throwsBusinessRuleException() {
         Document documentWithoutProofs = new Document();
-        documentWithoutProofs.setNationality(Nationality.DOMESTIC);
+        documentWithoutProofs.setNationality(Nationality.INDIA);
 
         when(visitorRepository.findById("VTR-001"))
                 .thenReturn(Optional.of(visitor));
@@ -298,10 +298,10 @@ class BlacklistServiceImplTest {
     }
 
     /**
-     * Verifies that a visitor with available domestic proofs can be blacklisted.
+     * Verifies that a visitor with available INDIA proofs can be blacklisted.
      */
     @Test
-    void addExistingVisitor_whenDomesticProofsAreAvailable_savesBlacklist() {
+    void addExistingVisitor_whenINDIAProofsAreAvailable_savesBlacklist() {
         when(idGeneratorService.generateId(anyString(), anyString()))
                 .thenAnswer(invocation ->
                         invocation.getArgument(1) + "-001"
@@ -312,7 +312,7 @@ class BlacklistServiceImplTest {
 
         when(documentRepository
                 .findTopByVisitorIdOrderByCreatedAtDesc("VTR-001"))
-                .thenReturn(Optional.of(domesticDocument));
+                .thenReturn(Optional.of(INDIADocument));
 
         when(blacklistRepository.findByVisitorIdAndStatus(
                 "VTR-001", BlacklistStatus.ACTIVE

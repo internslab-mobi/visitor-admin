@@ -3,6 +3,7 @@ package com.adminvisitor.controller;
 import com.adminvisitor.dto.requestdto.UpdateVisitorRequest;
 import com.adminvisitor.dto.responsedto.VisitorEditResponse;
 import com.adminvisitor.dto.responsedto.VisitorResponse;
+import com.adminvisitor.exception.ResourceNotFoundException;
 import com.adminvisitor.service.VisitorService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,9 +11,11 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -57,11 +60,21 @@ public class VisitorController {
                     required = true,
                     example = "VIS001"
             )@PathVariable String visitorId) {
+            try {
+                VisitorResponse response = visitorService.getVisitor(visitorId);
 
-        VisitorResponse response = visitorService.getVisitor(visitorId);
+                return ResponseEntity.ok(response);
+            }catch (ResourceNotFoundException ex) {
+                throw ex;
 
-        return ResponseEntity.ok(response);
-    }
+            } catch (Exception ex) {
+                throw new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Failed to retrieve visitor details",
+                        ex
+                );
+            }
+                }
 
     /**
      * Updates the information of an existing visitor.
@@ -93,11 +106,22 @@ public class VisitorController {
             @PathVariable("visitorId") String visitorId,
             @Valid @RequestBody UpdateVisitorRequest request) {
 
+        try {
         VisitorResponse response =
                 visitorService.updateVisitor(visitorId, request);
 
         return ResponseEntity.ok(response);
-    }
+
+    } catch (ResourceNotFoundException ex) {
+        throw ex;
+
+    } catch (Exception ex) {
+        throw new ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Failed to update visitor details",
+                ex
+        );
+    }}
 
     /**
      * Retrieves the list of all visitors available in the VMS application.
@@ -109,9 +133,17 @@ public class VisitorController {
 
     public ResponseEntity<List<VisitorResponse>> getAllVisitors() {
 
+        try {
         List<VisitorResponse> response = visitorService.getAllVisitors();
 
         return ResponseEntity.ok(response);
+    } catch (Exception ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to retrieve visitors",
+                    ex
+            );
+        }
     }
 
 
@@ -142,32 +174,42 @@ public class VisitorController {
             )
             @PathVariable("visitorId") String visitorId
     ) {
-
+        try {
         return ResponseEntity.ok(
                 visitorService.getVisitorEditDetails(visitorId)
         );
+    }catch (ResourceNotFoundException ex) {
+            throw ex;
+
+        } catch (Exception ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to retrieve visitor edit details",
+                    ex
+            );
+        }
     }
 
-    @GetMapping(
-            value = "/lookup",
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    @Operation(
-            summary = "Find visitor by email and mobile number",
-            description = "Retrieves an existing visitor using the supplied email and mobile number."
-    )
-    public ResponseEntity<VisitorResponse> findVisitorByContact(
-            @Parameter(description = "Visitor email address", required = true)
-            @RequestParam String email,
-
-            @Parameter(description = "Visitor mobile number", required = true)
-            @RequestParam String mobileNumber
-    ) {
-
-        VisitorResponse response =
-                visitorService.findVisitorByContact(email, mobileNumber);
-
-        return ResponseEntity.ok(response);
-    }
+//    @GetMapping(
+//            value = "/lookup",
+//            produces = MediaType.APPLICATION_JSON_VALUE
+//    )
+//    @Operation(
+//            summary = "Find visitor by email and mobile number",
+//            description = "Retrieves an existing visitor using the supplied email and mobile number."
+//    )
+//    public ResponseEntity<VisitorResponse> findVisitorByContact(
+//            @Parameter(description = "Visitor email address", required = true)
+//            @RequestParam String email,
+//
+//            @Parameter(description = "Visitor mobile number", required = true)
+//            @RequestParam String mobileNumber
+//    ) {
+//
+//        VisitorResponse response =
+//                visitorService.findVisitorByContact(email, mobileNumber);
+//
+//        return ResponseEntity.ok(response);
+//    }
 
 }

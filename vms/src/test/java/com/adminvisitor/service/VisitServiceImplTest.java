@@ -78,7 +78,7 @@ class VisitServiceImplTest {
                 LocalTime.of(9, 30),
                 LocalTime.of(10, 30),
                 "Test visit",
-                Nationality.DOMESTIC,
+                Nationality.INDIA,
                 "123456789012",
                 "ABCDE1234F",
                 null
@@ -156,7 +156,7 @@ class VisitServiceImplTest {
         verify(visitorRepository).save(any(Visitor.class));
         verify(documentService).saveIdentityProofs(
                 any(Visitor.class),
-                eq(Nationality.DOMESTIC),
+                eq(Nationality.INDIA),
                 eq("123456789012"),
                 eq("ABCDE1234F"),
                 isNull()
@@ -263,7 +263,7 @@ class VisitServiceImplTest {
                 .thenReturn(true);
 
         Document document = new Document();
-        document.setNationality(Nationality.DOMESTIC);
+        document.setNationality(Nationality.INDIA);
 
         when(documentService.getLatestIdentityDocument("VTR-001"))
                 .thenReturn(document);
@@ -337,7 +337,7 @@ class VisitServiceImplTest {
                 .thenReturn(true);
 
         Document document = new Document();
-        document.setNationality(Nationality.DOMESTIC);
+        document.setNationality(Nationality.INDIA);
 
         when(documentService.getLatestIdentityDocument("VTR-001"))
                 .thenReturn(document);

@@ -68,7 +68,6 @@ class NdaServiceImplTest {
     private DocumentMapper documentMapper;
 
 
-
     @MockitoBean
     private ErrorResponseFactory errorResponseFactory;
 
@@ -100,6 +99,7 @@ class NdaServiceImplTest {
         visit = mock(Visit.class);
         document = mock(Document.class);
     }
+
     @Test
     void uploadNewNda_shouldSaveMetadataSuccessfully() throws IOException {
         LocalDate validUntil = LocalDate.now().plusDays(30);
@@ -566,8 +566,12 @@ class NdaServiceImplTest {
         DocumentMetadata metadata = mock(DocumentMetadata.class);
 
         when(documentMetadataRepository
-                .findByDocumentTypeAndStatusAndValidUntilLessThanEqual(
-                        eq(DocumentType.NDA),
+                .findByDocumentTypeInAndStatusAndValidUntilLessThanEqual(
+                        eq(List.of(
+                                DocumentType.NDA,
+                                DocumentType.NDA_SUPPORTING,
+                                DocumentType.NDA_RENEWAL
+                        )),
                         eq(NdaStatus.ACTIVE),
                         any(LocalDateTime.class)))
                 .thenReturn(List.of(metadata));
@@ -580,15 +584,21 @@ class NdaServiceImplTest {
 
     @Test
     void updateExpiredNdaStatuses_shouldSaveEmptyListWhenNoRecordsAreExpired() {
+
         when(documentMetadataRepository
-                .findByDocumentTypeAndStatusAndValidUntilLessThanEqual(
-                        eq(DocumentType.NDA),
+                .findByDocumentTypeInAndStatusAndValidUntilLessThanEqual(
+                        eq(List.of(
+                                DocumentType.NDA,
+                                DocumentType.NDA_SUPPORTING,
+                                DocumentType.NDA_RENEWAL
+                        )),
                         eq(NdaStatus.ACTIVE),
                         any(LocalDateTime.class)))
                 .thenReturn(List.of());
 
         ndaService.updateExpiredNdaStatuses();
 
-        verify(documentMetadataRepository).saveAll(List.of());
+        verify(documentMetadataRepository, never())
+                .saveAll(anyList());
     }
 }

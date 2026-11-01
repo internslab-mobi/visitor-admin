@@ -74,7 +74,7 @@ class NotificationOutboxServiceImplTest {
     private NotificationOutbox createOutbox() {
         NotificationOutbox outbox = new NotificationOutbox();
         outbox.setId("NTF-001");
-        outbox.setNotificationId("notification-1");
+
         outbox.setScenario(NotificationScenario.VISIT_CONFIRMATION);
         outbox.setRecipient("visitor@test.com");
         outbox.setCc("host@test.com");
@@ -88,8 +88,7 @@ class NotificationOutboxServiceImplTest {
 
     @Test
     void enqueue_shouldSaveOutboxSuccessfully() {
-        when(repository.existsByNotificationId("notification-1"))
-                .thenReturn(false);
+
         when(idGenerator.generateId("NOTIFICATION_OUTBOX", "NTF"))
                 .thenReturn("NTF-001");
         when(repository.save(any(NotificationOutbox.class)))
@@ -133,8 +132,6 @@ class NotificationOutboxServiceImplTest {
 
     @Test
     void enqueue_shouldSkipDuplicateNotification() {
-        when(repository.existsByNotificationId("notification-1"))
-                .thenReturn(true);
 
         service.enqueue(createRequest());
 
@@ -144,8 +141,6 @@ class NotificationOutboxServiceImplTest {
 
     @Test
     void enqueue_shouldRejectUnknownScenario() {
-        when(repository.existsByNotificationId("notification-1"))
-                .thenReturn(false);
 
         NotificationRequest request = new NotificationRequest(
                 "notification-1", "UNKNOWN_SCENARIO",
