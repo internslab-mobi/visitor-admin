@@ -27,8 +27,8 @@ app:
 
 vms:
   document:
-    nda-upload-dir: D:/VMS/NDA
-    upload-dir: D:/VMS/Proof
+    nda-upload-dir: C:/VMS/NDA
+    upload-dir: C:/VMS/Proof
     photo-upload-dir: C:/VMS/VisitorPhotos
 
 

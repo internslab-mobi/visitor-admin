@@ -89,7 +89,7 @@ class BlacklistServiceImplTest {
         visitor.setId("VTR-001");
 
         domesticDocument = new Document();
-        domesticDocument.setNationality(Nationality.DOMESTIC);
+        domesticDocument.setNationality(Nationality.INDIA);
         domesticDocument.setAadharNumber("AADHAAR-INDEX-001");
         domesticDocument.setPanNumber("PAN-INDEX-001");
 
@@ -274,7 +274,7 @@ class BlacklistServiceImplTest {
     @Test
     void addExistingVisitor_whenNoValidProofExists_throwsBusinessRuleException() {
         Document documentWithoutProofs = new Document();
-        documentWithoutProofs.setNationality(Nationality.DOMESTIC);
+        documentWithoutProofs.setNationality(Nationality.INDIA);
 
         when(visitorRepository.findById("VTR-001"))
                 .thenReturn(Optional.of(visitor));

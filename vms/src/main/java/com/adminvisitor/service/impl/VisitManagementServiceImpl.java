@@ -35,11 +35,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class VisitManagementServiceImpl implements VisitManagementService{
-//    private static final List<VisitStatus> OPERATIONAL_STATUSES =
-//            List.of(VisitStatus.REGISTERED,VisitStatus.CHECKED_IN);
-//
-//    private static final List<VisitStatus> HISTORICAL_STATUSES =
-//            List.of(VisitStatus.CHECKED_OUT,VisitStatus.CANCELLED,VisitStatus.NO_SHOW);
+
+    private static final List<VisitStatus> HISTORICAL_STATUSES =
+           List.of(VisitStatus.CHECKED_IN,VisitStatus.CHECKED_OUT,VisitStatus.CANCELLED,VisitStatus.NO_SHOW);
 
     private static final DateTimeFormatter EMAIL_DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
@@ -80,9 +78,6 @@ public class VisitManagementServiceImpl implements VisitManagementService{
             String sortBy
     ) {
 
-//        Specification<Visit> specification =
-//                (root, query, criteriaBuilder) ->
-//                        root.get("status").in(OPERATIONAL_STATUSES);
         Specification<Visit> specification =
                 (root, query, criteriaBuilder) ->
                         criteriaBuilder.conjunction();
@@ -177,12 +172,9 @@ public class VisitManagementServiceImpl implements VisitManagementService{
             );
         }
 
-//            Specification<Visit> specification =
-//                    (root, query, criteriaBuilder) ->
-//                            root.get("status").in(HISTORICAL_STATUSES);
             Specification<Visit> specification =
                     (root, query, criteriaBuilder) ->
-                            criteriaBuilder.conjunction();
+                            root.get("status").in(HISTORICAL_STATUSES);
 
         specification = addSpecification(
                 specification, VisitSpecification.hasSearch(search));

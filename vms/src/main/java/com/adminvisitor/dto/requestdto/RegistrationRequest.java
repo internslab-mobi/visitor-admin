@@ -147,7 +147,7 @@ public record RegistrationRequest(
         @NotNull(message = "Nationality is required")
         @Schema(
                 description = "Visitor's nationality classification",
-                example = "DOMESTIC",
+                example = "INDIA",
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
         Nationality nationality,

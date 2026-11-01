@@ -42,6 +42,8 @@ notification:
     batch-size: 50
     retry-delay-seconds: 30
     polling-delay-ms: 5000
+    processing-timeout-minutes: 10
+    recovery-delay-ms: 60000
 
 springdoc:
   swagger-ui:

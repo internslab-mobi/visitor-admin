@@ -426,4 +426,41 @@ public class NotificationOutboxServiceImpl
             }
         }
     }
+
+    @Value("${notification.outbox.processing-timeout-minutes}")
+    private long processingTimeoutMinutes;
+
+    @Scheduled(fixedDelayString =
+            "${notification.outbox.recovery-delay-ms}")
+    @Transactional
+    public void recoverStaleOutboxNotifications() {
+
+        LocalDateTime now = LocalDateTime.now();
+
+        LocalDateTime staleBefore =
+                now.minusMinutes(processingTimeoutMinutes);
+
+        int recoveredCount =
+                notificationOutboxRepository.recoverStaleNotifications(
+                        NotificationOutboxStatus.PROCESSING,
+                        NotificationOutboxStatus.PENDING,
+                        staleBefore,
+                        now,
+                        "Recovered stale notification for retry"
+                );
+
+        int failedCount =
+                notificationOutboxRepository.failExhaustedStaleNotifications(
+                        NotificationOutboxStatus.PROCESSING,
+                        NotificationOutboxStatus.FAILED,
+                        staleBefore,
+                        "Processing timeout; maximum attempts exhausted"
+                );
+
+        log.info(
+                "Outbox recovery completed. Recovered: {}, Failed: {}",
+                recoveredCount,
+                failedCount
+        );
+    }
 }
