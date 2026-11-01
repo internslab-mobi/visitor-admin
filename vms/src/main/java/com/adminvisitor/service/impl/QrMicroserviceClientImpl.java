@@ -136,46 +136,6 @@ public class QrMicroserviceClientImpl implements QrMicroserviceClient {
      *         when the operation does not return a value
      * @throws ServiceUnavailableException if a REST client exception occurs
      */
-//    private <T> T executeQrRequest(
-//            Supplier<T> request,
-//            String operation
-//    ) {
-//        try {
-//            return request.get();
-//
-//        } catch (RestClientResponseException ex) {
-//
-//            log.warn(
-//                    "QR_MICROSERVICE_HTTP_ERROR: operation={}, status={}, response={}",
-//                    operation,
-//                    ex.getStatusCode(),
-//                    ex.getResponseBodyAsString()
-//            );
-//
-//            String errorMessage = "QR service request failed.";
-//
-//            try {
-//                Map<String, String> errorResponse =
-//                        new ObjectMapper().readValue(
-//                                ex.getResponseBodyAsString(),
-//                                new TypeReference<Map<String, String>>() {}
-//                        );
-//
-//                errorMessage = errorResponse.getOrDefault(
-//                        "message",
-//                        errorMessage
-//                );
-//
-//            } catch (Exception parseException) {
-//                log.warn("Unable to parse QR service error response");
-//            }
-//
-//            throw new ResponseStatusException(
-//                    ex.getStatusCode(),
-//                    errorMessage
-//            );
-//        }
-//    }
 
 
 

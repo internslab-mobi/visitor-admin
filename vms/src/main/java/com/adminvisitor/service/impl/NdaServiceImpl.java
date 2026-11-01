@@ -112,11 +112,14 @@ public class NdaServiceImpl implements NdaService {
 
         Optional<DocumentMetadata> existingNda =
                 documentMetadataRepository
-                        .findTopByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
+                        .findFirstByDocument_Visitor_IdAndDocumentTypeInAndOverwrittenByIsNullOrderByCreatedAtDesc(
                                 visitorId,
-                                DocumentType.NDA
+                                List.of(
+                                        DocumentType.NDA,
+                                        DocumentType.NDA_SUPPORTING,
+                                        DocumentType.NDA_RENEWAL
+                                )
                         );
-
         if (existingNda.isPresent()) {
 
             LocalDateTime existingValidUntil =
@@ -458,24 +461,22 @@ public class NdaServiceImpl implements NdaService {
      */
     public boolean isNdaRequired(Visitor visitor) {
 
-        Optional<DocumentMetadata> latestNda =
-                documentMetadataRepository
-                        .findTopByDocument_Visitor_IdAndDocumentTypeOrderByCreatedAtDesc(
-                                visitor.getId(),
-                                DocumentType.NDA
-                        );
+        try {
 
-        if (latestNda.isEmpty()) {
+            DocumentMetadata latestNda = getLatestNda(visitor.getId());
+
+            LocalDateTime validUntil = latestNda.getValidUntil();
+
+            if (validUntil == null) {
+                return true;
+            }
+
+            return !validUntil.isAfter(LocalDateTime.now());
+
+        } catch (ResourceNotFoundException ex) {
+
             return true;
         }
-
-        LocalDateTime validUntil = latestNda.get().getValidUntil();
-
-        if (validUntil == null) {
-            return true;
-        }
-
-        return !validUntil.isAfter(LocalDateTime.now());
     }
 
 
@@ -512,8 +513,12 @@ public class NdaServiceImpl implements NdaService {
 
         List<DocumentMetadata> expiredNdas =
                 documentMetadataRepository
-                        .findByDocumentTypeAndStatusAndValidUntilLessThanEqual(
-                                DocumentType.NDA,
+                        .findByDocumentTypeInAndStatusAndValidUntilLessThanEqual(
+                                List.of(
+                                        DocumentType.NDA,
+                                        DocumentType.NDA_SUPPORTING,
+                                        DocumentType.NDA_RENEWAL
+                                ),
                                 NdaStatus.ACTIVE,
                                 now
                         );

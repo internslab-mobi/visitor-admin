@@ -33,6 +33,9 @@ public interface DocumentMetadataRepository
             Collection<DocumentType> documentTypes
     );
 
+
+
+
     List<DocumentMetadata>
     findByDocument_Visitor_IdAndDocumentTypeInOrderByCreatedAtDesc(
             String visitorId,
@@ -84,8 +87,8 @@ public interface DocumentMetadataRepository
     );
 
     List<DocumentMetadata>
-    findByDocumentTypeAndStatusAndValidUntilLessThanEqual(
-            DocumentType documentType,
+            findByDocumentTypeInAndStatusAndValidUntilLessThanEqual(
+            Collection<DocumentType> documentTypes,
             NdaStatus status,
             LocalDateTime now
     );
